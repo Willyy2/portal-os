@@ -5,130 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal</title>
     <style>
-        :root {
-            --bg: #030712;
-            --accent: #3b82f6;
-        }
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg);
-            display: flex; align-items: center; justify-content: center;
-            font-family: system-ui, -apple-system, sans-serif;
-            overflow: hidden;
-            color: white;
-        }
-
-        /* The App Container (Hidden until ready) */
-        #app-frame {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border: none;
-            opacity: 0;
-            transition: opacity 0.4s ease-in-out;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        #app-frame.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* Minimalist Loader */
-        .loader-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 5;
-        }
-
-        .fast-loader {
-            width: 32px; height: 32px;
-            border: 2px solid rgba(59, 130, 246, 0.1);
-            border-top: 2px solid var(--accent);
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        #status {
-            font-size: 10px;
-            color: rgba(255,255,255,0.4);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+        body { margin: 0; background: #020617; color: #7dd3fc; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+        #s { font-weight: 800; letter-spacing: 1px; text-transform: uppercase; animation: p 1.2s ease-in-out infinite; font-size: 14px; }
+        @keyframes p { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.98); } }
+        iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; display: none; background: #020617; }
     </style>
 </head>
 <body>
-
-    <div class="loader-container" id="boot-ui">
-        <div class="fast-loader"></div>
-        <div id="status">Syncing...</div>
-    </div>
-
-    <!-- This is where the app lives -->
-    <iframe id="app-frame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    <div id="s">Loading..</div>
+    <iframe id="f" src="about:blank" sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation allow-downloads" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media; picture-in-picture" allowfullscreen></iframe>
 
     <script>
-        const CDN_URL = "https://cdn.jsdelivr.net/gh/Willyy2/portal-os@main/index.html";
-        const CACHE_KEY = "portal_core_v1";
-        const frame = document.getElementById('app-frame');
-        const bootUI = document.getElementById('boot-ui');
+        (function() {
+            const URL = "https://cdn.jsdelivr.net/gh/Willyy2/portal-os@main/index.html";
+            const frame = document.getElementById('f');
+            const status = document.getElementById('s');
 
-        async function init() {
-            // 1. Try to get cached code first
-            let code = localStorage.getItem(CACHE_KEY);
-            
-            if (code) {
-                console.log("⚡ Loading from LocalStorage");
-                launch(code);
-                // Check for updates in the background without disturbing the user
-                refreshCache();
-            } else {
-                console.log("🌐 First time load: Fetching...");
-                code = await fetchFromNetwork();
-                if (code) launch(code);
-            }
-        }
+            // Start fetch immediately without waiting for window.onload
+            const fetchPromise = fetch(`${URL}?t=${Date.now()}`).then(res => {
+                if (!res.ok) throw new Error();
+                return res.text();
+            });
 
-        async function fetchFromNetwork() {
-            try {
-                const res = await fetch(`${CDN_URL}?v=${Date.now()}`);
-                const text = await res.text();
-                if (text.length > 500) {
-                    localStorage.setItem(CACHE_KEY, text);
-                    return text;
+            async function boot() {
+                try {
+                    const code = await fetchPromise;
+                    const doc = frame.contentWindow.document;
+                    
+                    doc.open();
+                    doc.write(code);
+                    doc.close();
+
+                    // Smooth transition
+                    frame.style.display = 'block';
+                    status.style.display = 'none';
+                } catch (e) {
+                    status.innerText = "Fetch Error";
+                    status.style.color = "#ff4444";
                 }
-            } catch (e) {
-                document.getElementById('status').innerText = "Connection Failed";
-                return null;
             }
-        }
 
-        async function refreshCache() {
-            const latest = await fetchFromNetwork();
-            if (latest) console.log("✅ Cache updated for next boot.");
-        }
-
-        function launch(content) {
-            const doc = frame.contentWindow.document;
-            doc.open();
-            doc.write(content);
-            doc.close();
-
-            // Wait just a split second for the iframe to internalize the styles
-            setTimeout(() => {
-                frame.classList.add('visible');
-                // Optional: Fade out the loader after app appears
-                bootUI.style.display = 'none';
-            }, 100);
-        }
-
-        // Start immediately
-        init();
+            // Execute as soon as the DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', boot);
+            } else {
+                boot();
+            }
+        })();
     </script>
 </body>
 </html>
