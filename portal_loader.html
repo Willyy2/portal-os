@@ -2,56 +2,143 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- LIGHT-SPEED NETWORKING HINTS -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <title>Portal OS</title>
+    <!-- DEFAULT BURGER FAVICON -->
+    <link id="favicon" rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Willyy2/portal-os/main/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    
     <style>
-        body { margin: 0; background: #020617; color: #7dd3fc; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
-        #s { font-weight: 800; letter-spacing: 1px; text-transform: uppercase; animation: p 1.2s ease-in-out infinite; font-size: 14px; }
-        @keyframes p { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.98); } }
-        iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; display: none; background: #020617; }
+        :root {
+            --bg-color: #020617; 
+            --accent: #7dd3fc; /* Light Blue */
+            --font-main: 'Fredoka One', cursive;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: var(--font-main);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #portal-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: var(--bg-color); /* Anti-White-Flash Layer */
+            z-index: 1;
+            display: block;
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(125, 211, 252, 0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; /* Spun up the speed */
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div id="s">Loading..</div>
-    <iframe id="f" src="about:blank" sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation allow-downloads" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+
+    <div id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Full permissions, NO sandbox restrictions -->
+    <iframe id="portal-frame" allow="camera; microphone; geolocation; autoplay; fullscreen; display-capture; keyboard; clipboard-read; clipboard-write; accelerometer; gyroscope; magnetometer; bluetooth; midi; encrypted-media; picture-in-picture; web-share; usb; xr-spatial-tracking; payment-handler;"></iframe>
 
     <script>
-        (function() {
-            const URL = "https://cdn.jsdelivr.net/gh/Willyy2/portal-os@main/index.html";
-            const frame = document.getElementById('f');
-            const status = document.getElementById('s');
+        // 1. KICK OFF FETCH IMMEDIATELY (Parallel to DOM parsing)
+        const TARGET_URL = "https://cdn.jsdelivr.net/gh/Willyy2/portal-os@main/index.html";
+        const fetchTask = fetch(TARGET_URL + '?fast=' + Date.now(), { priority: 'high', cache: 'no-store' });
 
-            // Start fetch immediately without waiting for window.onload
-            const fetchPromise = fetch(`${URL}?t=${Date.now()}`).then(res => {
-                if (!res.ok) throw new Error();
-                return res.text();
-            });
+        const frame = document.getElementById('portal-frame');
+        const loader = document.getElementById('loader');
+        const mainFavicon = document.getElementById('favicon');
+        const DEFAULT_ICON = "https://raw.githubusercontent.com/Willyy2/portal-os/main/favicon.ico";
 
-            async function boot() {
-                try {
-                    const code = await fetchPromise;
-                    const doc = frame.contentWindow.document;
-                    
-                    doc.open();
-                    doc.write(code);
-                    doc.close();
+        // 2. WAIT FOR DOM READY, THEN INJECT
+        document.addEventListener('DOMContentLoaded', async () => {
+            const frameDoc = frame.contentWindow.document;
+            
+            // Pre-paint iframe dark to guarantee 0 white flashes while waiting for network
+            frameDoc.open();
+            frameDoc.write('<style>body{background:#020617;}</style>');
 
-                    // Smooth transition
-                    frame.style.display = 'block';
-                    status.style.display = 'none';
-                } catch (e) {
-                    status.innerText = "Fetch Error";
-                    status.style.color = "#ff4444";
-                }
+            try {
+                // Await the fetch that has already been running in the background
+                const response = await fetchTask;
+                const html = await response.text();
+
+                // Synchronous Injection - The fastest way to render
+                frameDoc.open();
+                frameDoc.write(html);
+                frameDoc.close();
+
+                // 3. INSTANT SYNC LOGIC (No waiting for intervals to start)
+                const sync = () => {
+                    if (frameDoc.title && document.title !== frameDoc.title) {
+                        document.title = frameDoc.title;
+                    }
+                    const frameIcon = frameDoc.querySelector("link[rel*='icon']");
+                    const newHref = (frameIcon && frameIcon.href && frameIcon.href.length > 5) 
+                                    ? frameIcon.href 
+                                    : DEFAULT_ICON;
+                    if (mainFavicon.href !== newHref) {
+                        mainFavicon.href = newHref;
+                    }
+                };
+
+                const observer = new MutationObserver(sync);
+                observer.observe(frameDoc.head, { childList: true, subtree: true, attributes: true });
+                setInterval(sync, 300);
+                sync(); // Run once instantly
+
+                // Hide loader instantly
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 200);
+
+            } catch (e) {
+                console.error("Link Failed", e);
+                loader.innerHTML = '<div style="color:#ef4444; font-weight:bold; font-family:\'Fredoka One\', sans-serif;">SYNC FAILED</div>';
             }
+        });
 
-            // Execute as soon as the DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', boot);
-            } else {
-                boot();
-            }
-        })();
+        // Instant resize handling for S24 FE rotation
+        window.addEventListener('resize', () => {
+            frame.style.height = window.innerHeight + 'px';
+            frame.style.width = window.innerWidth + 'px';
+        });
     </script>
 </body>
 </html>
