@@ -171,13 +171,26 @@
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             position: relative;
-            will-change: transform, box-shadow;
+            will-change: transform, opacity, box-shadow;
             backdrop-filter: blur(10px);
             /* Fluid Spring Easing for "Tweening" Feel */
             transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
                         box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
                         border-color 0.4s ease, background-color 0.4s ease;
-            will-change: transform, box-shadow;
+            will-change: transform, opacity, box-shadow;
+        }
+
+        /* --- PERFORMANCE MODE OVERRIDES --- */
+        body.perf-mode * {
+            backdrop-filter: none !important;
+            animation-duration: 0.1s !important;
+            transition-duration: 0.1s !important;
+        }
+        body.perf-mode .app-card {
+            box-shadow: none !important;
+        }
+        body.perf-mode #ambient-grid {
+            display: none !important;
         }
 
         .app-card:hover {
@@ -401,24 +414,47 @@
             max-height: 90vh;
             overflow-y: auto;
             animation: dialogPop 0.4s var(--spring-easing);
+            will-change: transform, opacity;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
         }
+
+        .perf-mode-enabled #ambient-grid { animation: none; display: none; }
+        .perf-mode-enabled .custom-dialog { backdrop-filter: none !important; box-shadow: none !important; }
+        .perf-mode-enabled .floating-btn { backdrop-filter: none !important; }
 
         @keyframes dialogPop {
             from {
                 opacity: 0;
                 transform: scale(0.9) translateY(20px);
             }
-
             to {
                 opacity: 1;
                 transform: scale(1) translateY(0);
             }
         }
 
-        /* Fullscreen Iframe Container */        #app-container {
-            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: opacity, filter;
+        /* GPU Accelerated Modals */
+        .custom-dialog {
+            background-color: var(--dialog-bg) !important;
+            border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: dialogPop 0.4s var(--spring-easing);
+            will-change: transform, opacity;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            transform: translateZ(0); /* Force GPU Layer */
+        }
+
+        .perf-mode-enabled #ambient-grid { animation: none; display: none; }
+        .perf-mode-enabled .custom-dialog { backdrop-filter: none !important; box-shadow: none !important; transform: none; }
+        .perf-mode-enabled .floating-btn { backdrop-filter: none !important; }
+
+
+        /* Fullscreen Iframe Container (Instant Snap) */
+        #app-container {
+            transition: none !important;
+            will-change: auto;
+            transform: translateZ(0); /* GPU Layer */
         }
 
         #fullscreen-container {
@@ -436,11 +472,11 @@
         }
 
         .animate-open {
-            animation: zoomIn 0.5s var(--spring-easing) forwards;
+            animation: none !important;
         }
 
         .animate-close {
-            animation: zoomOut 0.4s var(--spring-easing) forwards;
+            animation: none !important;
         }
 
         @keyframes zoomIn {
@@ -837,7 +873,7 @@
 
         /* Dev button red accent when enabled */
         .dev-btn {
-            display: none !important;
+            display: none;
         }
 
         body.dev-mode .dev-btn {
@@ -1495,10 +1531,10 @@
                     </div>
                     <div id="html-input-group" class="hidden space-y-2">
                         <div class="flex gap-2 items-center">
-                            <textarea id="add-html" placeholder="Paste HTML code here" rows="4"
-                                class="flex-1 bg-black/60 border border-white/10 rounded-2xl px-6 py-5 font-mono outline-none focus:border-blue-500 transition-colors text-sm"></textarea>
+                            <textarea id="add-html" placeholder="Paste HTML code here" rows="8"
+                                class="flex-1 bg-black/60 border border-white/10 rounded-2xl px-6 py-5 font-mono outline-none focus:border-blue-500 transition-colors text-sm resize-y min-h-[120px]"></textarea>
                             <button type="button" onclick="openCodeStudioForAddHtml()"
-                                class="self-start py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-xs font-bold flex items-center gap-1 shrink-0">
+                                class="self-start py-3 px-4 rounded-xl bg-slate-800/80 hover:bg-blue-600 border border-white/10 overflow-hidden group text-xs font-bold flex items-center gap-2 shrink-0 transition-all duration-300 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]">
                                 <i class="ph ph-code"></i> Studio
                             </button>
                         </div>
@@ -1872,6 +1908,19 @@
                             <div>
                                 <p
                                     class="text-xs uppercase text-teal-400 font-bold tracking-widest font-sans">
+                                    Performance Mode</p>
+                                <p class="text-[11px] text-slate-500 font-sans">Disable blurs & shadows for speed</p>
+                            </div>
+                            <button id="perf-mode-toggle" onclick="togglePerformanceMode()" class="dev-toggle"
+                                type="button">
+                                <div class="dev-toggle-knob"></div>
+                            </button>
+                        </div>
+                        <div
+                            class="bg-black/40 border border-teal-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
+                            <div>
+                                <p
+                                    class="text-xs uppercase text-teal-400 font-bold tracking-widest font-sans">
                                     Hold-and-Drag</p>
                                 <p class="text-[11px] text-slate-500 font-sans">Drag apps instantly without clicking</p>
                             </div>
@@ -1879,6 +1928,13 @@
                                 type="button">
                                 <div class="dev-toggle-knob"></div>
                             </button>
+                        </div>
+                        <div class="bg-black/40 border border-fuchsia-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-xs uppercase text-fuchsia-400 font-bold tracking-widest font-sans">Emoji Hub</p>
+                                <p class="text-[11px] text-slate-500 font-sans">Create and manage custom rich-text emojis.</p>
+                            </div>
+                            <button onclick="window.openEmojiHub()" class="px-4 py-2 rounded-xl bg-fuchsia-600/20 text-fuchsia-400 hover:bg-fuchsia-600/40 text-[11px] font-bold border border-fuchsia-500/30 transition-colors uppercase tracking-wider">Open Hub</button>
                         </div>
                     </div>
                 </details>
@@ -1892,11 +1948,14 @@
                     <div class="p-4 border-t border-white/5 space-y-4">
                         <div class="grid grid-cols-2 gap-3">
                             <button onclick="resetThemeOnly()"
-                                class="py-3 bg-slate-900 text-yellow-500 border border-yellow-500/20 rounded-xl font-bold text-xs hover:bg-yellow-500/10">Reset
+                                class="py-3 bg-slate-900 text-yellow-500 border border-yellow-500/20 rounded-xl font-bold text-xs hover:bg-yellow-500/10 transition-all active:scale-95">Reset
                                 Theme</button>
                             <button onclick="resetAppsOnly()"
-                                class="py-3 bg-slate-900 text-orange-500 border border-orange-500/20 rounded-xl font-bold text-xs hover:bg-orange-500/10">Reset
+                                class="py-3 bg-slate-900 text-orange-500 border border-orange-500/20 rounded-xl font-bold text-xs hover:bg-orange-500/10 transition-all active:scale-95">Reset
                                 Apps</button>
+                            <button onclick="resetEmojis()"
+                                class="col-span-2 py-3 bg-slate-900 text-fuchsia-500 border border-fuchsia-500/20 rounded-xl font-bold text-xs hover:bg-fuchsia-500/10 transition-all active:scale-95">Reset
+                                Emojis</button>
                         </div>
                         <button onclick="resetEverything()"
                             class="w-full py-4 bg-red-900/20 text-red-400 border border-red-900/30 rounded-xl font-bold text-xs hover:bg-red-900/30">Reset
@@ -1906,6 +1965,51 @@
             </div>
             <button onclick="saveSettings()"
                 class="w-full py-5 rounded-2xl font-bold mt-8 bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/30">Save</button>
+        </div>
+    </div>
+
+    <!-- Emoji Hub Modal -->
+    <div id="emoji-hub-modal" class="fixed inset-0 z-[1720] hidden flex items-center justify-center p-4"
+        style="display: none;">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('emoji-hub-modal')"></div>
+        <div class="relative custom-dialog rounded-[2rem] max-w-2xl w-full text-white p-8 border border-white/10">
+            <button onclick="closeModal('emoji-hub-modal')"
+                class="absolute top-5 right-5 text-slate-500 hover:text-white transition-colors z-10">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-11 h-11 rounded-2xl bg-fuchsia-600/20 border border-fuchsia-500/30 flex items-center justify-center flex-shrink-0 text-fuchsia-400">
+                    <i class="ph ph-smiley-wink text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold leading-tight">Emoji Hub</h2>
+                    <p class="text-slate-500 text-[11px] font-sans uppercase tracking-widest">Manage your custom emojis</p>
+                </div>
+            </div>
+
+            <!-- Add Emoji Form -->
+            <!-- Add Emoji Form -->
+            <div class="bg-black/40 border border-white/10 p-4 rounded-xl mb-6 flex flex-col md:flex-row gap-3">
+                <input type="text" id="emoji-keyword-input" placeholder=":keyword:" class="w-full md:w-1/3 bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-fuchsia-500 transition-colors font-mono">
+                <div class="flex-1 flex gap-2">
+                    <input type="text" id="emoji-url-input" placeholder="Image URL (or upload)" class="flex-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-fuchsia-500 transition-colors">
+                    <select id="emoji-crop-mode" class="bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-slate-300 text-xs px-2 outline-none cursor-pointer" title="Image Scaling Mode">
+                        <option value="crop">Square Crop</option>
+                        <option value="fit">Fit Original</option>
+                    </select>
+                    <input type="file" id="emoji-file-input" accept="image/*" class="hidden" onchange="handleEmojiFileUpload(event)">
+                    <button onclick="document.getElementById('emoji-file-input').click()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-slate-300 hover:text-white transition-colors flex items-center justify-center" title="Upload Local Image">
+                        <i class="ph ph-upload-simple"></i>
+                    </button>
+                </div>
+                <button onclick="addCustomEmoji()" class="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 rounded-lg font-bold text-sm transition-colors text-white whitespace-nowrap">Add</button>
+            </div>
+
+            <!-- Emoji List -->
+            <div id="emoji-hub-list" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[45vh] overflow-y-auto scroll-section pb-4">
+                <!-- Render emojis here -->
+            </div>
         </div>
     </div>
 
@@ -2064,11 +2168,14 @@
                     <p id="dev-storage-usage" class="text-[11px] text-slate-500 font-mono">Usage: calculating...</p>
                     <div class="flex gap-2">
                         <button onclick="resetAppsOnly()"
-                            class="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-orange-400 border border-orange-500/30">Wipe
+                            class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-orange-400 border border-orange-500/30">Wipe
                             Apps</button>
                         <button onclick="resetThemeOnly()"
-                            class="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-yellow-400 border border-yellow-500/30">Wipe
+                            class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-yellow-400 border border-yellow-500/30">Wipe
                             Theme</button>
+                        <button onclick="resetEmojis()"
+                            class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-fuchsia-400 border border-fuchsia-500/30">Wipe
+                            Emojis</button>
                     </div>
                 </div>
                 <div class="bg-black/70 border border-slate-800 rounded-2xl p-3">
@@ -2079,7 +2186,7 @@
                     </div>
                 </div>
                 <div class="bg-red-900/20 border border-red-500/30 rounded-2xl p-4">
-                    <button onclick="openDevOnlyMode()"
+                    <button onclick="showDevNotice()"
                         class="w-full py-2.5 rounded-xl font-bold bg-red-600 hover:bg-red-500 text-sm flex items-center justify-center gap-2 text-white">
                         <i class="ph ph-warning-octagon text-lg"></i> Open DEV ONLY MODE
                     </button>
@@ -2167,95 +2274,188 @@
         </div>
     </div>
 
-    <!-- Help Modal -->
+    <!-- Emoji Options Modal (Unified Looking) -->
+    <div id="emoji-options-modal" class="fixed inset-0 z-[1850] hidden flex items-center justify-center p-4"
+        style="display: none;">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('emoji-options-modal')"></div>
+        <div class="relative custom-dialog p-8 rounded-[2rem] w-full max-w-sm text-white text-center" style="font-family: 'Fredoka One', cursive;">
+            <button onclick="closeModal('emoji-options-modal')" 
+                class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+            <h2 id="emoji-options-title" class="text-2xl font-black opacity-90 mb-1">Emoji Options</h2>
+            <p class="text-[12px] uppercase tracking-[0.2em] text-slate-500 mb-8 font-bold">Manage Custom Emoji</p>
+
+            <div class="grid gap-3">
+                <button onclick="handleEmojiOptionAction('edit')"
+                    class="w-full py-4 rounded-2xl font-bold bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-95">
+                    <i class="ph ph-pencil-simple text-xl"></i> Edit Keyword
+                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="handleEmojiOptionAction('copy-keyword')"
+                        class="py-4 rounded-2xl font-bold bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center gap-2 transition-all active:scale-95 text-base">
+                        <i class="ph ph-copy text-lg"></i> Keyword
+                    </button>
+                    <button onclick="handleEmojiOptionAction('copy-html')"
+                        class="py-4 rounded-2xl font-bold bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border border-amber-500/30 flex items-center justify-center gap-2 transition-all active:scale-95 text-base">
+                        <i class="ph ph-code text-lg"></i> HTML Tag
+                    </button>
+                </div>
+                <div class="h-[1px] bg-white/5 my-1"></div>
+                <button onclick="handleEmojiOptionAction('delete')"
+                    class="w-full py-4 rounded-2xl font-bold bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/30 flex items-center justify-center gap-3 transition-all active:scale-95 text-base">
+                    <i class="ph ph-trash text-xl"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal (Changelogs, Help & Honorable Mentions) -->
     <div id="help-modal" class="fixed inset-0 z-[1900] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('help-modal')"></div>
         <div class="relative custom-dialog rounded-[2rem] max-w-xl w-full text-white p-8">
-            <h2 class="text-3xl font-bold mb-1">Portal OS v4.0</h2>
-            <p class="text-blue-400 text-xs font-sans mb-6 uppercase tracking-widest italic font-bold">The Multi-Select Update</p>
-            <div class="space-y-3 text-slate-300 max-h-[60vh] overflow-y-auto pr-2 scroll-section">
-                <!-- NEW: Multi-Select Section -->
-                <div class="bg-blue-600/20 p-4 rounded-2xl border border-blue-500/40 shadow-lg shadow-blue-500/10">
-                    <p class="font-bold text-blue-300 mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-selection"></i> Multi-Select & Bulk Edit</p>
-                    <ul class="text-[11px] font-sans text-slate-300 space-y-1 ml-4 list-disc marker:text-blue-500">
-                        <li><b>Selection Mode</b>: Hold <b>Shift</b> to toggle visual selection mode.</li>
-                        <li><b>Bulk Manage</b>: Select multiple items, then use the <b>Add</b> button to Bulk Edit or Move everything.</li>
-                        <li><b>Smart Icons</b>: The dashboard button highlights when items are selected.</li>
-                    </ul>
+            <!-- X Close Button -->
+            <button onclick="closeModal('help-modal')"
+                class="absolute top-5 right-5 text-slate-500 hover:text-white transition-colors z-10">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3 mb-1">
+                <div class="w-11 h-11 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                    <i class="ph ph-newspaper text-blue-400 text-xl"></i>
                 </div>
-                <!-- NEW: UI Refinements Section -->
-                <div class="bg-indigo-600/10 p-4 rounded-2xl border border-indigo-500/20">
-                    <p class="font-bold text-indigo-300 mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-paint-brush"></i> Premium UI Polish</p>
-                    <ul class="text-[11px] font-sans text-slate-400 space-y-1 ml-4 list-disc marker:text-indigo-500">
-                        <li><b>Typography</b>: Switched to <b>Fredoka One</b> for a playful, modern look everywhere.</li>
-                        <li><b>Better Dialogs</b>: Standard top-right <b>X</b> close buttons replace clunky bottom buttons.</li>
-                        <li><b>Micro-Animations</b>: Smooth squish effect on app dots and buttons.</li>
-                        <li><b>Long Text</b>: Added horizontal scrolling for long URLs and names in the manager.</li>
-                    </ul>
-                </div>
-                <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/30">
-                    <p class="font-bold text-blue-400 mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-sparkle"></i> NEW: Fun Edition v3.5+</p>
-                    <ul class="text-[11px] font-sans text-slate-400 space-y-1 ml-4 list-disc marker:text-blue-500">
-                        <li><b>App & Category Duplication</b>: Clone with one click.</li>
-                        <li><b>Format Painter</b>: Copy style & paint it onto others.</li>
-                        <li><b>Custom Favicons</b>: masked browser tab icons.</li>
-                        <li><b>Element Inspector</b>: Direct live text editing.</li>
-                    </ul>
-                </div>
-                <div
-                    class="bg-slate-900/50 p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                    <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-palette text-pink-400"></i> Advanced App Customization</p>
-                    <p class="text-xs font-sans text-slate-400">Use the <strong class="text-white">Extra Extra
-                            Customization</strong> menu to upload local background images, set true glassmorphism
-                        opacity, and independently color your icons and text.</p>
-                </div>
-                <div
-                    class="bg-slate-900/50 p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                    <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-lock text-blue-400"></i> Security & Access</p>
-                    <p class="text-xs font-sans text-slate-400">The <em>admin access</em> link provides a hidden bypass.
-                        Use <strong class="text-white">Fast Boot</strong> in settings to skip the login screen on your
-                        local device.</p>
-                </div>
-                <div
-                    class="bg-slate-900/50 p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                    <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-folder-open text-yellow-400"></i> Category Folders</p>
-                    <p class="text-xs font-sans text-slate-400">Categories act as sub-portals. Click the folder icon in
-                        the App Creator to make one. You can drag apps onto the <strong>Back</strong> button to move
-                        them up one level.</p>
-                </div>
-                <div
-                    class="bg-slate-900/50 p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                    <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-code text-indigo-400"></i> Code Studio 2.0</p>
-                    <p class="text-xs font-sans text-slate-400">Embed your own HTML apps. Use the Dev Sidebar to edit
-                        <strong class="text-white">Live CSS</strong>, <strong class="text-white">App State</strong>, or
-                        raw <strong class="text-white">Source HTML</strong> with instant previews.
-                    </p>
-                </div>
-                <div
-                    class="bg-slate-900/50 p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                    <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i
-                            class="ph ph-share-network text-emerald-400"></i> Cloud Sync (Local)</p>
-                    <p class="text-xs font-sans text-slate-400">Export your entire ecosystem as a single code block or a
-                        .txt file to transfer between devices effortlessly.</p>
-                </div>
-                <div class="bg-red-600/5 p-4 rounded-2xl border border-red-500/20">
-                    <p class="font-bold text-red-400 mb-1 flex items-center gap-2 text-xs uppercase tracking-widest"><i
-                            class="ph ph-warning-circle"></i> Quick Tip</p>
-                    <p class="text-[10px] font-sans text-slate-500">If a site shows a blank screen, it's likely blocking
-                        iframes. Switch that app to <strong>Cloaked Tab</strong> mode in the creator setting m</p>
+                <div>
+                    <h2 class="text-2xl font-bold leading-tight">Changelogs, Help, and Honorable Mentions!</h2>
+                    <p class="text-slate-500 text-[11px] font-sans uppercase tracking-widest">Your central hub for portal news, tips &amp; fame</p>
                 </div>
             </div>
+
+            <!-- Scrollable Content -->
+            <div class="space-y-3 text-slate-300 max-h-[65vh] overflow-y-auto pr-1 mt-5 scroll-section">
+
+                <!-- CHANGELOGS (Dropdown) -->
+                <details class="group bg-gradient-to-br from-blue-950/60 to-slate-900/60 rounded-2xl border border-blue-500/30 overflow-hidden" open>
+                    <summary class="flex items-center justify-between p-5 cursor-pointer list-none select-none">
+                        <p class="font-bold text-blue-300 flex items-center gap-2 text-base"><i class="ph ph-git-commit"></i> Changelogs</p>
+                        <i class="ph ph-caret-down text-blue-400/50 transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-5 pb-5">
+                        <!-- v4.1 April 8 2026 -->
+                        <div class="mb-4">
+                            <p class="text-xs font-bold text-fuchsia-400 uppercase tracking-widest font-sans mb-2 flex items-center gap-1"><i class="ph ph-smiley-wink"></i> v4.1 &mdash; April 8, 2026</p>
+                            <ul class="text-[11px] font-sans text-slate-300 space-y-2 ml-3 list-disc marker:text-fuchsia-400">
+                                <li><b>Emoji Hub & Custom Text</b>: You can now upload local images right into the Emoji Hub to use directly within App Titles and Descriptions! </li>
+                                <li><b>Extreme Performance Boost</b>: Massive memory savings and rendering optimizations for complex app grids using hardware acceleration and visibility observers.</li>
+                            </ul>
+                        </div>
+                        <div class="h-px bg-white/5 my-3"></div>
+
+                    <!-- v4.0 April 7 2026 -->
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-blue-400 uppercase tracking-widest font-sans mb-2 flex items-center gap-1"><i class="ph ph-sparkle"></i> v4.0 &mdash; April 7, 2026 &bull; The Mega Quality-of-Life Update</p>
+                        <ul class="text-[11px] font-sans text-slate-300 space-y-2 ml-3 list-disc marker:text-blue-400">
+                            <li><b>Changelogs, Help &amp; Honorable Mentions</b>: The old boring "Help" button has been completely overhauled with a premium hub. Changelogs live at the top, Help tips are in a collapsible dropdown, and there's a special golden Honorable Mentions section at the bottom.</li>
+                            <li><b>Dev Mode Notice</b>: The bug button now shows a clear dialog about the upcoming external app feature, keeping the UI clean and informative without opening the full dev panel.</li>
+                            <li><b>Dual-Layer Data Persistence</b>: Your apps now save to both localStorage and sessionStorage simultaneously. If localStorage is ever wiped, the session backup kicks in automatically and restores everything &mdash; no more losing your apps!</li>
+                            <li><b>Update Backup File</b>: The Sync modal now has a dedicated button to pick a .txt backup from your files and update it with fresh portal data.</li>
+                            <li><b>Collapsible Help Sections</b>: All the feature tips are now organized into smooth accordion dropdowns so the dialog stays clean and easy to navigate.</li>
+                            <li><b>Code Studio Stability</b>: Fixed edge cases where multiline HTML content could lose newlines, and generally improved the editor's save/close flow stability.</li>
+                        </ul>
+                    </div>
+
+                    <div class="h-px bg-white/5 my-3"></div>
+
+                    <!-- v3.5 Legacy -->
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest font-sans mb-2 flex items-center gap-1"><i class="ph ph-clock-counter-clockwise"></i> v3.5 &mdash; The Fun Edition &amp; Quality-of-Life Update</p>
+                        <ul class="text-[11px] font-sans text-slate-400 space-y-2 ml-3 list-disc marker:text-slate-500">
+                            <li><b>App &amp; Category Duplication</b>: Clone any app or entire folder in one click &mdash; no need to rebuild from scratch. Duplicates appear right next to the original.</li>
+                            <li><b>Format Painter</b>: Copy an app's full visual style (colors, background, glow, opacity) and paint it onto any other app. Supports bulk painting when multiple apps are selected.</li>
+                            <li><b>Custom Favicons</b>: Set a custom icon for your Portal's browser tab. Supports emoji, image URLs, and uploaded image files. The icon travels with Cloaked Tab windows too.</li>
+                            <li><b>Element Inspector</b>: Activate live text editing directly on the portal &mdash; click any visible text to edit it in-place without opening a modal.</li>
+                            <li><b>Multi-Select &amp; Bulk Management</b>: Hold Shift to enter Selection Mode. Tap multiple apps, then use the + button to bulk-edit, move to folders, or delete all at once. The Add button glows to signal an active selection.</li>
+                            <li><b>Fredoka One Typography</b>: Switched the entire portal UI to Fredoka One for a playful, premium feel throughout dialogs, buttons, and menus.</li>
+                            <li><b>Micro-Animations</b>: Added smooth squish and spring effects on cards, buttons, and dialog transitions for a snappier, more responsive feel.</li>
+                            <li><b>Improved Dialogs</b>: All modals now have a clean top-right X close button. Long app names, URLs, and descriptions horizontally scroll so nothing gets cut off.</li>
+                        </ul>
+                    </div>
+                </div>
+                </details>
+
+                <!-- ANNOUNCEMENTS (Dropdown) -->
+                <details class="group bg-slate-900/50 rounded-2xl border border-white/5 overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer list-none hover:bg-white/5 transition-colors select-none">
+                        <p class="font-bold text-white flex items-center gap-2 text-sm"><i class="ph ph-megaphone text-amber-400"></i> Announcements</p>
+                        <i class="ph ph-caret-down text-slate-500 transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-4 pb-4 pt-1">
+                        <div class="bg-amber-600/10 rounded-xl p-3 border border-amber-500/20">
+                            <p class="text-amber-300 font-bold text-xs uppercase tracking-widest mb-1 flex items-center gap-1"><i class="ph ph-info"></i> Status</p>
+                            <p class="text-slate-400 text-[11px] font-sans">THIS PART IS STILL WIP, might take me a bit to make this a real thing but yeah and i know gn-math might not be working and stuff but i cant fix that sadly. (unless its working again!) </p>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- HELP TIPS (Dropdown) -->
+                <details class="group bg-slate-900/50 rounded-2xl border border-white/5 overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer list-none hover:bg-white/5 transition-colors select-none">
+                        <p class="font-bold text-white flex items-center gap-2 text-sm"><i class="ph ph-question text-sky-400"></i> Help?</p>
+                        <i class="ph ph-caret-down text-slate-500 transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-4 pb-4 pt-1 space-y-3">
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700/80">
+                            <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i class="ph ph-smiley-wink text-fuchsia-400"></i> Emoji Hub & Rich Text</p>
+                            <p class="text-xs font-sans text-slate-400">Go to Settings &gt; Experimental Features &gt; <strong class="text-white">Emoji Hub</strong>. Upload local images or add URLs. Once added, type the keyword (e.g. <strong class="text-white">:dog:</strong>) in any App Name or Description to render the custom emoji!</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                            <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i class="ph ph-palette text-pink-400"></i> Advanced App Customization</p>
+                            <p class="text-xs font-sans text-slate-400">Use the <strong class="text-white">Extra Extra Customization</strong> menu to upload local background images, set true glassmorphism opacity, and independently color your icons and text.</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                            <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i class="ph ph-lock text-blue-400"></i> Security &amp; Access</p>
+                            <p class="text-xs font-sans text-slate-400">The <em>admin access</em> link provides a hidden bypass. Use <strong class="text-white">Fast Boot</strong> in settings to skip the login screen on your local device.</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                            <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i class="ph ph-folder-open text-yellow-400"></i> Category Folders</p>
+                            <p class="text-xs font-sans text-slate-400">Categories act as sub-portals. Click the folder icon in the App Creator to make one. You can drag apps onto the <strong>Back</strong> button to move them up one level.</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                            <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i class="ph ph-code text-indigo-400"></i> Code Studio</p>
+                            <p class="text-xs font-sans text-slate-400">Embed your own HTML apps. Use the Dev Sidebar to edit <strong class="text-white">Live CSS</strong>, <strong class="text-white">App State</strong>, or raw <strong class="text-white">Source HTML</strong> with instant previews.</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5">
+                            <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i class="ph ph-share-network text-emerald-400"></i> Cloud Sync (Local)</p>
+                            <p class="text-xs font-sans text-slate-400">Export your entire ecosystem as a single code block or a .txt file to transfer between devices effortlessly.</p>
+                        </div>
+                        <div class="bg-red-600/5 p-3 rounded-xl border border-red-500/20">
+                            <p class="font-bold text-red-400 mb-1 flex items-center gap-2 text-xs uppercase tracking-widest"><i class="ph ph-warning-circle"></i> Quick Tip</p>
+                            <p class="text-[10px] font-sans text-slate-500">If a site shows a blank screen, it's likely blocking iframes. Switch that app to <strong>Cloaked Tab</strong> mode in the creator settings.</p>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- HONORABLE MENTIONS (Dropdown - Always Gold) -->
+                <details class="group rounded-2xl overflow-hidden" style="background: linear-gradient(135deg, rgba(202,138,4,0.15), rgba(161,98,7,0.1)); border: 1px solid rgba(234,179,8,0.35);">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer list-none select-none" style="background: linear-gradient(90deg, rgba(234,179,8,0.08), transparent);">
+                        <p class="font-bold flex items-center gap-2 text-sm" style="color: #fbbf24;"><i class="ph ph-trophy"></i> Honorable Mentions <span style="font-size:10px; opacity:0.6; font-family:sans-serif; font-weight:normal;">&#x2728; Hall of Fame &#x2728;</span></p>
+                        <i class="ph ph-caret-down transition-transform group-open:rotate-180" style="color: #ca8a04;"></i>
+                    </summary>
+                    <div class="px-4 pb-4 pt-1 space-y-3">
+                        <div class="p-3 rounded-xl" style="background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2);">
+                            <p class="font-bold text-sm" style="color: #fde68a;"><u>PROTEIN</u> <b style="color: #2563eb;">SHAKE!</b></p>
+                        </div>
+                        <div class="p-3 rounded-xl" style="background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2);">
+                            <p class="font-bold text-sm" style="color: #fde68a;">I'm at the <span style="color: #ef4444;">CLUBBB!!</span></p>
+                        </div>
+                    </div>
+                </details>
+
+            </div>
+
             <button onclick="closeModal('help-modal')"
-                class="w-full mt-6 py-4 rounded-2xl font-bold bg-slate-800 hover:bg-slate-700 transition-colors border border-white/5">Got
-                it!</button>
+                class="w-full mt-5 py-3 rounded-2xl font-bold bg-slate-800 hover:bg-slate-700 transition-colors border border-white/5 text-sm">Got it!</button>
         </div>
     </div>
 
@@ -2296,6 +2496,15 @@
                     <input type="file" id="sync-file-upload" class="hidden" accept=".txt"
                         onchange="handleSyncFileUpload(event)">
                 </div>
+            </div>
+            <!-- Update Backup File -->
+            <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-500/20 mt-3">
+                <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest font-sans mb-2">Update Existing Backup</p>
+                <button onclick="document.getElementById('sync-update-file').click()"
+                    class="w-full py-3 bg-indigo-600/30 hover:bg-indigo-600/60 rounded-xl font-bold text-sm transition-colors border border-indigo-500/30 flex items-center justify-center gap-2 text-indigo-200"><i
+                        class="ph ph-folder-open"></i> Choose Backup .txt to Overwrite</button>
+                <input type="file" id="sync-update-file" class="hidden" accept=".txt" onchange="handleSyncUpdateFile(event)">
+                <p class="text-[10px] text-indigo-600 font-sans mt-2 text-center">Opens a file from your computer and overwrites it with your current portal data.</p>
             </div>
             <button onclick="closeModal('export-modal')"
                 class="w-full mt-6 py-3 rounded-2xl font-bold bg-transparent text-slate-500 hover:text-white transition-colors">Cancel</button>
@@ -2394,8 +2603,8 @@
             class="ph ph-bug-beetle"></i></button>
     <button class="floating-btn add-btn" onclick="showAdd()" title="Add App"><i
             class="ph ph-plus"></i></button>
-    <button class="floating-btn help-btn" onclick="toggleModal('help-modal')" title="Help"><i
-            class="ph ph-question"></i></button>
+    <button class="floating-btn help-btn" onclick="toggleModal('help-modal')" title="Changelogs, Help & More!"><i
+            class="ph ph-newspaper"></i></button>
     <button class="floating-btn export-btn" onclick="showExport()" title="Sync Data"><i
             class="ph ph-share-network"></i></button>
     <button class="floating-btn settings-btn" onclick="showSettings()" title="Settings"><i
@@ -2455,6 +2664,7 @@
         /* ==========================================================================
            1. CORE STATE & CONSTANTS
            ========================================================================== */
+        let state = { userApps: [], theme: {} };
         const ICONS = [
             'ph-globe', 'ph-game-controller', 'ph-book-open', 'ph-music-notes',
             'ph-video-camera', 'ph-code', 'ph-calculator', 'ph-calendar',
@@ -2487,6 +2697,9 @@
         let addType = 'url';
         let currentCategoryId = null;
         let isSelectMode = false;
+        
+        let saveTimeout = null;
+        let renderRequested = false;
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Shift' && !e.repeat) {
@@ -2554,50 +2767,81 @@
         });
 
         function init() {
-            const config = getDefaultConfig();
-            const storedState = localStorage.getItem('portal-state');
-            
-            if (!storedState) {
-                // Try migration from old keys
-                const oldApps = getStorageItem(STORAGE_KEY_APPS);
-                const oldTheme = getStorageItem(STORAGE_KEY_THEME);
+            console.log("🚀 Portal Initialization Started...");
+            try {
+                const config = getDefaultConfig();
+                let storedState = localStorage.getItem('portal-state');
                 
-                if (oldApps || oldTheme) {
-                    state = {
-                        userApps: oldApps ? JSON.parse(oldApps) : JSON.parse(JSON.stringify(config.defaultApps)),
-                        theme: oldTheme ? JSON.parse(oldTheme) : JSON.parse(JSON.stringify(config.theme))
-                    };
-                } else {
-                    state = JSON.parse(JSON.stringify(config));
+                // Fallback: try sessionStorage if localStorage was cleared
+                if (!storedState) {
+                    const sessionBackup = sessionStorage.getItem('portal-state-session');
+                    if (sessionBackup) {
+                        storedState = sessionBackup;
+                        try { localStorage.setItem('portal-state', storedState); } catch(e) {}
+                    }
                 }
-                commitChanges();
-            } else {
-                state = JSON.parse(storedState);
+                
+                if (!storedState) {
+                    console.log("📝 No saved state found, checking legacy...");
+                    const oldApps = localStorage.getItem('apps');
+                    const oldTheme = localStorage.getItem('theme');
+                    if (oldApps || oldTheme) {
+                        console.log("🚚 Legacy data detected, migrating...");
+                        state = {
+                            userApps: oldApps ? JSON.parse(oldApps) : JSON.parse(JSON.stringify(config.defaultApps)),
+                            theme: oldTheme ? JSON.parse(oldTheme) : JSON.parse(JSON.stringify(config.theme))
+                        };
+                    } else {
+                        state = {
+                            userApps: JSON.parse(JSON.stringify(config.defaultApps || [])),
+                            theme: JSON.parse(JSON.stringify(config.theme || {}))
+                        };
+                    }
+                    commitChanges(true, true);
+                } else {
+                    console.log("💾 Loading saved state...");
+                    state = JSON.parse(storedState);
+                    // Critical Schema Migration
+                    if (!state.userApps) state.userApps = state.defaultApps || JSON.parse(JSON.stringify(config.defaultApps || []));
+                    if (!state.theme) state.theme = JSON.parse(JSON.stringify(config.theme || {}));
+                    if (!state.theme.colors) state.theme.colors = JSON.parse(JSON.stringify(config.theme.colors || {}));
+                    if (!state.theme.customEmojis) state.theme.customEmojis = [];
+                }
+
+                // Cleanup stale keys
+                if (state.theme && state.theme.globalFilters !== undefined) delete state.theme.globalFilters;
+                if (state.theme && state.theme.globalVisuals !== undefined) delete state.theme.globalVisuals;
+                
+                // Verification: Force defaults if apps are missing/corrupted
+                if (!state.userApps || !Array.isArray(state.userApps) || state.userApps.length === 0) {
+                    state.userApps = JSON.parse(JSON.stringify(config.defaultApps || []));
+                }
+
+                if (state.theme.fastBoot) {
+                    document.getElementById('password-modal')?.classList.add('hidden');
+                    document.getElementById('app-container')?.classList.remove('hidden');
+                    document.body.classList.remove('logged-out');
+                }
+
+                // Custom Style Injections
+                const style = document.createElement('style');
+                style.textContent = '.app-card:hover { z-index: 50 !important; }';
+                document.head.appendChild(style);
+
+                console.log("🎨 Applying theme...");
+                applyTheme();
+                
+                console.log("🖼️ Rendering apps...");
+                renderApps();
+
+                if (typeof applyPortalIcon === 'function') applyPortalIcon();
+                if (typeof saveHistory === 'function') saveHistory();
+                
+                console.log("✅ Portal Successfully Initialized");
+            } catch (e) {
+                console.error("❌ CRITICAL INIT ERROR:", e);
+                notify("Portal initialization failed: " + e.message, "error");
             }
-
-            // Remove stale globalFilters/globalVisuals keys if present
-            if (state.theme.globalFilters !== undefined) delete state.theme.globalFilters;
-            if (state.theme.globalVisuals !== undefined) delete state.theme.globalVisuals;
-            
-            // Force defaults if empty (as requested)
-            if (!state.userApps || state.userApps.length === 0) {
-                state.userApps = JSON.parse(JSON.stringify(config.defaultApps));
-                commitChanges();
-            }
-
-            if (state.theme.fastBoot) {
-                document.getElementById('password-modal').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                document.body.classList.remove('logged-out');
-            }
-
-            // Stacking context & hover fix
-            const style = document.createElement('style');
-            style.textContent = '.app-card:hover { z-index: 50 !important; }';
-            document.head.appendChild(style);
-
-            applyTheme();
-            renderApps();
         }
 
         function getDefaultConfig() {
@@ -2627,7 +2871,7 @@
             catch (e) { console.warn("Storage access denied for", key); return null; }
         }
 
-        let state = { userApps: [], theme: {} };
+
 
         // Tree Migration
         function migrateTree() {
@@ -2791,6 +3035,7 @@
             if (isHidden) {
                 modal.classList.remove('hidden');
                 modal.style.display = 'flex';
+                if (id === 'settings-modal' && typeof syncSettingsUI === 'function') syncSettingsUI();
             } else {
                 modal.classList.add('hidden');
                 modal.style.display = 'none';
@@ -3046,6 +3291,8 @@
                             if (container) { 
                                 container.style.filter = ''; 
                                 container.style.opacity = '1'; 
+                                container.style.visibility = 'visible';
+                                container.style.transform = 'scale(1)';
                             }
                         } catch(e) {}
                     }
@@ -3106,7 +3353,7 @@
             const snap = JSON.stringify(state);
             if (historyIndex < historyLogs.length - 1) historyLogs = historyLogs.slice(0, historyIndex + 1);
             historyLogs.push(snap);
-            if (historyLogs.length > 50) historyLogs.shift();
+            if (historyLogs.length > 20) historyLogs.shift(); // Dramatically reduce memory footprint by storing fewer full state snapshots
             historyIndex = historyLogs.length - 1;
             updateHistoryButtons();
         }
@@ -3120,7 +3367,7 @@
             if (historyIndex > 0) {
                 historyIndex--;
                 state = JSON.parse(historyLogs[historyIndex]);
-                commitChanges(false);
+                commitChanges(false, true);
                 applyTheme();
                 applyElementStyles();
                 renderApps();
@@ -3133,7 +3380,7 @@
             if (historyIndex < historyLogs.length - 1) {
                 historyIndex++;
                 state = JSON.parse(historyLogs[historyIndex]);
-                commitChanges(false);
+                commitChanges(false, true);
                 applyTheme();
                 applyElementStyles();
                 renderApps();
@@ -3142,8 +3389,27 @@
             }
         }
 
-        function commitChanges(addToHistory = true) {
-            localStorage.setItem('portal-state', JSON.stringify(state));
+        function commitChanges(addToHistory = true, immediate = false) {
+            if (!state) return;
+            
+            if (!immediate) {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    commitChanges(addToHistory, true);
+                }, 1000); // Wait 1 second before writing to disk
+                return;
+            }
+            
+            const stateJson = JSON.stringify(state);
+            try { localStorage.setItem('portal-state', stateJson); } catch(e) { console.warn('localStorage save failed:', e); }
+            // Backup save: cookies (stores a hash/flag so we can detect if LS was cleared)
+            try {
+                const appsCount = state.userApps ? state.userApps.length : 0;
+                const cookieVal = encodeURIComponent(JSON.stringify({ appsCount, themeColor: (state.theme && state.theme.colors && state.theme.colors.primary) || '#2563eb', ts: Date.now() }));
+                document.cookie = 'portal_backup_meta=' + cookieVal + '; max-age=2592000; path=/';
+                // Also keep a compressed emergency backup in sessionStorage
+                sessionStorage.setItem('portal-state-session', stateJson);
+            } catch(e) { /* cookies may be blocked in some environments */ }
             if (addToHistory) saveHistory();
         }
 
@@ -3163,7 +3429,7 @@
             root.setProperty('--text-dim', colors.textDim || "#94a3b8");
             root.setProperty('--header-color', colors.header || colors.textMain || "#ffffff");
 
-            document.body.style.backgroundImage = state.theme.bgImage ? `url(${state.theme.bgImage})` : 'none';
+            document.body.style.backgroundImage = state.theme.bgImage ? `url('${state.theme.bgImage}')` : 'none';
 
             const devSuffix = state.theme.devMode ? " [DEV]" : "";
             const nameEl = document.getElementById('p-name');
@@ -3176,15 +3442,12 @@
             if (descEl) descEl.innerHTML = state.theme.desc || '';
 
             if (typeof applyElementStyles === 'function') applyElementStyles();
-            // Sync toggles
-            if (typeof updateDevToggleFromState === 'function') updateDevToggleFromState();
-            if (typeof updateFastBootToggleFromState === 'function') updateFastBootToggleFromState();
-            if (typeof updateExitAlertToggleFromState === 'function') updateExitAlertToggleFromState();
-            if (typeof updateCardHoverToggleFromState === 'function') updateCardHoverToggleFromState();
-            if (typeof updateBulkSelectToggleFromState === 'function') updateBulkSelectToggleFromState();
+            // Sync toggles visually only
+            if (typeof applyPerformanceMode === 'function') applyPerformanceMode();
 
             document.body.classList.toggle('dev-mode', !!state.theme.devMode);
             document.body.classList.toggle('hover-effect-on', state.theme.cardHoverEffect !== false);
+            document.body.classList.toggle('perf-mode-enabled', !!state.theme.performanceMode);
             
             // Check for return from cloaked tab
             const urlParams = new URLSearchParams(window.location.search);
@@ -3194,28 +3457,6 @@
                 // Clean up URL
                 const cleanUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
-            }
-
-            const sn = document.getElementById('set-name');
-            const sd = document.getElementById('set-desc');
-            if (sn) sn.value = state.theme.name || '';
-            if (sd) sd.value = state.theme.desc || '';
-
-            const primaryInput = document.getElementById('set-col-primary');
-            if (primaryInput) primaryInput.value = colors.primary || "#2563eb";
-
-
-
-            const extBtn = document.getElementById('external-tab-toggle');
-            if (extBtn) {
-                if (state.theme.alwaysOpenNewTab) extBtn.classList.add('dev-toggle-on');
-                else extBtn.classList.remove('dev-toggle-on');
-            }
-
-            const hdBtn = document.getElementById('hold-drag-toggle');
-            if (hdBtn) {
-                if (state.theme.holdAndDrag) hdBtn.classList.add('dev-toggle-on');
-                else hdBtn.classList.remove('dev-toggle-on');
             }
 
             const nav = document.getElementById('movable-menu');
@@ -3229,6 +3470,38 @@
                 const isRight = state.theme.menuPos.left && parseInt(state.theme.menuPos.left) > window.innerWidth / 2;
                 nav.classList.toggle('top-positioned', isTop);
                 nav.classList.toggle('right-positioned', isRight);
+            }
+        }
+
+        function syncSettingsUI() {
+            if (!state || !state.theme) return;
+            const colors = state.theme.colors || {};
+
+            // Batch update toggles to avoid repeated calls to the same function
+            if (typeof updateDevToggleFromState === 'function') updateDevToggleFromState();
+            if (typeof updateFocusMode === 'function') updateFocusMode();
+            if (typeof updateFastBootToggleFromState === 'function') updateFastBootToggleFromState();
+            if (typeof updateExitAlertToggleFromState === 'function') updateExitAlertToggleFromState();
+            if (typeof updateCardHoverToggleFromState === 'function') updateCardHoverToggleFromState();
+            if (typeof updateBulkSelectToggleFromState === 'function') updateBulkSelectToggleFromState();
+            if (typeof updatePerformanceModeToggleFromState === 'function') updatePerformanceModeToggleFromState();
+
+            const sn = document.getElementById('set-name');
+            const sd = document.getElementById('set-desc');
+            const scp = document.getElementById('set-col-primary');
+            if (sn) sn.value = state.theme.name || '';
+            if (sd) sd.value = state.theme.desc || '';
+            if (scp) scp.value = colors.primary || "#2563eb";
+            
+            const et = document.getElementById('external-tab-toggle');
+            if (et) {
+                if (state.theme.alwaysOpenNewTab) et.classList.add('dev-toggle-on');
+                else et.classList.remove('dev-toggle-on');
+            }
+            const hd = document.getElementById('hold-drag-toggle');
+            if (hd) {
+                if (state.theme.holdAndDrag) hd.classList.add('dev-toggle-on');
+                else hd.classList.remove('dev-toggle-on');
             }
         }
 
@@ -3288,11 +3561,17 @@
             return list;
         }
 
-        function renderApps() {
-            const grid = document.getElementById('apps-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-            const currentList = getCurrentList() || [];
+        function renderApps(forceClearCache = false) {
+            if (renderRequested) return; // Debounce multiple rapid render requests
+            renderRequested = true;
+            
+            requestAnimationFrame(() => {
+                if (forceClearCache && typeof emojiCache !== 'undefined' && emojiCache.clear) emojiCache.clear();
+                
+                const grid = document.getElementById('apps-grid');
+                if (!grid) return;
+                grid.innerHTML = '';
+                const currentList = getCurrentList() || [];
 
             if (currentPath.length > 0) {
                 const backCard = document.createElement('div');
@@ -3392,14 +3671,17 @@
                     <div style="opacity: ${iconOpacity}; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%;">
                         ${isSelected ? `<div class="absolute top-4 left-4 w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white scale-125 shadow-[0_0_20px_rgba(59,130,246,0.8)] z-50 border-2 border-white"><i class="ph ph-check text-2xl font-bold"></i></div>` : ''}
                         ${iconHtml}
-                        <h3 class="text-2xl font-bold transition-colors" style="${nameStyle}">${app.name}</h3>
-                        <p class="text-sm mt-2 font-sans tracking-wide transition-colors" style="${descStyle}">${app.desc || ''}</p>
-                        ${app.creator ? `<span class="absolute bottom-3 left-4 text-[8px] font-sans uppercase tracking-[0.15em] transition-colors pointer-events-none group-hover:opacity-100" style="${creatorStyle}">by ${app.creator}</span>` : ''}
+                        <h3 class="text-2xl font-bold transition-colors" style="${nameStyle}">${renderTextWithEmojis(app.name)}</h3>
+                        <p class="text-sm mt-2 font-sans tracking-wide transition-colors" style="${descStyle}">${renderTextWithEmojis(app.desc || '')}</p>
+                        ${app.creator ? `<span class="absolute bottom-3 left-4 text-[8px] font-sans uppercase tracking-[0.15em] transition-colors pointer-events-none group-hover:opacity-100" style="${creatorStyle}">by ${renderTextWithEmojis(app.creator)}</span>` : ''}
                     </div>
                 `;
                 grid.appendChild(card);
             });
-        }
+            // Frame Isolation: Only allow new renders AFTER the last one is painted
+            setTimeout(() => { renderRequested = false; }, 0);
+        });
+    }
 
         let dragState = null;
         let currentOptionsAppId = null;
@@ -4218,10 +4500,23 @@
                 state.theme.portalPassword = currentPassword;
                 state.theme.devMode = currentDevMode;
                 state.theme.fastBoot = currentFastBoot;
+                state.theme.customEmojis = currentEmojis; // Protect user emojis
 
-                commitChanges();
+                commitChanges(true, true);
                 applyTheme();
-                notify("Theme reset to last saved state", "info");
+                renderApps();
+                notify("Theme reset (Emojis preserved!)", "success", "ph-palette");
+            }
+        }
+
+        async function resetEmojis() {
+            const ok = await portalConfirm("Are you sure you want to wipe ALL custom emojis? This cannot be undone.", "ph-smiley-blank", "fuchsia");
+            if (ok) {
+                state.theme.customEmojis = [];
+                commitChanges(true, true);
+                if (typeof emojiCache !== 'undefined') emojiCache.clear();
+                renderApps();
+                notify("All emojis wiped", "error", "ph-trash");
             }
         }
 
@@ -4231,7 +4526,7 @@
                 state.userApps = [];
                 localStorage.removeItem(STORAGE_KEY_APPS);
                 // Remove the key so next load the isFirstTime check repopulates defaults
-                commitChanges();
+                commitChanges(true, true);
                 renderApps();
                 notify("Apps wiped. Refresh for defaults.", "info");
             }
@@ -4250,7 +4545,7 @@
                 state.theme.fastBoot = currentFastBoot;
                 state.userApps = [];
 
-                commitChanges();
+                commitChanges(true, true);
                 // Remove the apps storage key so default apps reload on next visit
                 try { localStorage.removeItem(STORAGE_KEY_APPS); } catch(e) {}
                 applyTheme();
@@ -4264,6 +4559,11 @@
         function showExport() {
             document.getElementById('sync-code-area').value = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
             document.getElementById('import-code-area').value = '';
+            // Reset sync-naming modal state
+            const choice = document.getElementById('sync-naming-choice');
+            const inputGroup = document.getElementById('sync-naming-input-group');
+            if (choice) choice.classList.remove('hidden');
+            if (inputGroup) inputGroup.classList.add('hidden');
             toggleModal('export-modal');
         }
 
@@ -4314,6 +4614,25 @@
             e.target.value = null;
         }
 
+        function handleSyncUpdateFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            // Generate fresh export data
+            const freshCode = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+            const blob = new Blob([freshCode], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            // Use the same filename the user picked
+            a.download = file.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            notify('Backup updated: ' + file.name, 'success', 'ph-file-arrow-up');
+            e.target.value = null;
+        }
+
         function copySyncCode() {
             navigator.clipboard.writeText(document.getElementById('sync-code-area').value).then(() => {
                 notify("Copied!", "success");
@@ -4340,19 +4659,6 @@
 
                 commitChanges(); applyTheme(); renderApps(); notify("Imported!", "success"); closeModal('export-modal');
             } catch (e) { notify("Invalid code", "error"); }
-        }
-
-        function toggleModal(id) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const isHidden = el.classList.contains('hidden') || el.style.display === 'none';
-            if (isHidden) {
-                el.classList.remove('hidden');
-                el.style.display = 'flex';
-            } else {
-                el.classList.add('hidden');
-                el.style.display = 'none';
-            }
         }
 
         function updateDevToggleFromState() {
@@ -4411,6 +4717,13 @@
             const btn = document.getElementById('bulk-select-toggle');
             if (!btn) return;
             if (state.theme.enableBulkSelect) btn.classList.add('dev-toggle-on');
+            else btn.classList.remove('dev-toggle-on');
+        }
+
+        function updatePerformanceModeToggleFromState() {
+            const btn = document.getElementById('perf-mode-toggle');
+            if (!btn) return;
+            if (state.theme.performanceMode) btn.classList.add('dev-toggle-on');
             else btn.classList.remove('dev-toggle-on');
         }
 
@@ -4513,6 +4826,10 @@
             colors.header = document.getElementById('theme-col-header').value || colors.header;
             state.theme.colors = colors;
             commitChanges(); applyTheme(); closeModal('theme-modal'); notify("Theme updated!", "success");
+        }
+
+        function showDevNotice() {
+            portalConfirm("This is going to be an external app (it'll be like an HTML app, but not inside the portal - completely standalone)!", 'ph-rocket-launch', 'blue', 'awh, okay..', null).then(() => {});
         }
 
         function openDevTools() {
@@ -4955,20 +5272,31 @@
                 const cancelBtn = document.getElementById('pd-cancel-btn');
                 const inputGroup = document.getElementById('pd-input-group');
 
-                message.textContent = msg;
-                title.textContent = "Please Confirm";
-                okBtn.textContent = okText;
-                cancelBtn.textContent = cancelText;
+                if (!modal || !okBtn) {
+                    console.error("❌ Portal Dialog elements missing!");
+                    alert(msg); // Emergency fallback
+                    resolve(true);
+                    return;
+                }
 
-                const isHex = color.startsWith('#');
-                if (isHex) {
+                if (message) message.textContent = msg;
+                if (title) title.textContent = "Please Confirm";
+                if (okBtn) okBtn.textContent = okText;
+                if (cancelBtn) {
+                    cancelBtn.textContent = cancelText;
+                    if (!cancelText) cancelBtn.classList.add('hidden');
+                    else cancelBtn.classList.remove('hidden');
+                }
+
+                const isHex = (color && color.startsWith('#'));
+                if (isHex && iconContainer) {
                     iconContainer.className = `w-20 h-20 rounded-3xl mx-auto mb-8 flex items-center justify-center overflow-hidden`;
                     iconContainer.style.background = `${color}20`;
                     iconContainer.style.color = color;
                     iconContainer.style.borderColor = `${color}40`;
                     iconContainer.style.borderWidth = '1px';
                     iconContainer.style.borderStyle = 'solid';
-                } else {
+                } else if (iconContainer) {
                     iconContainer.className = `w-20 h-20 rounded-3xl mx-auto mb-8 flex items-center justify-center bg-${color}-600/20 text-${color}-400 border border-${color}-500/30 overflow-hidden`;
                     iconContainer.style = '';
                 }
@@ -4980,7 +5308,11 @@
                 }
 
                 inputGroup.classList.add('hidden');
-                cancelBtn.classList.remove('hidden');
+                if (!cancelText) {
+                    cancelBtn.classList.add('hidden');
+                } else {
+                    cancelBtn.classList.remove('hidden');
+                }
                 modal.classList.remove('hidden');
                 modal.style.display = 'flex';
 
@@ -5114,22 +5446,35 @@
         }
 
         function showSettings() {
-            document.getElementById('set-name').value = state.theme.name || '';
-            document.getElementById('set-desc').value = state.theme.desc || '';
-            document.getElementById('set-col-primary').value = (state.theme.colors && state.theme.colors.primary) || '#2563eb';
+            syncSettingsUI(); 
             toggleModal('settings-modal');
         }
 
         function saveSettings() {
-            const nameInput = document.getElementById('set-name').value;
-            const descInput = document.getElementById('set-desc').value;
-            const primaryInput = document.getElementById('set-col-primary').value;
-            state.theme.name = nameInput;
-            state.theme.desc = descInput;
-            if (primaryInput) {
-                state.theme.colors.primary = primaryInput;
+            try {
+                const nameInput = document.getElementById('set-name')?.value;
+                const descInput = document.getElementById('set-desc')?.value;
+                const primaryInput = document.getElementById('set-col-primary')?.value;
+                
+                if (!state.theme) state.theme = {};
+                if (!state.theme.colors) state.theme.colors = { primary: "#2563eb" };
+                
+                state.theme.name = nameInput || state.theme.name || "⚡Portal⚡";
+                state.theme.desc = (descInput !== undefined) ? descInput : state.theme.desc;
+                if (primaryInput) {
+                    state.theme.colors.primary = primaryInput;
+                }
+                
+                commitChanges(true, true); // Immediate save to prevent data loss 
+                applyTheme(); 
+                if (typeof emojiCache !== 'undefined') emojiCache.clear(); 
+                renderApps();
+                closeModal('settings-modal'); 
+                notify("Settings Saved", "success", "ph-check-circle");
+            } catch (e) {
+                console.error("Save Error:", e);
+                notify("Failed to save settings: " + e.message, "error");
             }
-            commitChanges(); applyTheme(); closeModal('settings-modal'); notify("Saved", "success");
         }
 
         function showAdd() {
@@ -5329,7 +5674,7 @@
                             <button onclick="smartRefresh()" style="background:#334155;color:white;padding:16px 32px;border-radius:16px;font-size:16px;font-weight:bold;cursor:pointer;border:none;transition:0.3s;">Refresh App</button>
                         </div>
                     </div>`;
-                }, 5000);
+                }, 25000); // Increased timeout to 25s for better reliability per user request
             }
 
             if (currentApp.isHtml) f.srcdoc = currentApp.content; else f.src = currentApp.content;
@@ -5338,6 +5683,14 @@
             container.style.display = 'flex';
             container.classList.add('animate-open');
             if (menu) menu.style.display = 'block';
+            const appContainer = document.getElementById('app-container');
+            if (appContainer) { 
+                appContainer.style.opacity = '0';
+                appContainer.style.visibility = 'hidden';
+                appContainer.style.pointerEvents = 'none'; 
+                appContainer.style.transform = 'scale(1.05)';
+                document.body.style.backgroundImage = 'none'; 
+            }
 
             container.addEventListener('animationend', () => { container.classList.remove('animate-open'); }, { once: true });
             closeModal('choice-modal');
@@ -5355,19 +5708,23 @@
             const container = document.getElementById('fullscreen-container');
             const menu = document.getElementById('movable-menu');
             
-            // Reset Background Visuals (Focus Mode Safety)
+            // Instant Cleanup (Butter-Smooth "Mechanical" Feel)
+            container.style.display = 'none'; 
+            if (menu) menu.style.display = 'none';
+            container.classList.remove('animate-open', 'animate-close');
+            document.getElementById('dynamic-iframe-slot').innerHTML = '';
+
             const appContainer = document.getElementById('app-container');
             if (appContainer) { 
-                appContainer.style.filter = ''; 
+                appContainer.style.display = '';
+                appContainer.style.visibility = 'visible';
                 appContainer.style.opacity = '1'; 
+                appContainer.style.pointerEvents = 'auto';
+                appContainer.style.transform = 'scale(1)';
+                appContainer.style.filter = ''; 
+                applyTheme(); 
             }
 
-            container.classList.add('animate-close');
-            setTimeout(() => {
-                container.style.display = 'none'; menu.style.display = 'none';
-                container.classList.remove('animate-open', 'animate-close');
-                document.getElementById('dynamic-iframe-slot').innerHTML = '';
-            }, 400); // Slightly longer for smoother tween
             notify(`You Returned To: ${state.theme.name || "Portal"}`, "success", "ph-house-line");
         }
 
@@ -5425,11 +5782,13 @@
         }
 
         function updateFocusMode(el) {
-            // Dims the BG container behind the iframe
-            const val = parseInt(el.value);
+            // Dims the BG container using hardware-accelerated properties instead of expensive filters
+            if (!el) el = document.getElementById('focus-slider') || { value: 0 }; 
+            const val = parseInt(el.value) || 0;
             const container = document.getElementById('app-container');
             if (container) {
-                container.style.filter = val > 0 ? `brightness(${100 - val}%)` : '';
+                container.style.backgroundColor = val > 0 ? `rgba(0,0,0,${val / 100})` : '';
+                container.style.backdropFilter = val > 0 ? 'none' : '';
             }
         }
 
@@ -5824,7 +6183,7 @@
         function openCodeStudio(mode, initialContent, source) {
             codeStudioSource = source;
             const titleEl = document.getElementById('code-studio-title');
-            const titles = { css: 'Edit Live CSS', json: 'Edit App State', html: 'Edit Source HTML', 'add-html': 'Edit HTML (App)', 'html_full': 'Full Portal HTML' };
+            const titles = { css: 'Edit Live CSS', state: 'Edit App State', html: 'Edit Source HTML', 'add-html': 'Edit HTML (App)', 'html_full': 'Full Portal HTML' };
             if (titleEl) titleEl.textContent = titles[source] || 'Code Studio';
             const iframe = document.getElementById('code-studio-iframe');
             if (!iframe) return;
@@ -5877,7 +6236,7 @@ function updateLn(){
   const lines=ed.value.split('\\n').length;
   ln.textContent=Array.from({length:lines},(_,i)=>i+1).join('\\n');
 }
-ed.value=${JSON.stringify(safeContent)};
+ed.value=${JSON.stringify(safeContent).replace(/</g, '\\u003c')};
 updateLn();
 ed.addEventListener('input',updateLn);
 ed.addEventListener('scroll',()=>{ln.scrollTop=ed.scrollTop;});
@@ -5950,6 +6309,239 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 document.body.classList.remove('ghost-active');
         });
 
+        /* ==========================================================================
+           10. EMOJI HUB & RICH TEXT
+           ========================================================================== */
+        
+        function openEmojiHub() {
+            renderEmojiHub();
+            toggleModal('emoji-hub-modal');
+        }
+
+        function renderEmojiHub() {
+            const list = document.getElementById('emoji-hub-list');
+            if (!list) return;
+            list.innerHTML = '';
+            const emojis = state.theme.customEmojis || [];
+            
+            if (emojis.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 font-bold text-center col-span-2 sm:col-span-3 py-6 uppercase tracking-widest text-xs">No emojis added yet</p>';
+                return;
+            }
+
+            emojis.forEach((em, idx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-black/60 border border-white/5 p-4 rounded-xl flex items-center justify-between group relative hover:border-fuchsia-500/30 transition-colors';
+                
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${em.url}" class="h-8 w-auto max-w-[4rem] rounded object-cover" alt="emoji">
+                        <span class="font-mono text-xs text-fuchsia-300 font-bold">${em.keyword}</span>
+                    </div>
+                    <div class="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="openEmojiOptions(${idx})" class="p-1.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all active:scale-90">
+                            <i class="ph ph-dots-three-vertical text-xl"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function addCustomEmoji() {
+            let kw = document.getElementById('emoji-keyword-input').value.trim();
+            const url = document.getElementById('emoji-url-input').value.trim();
+            
+            if (!kw || !url) {
+                notify("Missing keyword or URL", "error");
+                return;
+            }
+            if (!kw.startsWith(':')) kw = ':' + kw;
+            if (!kw.endsWith(':')) kw = kw + ':';
+
+            if (!state.theme.customEmojis) state.theme.customEmojis = [];
+            
+            const existingIdx = state.theme.customEmojis.findIndex(e => e.keyword === kw);
+            if (existingIdx !== -1) {
+                state.theme.customEmojis[existingIdx].url = url;
+                notify("Updated emoji " + kw, "success", "ph-check");
+            } else {
+                state.theme.customEmojis.push({ keyword: kw, url: url });
+                notify("Added emoji " + kw, "success", "ph-check");
+            }
+
+            document.getElementById('emoji-keyword-input').value = '';
+            document.getElementById('emoji-url-input').value = '';
+            
+            commitChanges();
+            renderEmojiHub();
+        }
+
+        function deleteCustomEmoji(idx) {
+            if (!state.theme.customEmojis) return;
+            state.theme.customEmojis.splice(idx, 1);
+            notify("Emoji deleted", "info", "ph-trash");
+            commitChanges();
+            renderEmojiHub();
+        }
+
+        let currentEmojiOptionIndex = null;
+        function openEmojiOptions(idx) {
+            currentEmojiOptionIndex = idx;
+            const em = (state.theme.customEmojis || [])[idx];
+            if (!em) return;
+            document.getElementById('emoji-options-title').textContent = em.keyword;
+            toggleModal('emoji-options-modal');
+        }
+
+        function handleEmojiOptionAction(action) {
+            const idx = currentEmojiOptionIndex;
+            const emojis = state.theme.customEmojis || [];
+            const em = emojis[idx];
+            if (!em) return;
+
+            if (action === 'edit') {
+                document.getElementById('emoji-keyword-input').value = em.keyword;
+                document.getElementById('emoji-url-input').value = em.url;
+                closeModal('emoji-options-modal');
+                document.getElementById('emoji-keyword-input').focus();
+            } else if (action === 'copy-keyword') {
+                copyCustomEmoji(em.keyword);
+                closeModal('emoji-options-modal');
+            } else if (action === 'copy-html') {
+                copyEmojiAsHtml(em.keyword);
+                closeModal('emoji-options-modal');
+            } else if (action === 'delete') {
+                deleteCustomEmoji(idx);
+                closeModal('emoji-options-modal');
+            }
+        }
+
+        function togglePerformanceMode() {
+            state.theme.performanceMode = !state.theme.performanceMode;
+            applyPerformanceMode();
+            commitChanges();
+            notify("Performance Mode " + (state.theme.performanceMode ? "ON" : "OFF"), "info");
+        }
+
+        function applyPerformanceMode() {
+            const active = state.theme.performanceMode;
+            document.body.classList.toggle('perf-mode', !!active);
+            const btn = document.getElementById('perf-mode-toggle');
+            if (btn) btn.classList.toggle('dev-toggle-on', !!active); // Visual fix: use dev-toggle-on
+            if (typeof emojiCache !== 'undefined' && emojiCache.clear) emojiCache.clear(); 
+        }
+
+        function editCustomEmoji(idx) { // Legacy call shim
+            openEmojiOptions(idx);
+        }
+
+        function copyEmojiAsHtml(kw) {
+            const em = (state.theme.customEmojis || []).find(e => e.keyword === kw);
+            if (!em) return;
+            const tag = `<img src="${em.url}" alt="${em.keyword}" style="height:1.2em; width:auto; max-width:3em; object-fit:cover; border-radius:4px; display:inline-block; vertical-align:-0.2em; margin:0 2px;">`;
+            navigator.clipboard.writeText(tag);
+            notify("Copied HTML Tag!", "success", "ph-code");
+        }
+
+        function copyCustomEmoji(kw) {
+            navigator.clipboard.writeText(kw);
+            notify("Copied " + kw, "success", "ph-copy");
+        }
+
+        function handleEmojiFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // PERFORMANCE: If it's an animated GIF, skip canvas processing to preserve frames
+            if (file.type === 'image/gif') {
+                if (file.size > 1024 * 1024) { // 1MB limit for GIFs to prevent storage crash
+                    notify("GIF too large (>1MB). Try a smaller one.", "error");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('emoji-url-input').value = e.target.result;
+                    notify("Animated GIF loaded!", "success", "ph-play");
+                };
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX = 64; // Further reduced from 96px to 64px for ~2x memory savings
+                    let width = img.width;
+                    let height = img.height;
+                    const mode = document.getElementById('emoji-crop-mode').value;
+                    const ctx = canvas.getContext('2d');
+                    
+                    if (mode === 'crop') {
+                        const size = Math.min(width, height);
+                        canvas.width = MAX; canvas.height = MAX;
+                        ctx.drawImage(img, (width - size)/2, (height - size)/2, size, size, 0, 0, MAX, MAX);
+                    } else {
+                        if (width > height) {
+                            if (width > MAX) { height = height * (MAX / width); width = MAX; }
+                        } else {
+                            if (height > MAX) { width = width * (MAX / height); height = MAX; }
+                        }
+                        canvas.width = width; canvas.height = Math.floor(height);
+                        ctx.drawImage(img, 0, 0, width, height);
+                    }
+                    // PERFORMANCE: Use webp (0.7 quality) for transparency + massive compression gains
+                    document.getElementById('emoji-url-input').value = canvas.toDataURL('image/webp', 0.7);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        const emojiCache = new Map(); // PERFORMANCE: Cache emoji-rendered strings to avoid layout/regex thrashing
+        function renderTextWithEmojis(text) {
+            if (!text || typeof text !== 'string') return text;
+            const emojis = state.theme.customEmojis || [];
+            if (emojis.length === 0) return text;
+            
+            const cacheKey = `${text}_${emojis.length}_${state.theme.performanceMode || 'off'}`;
+            if (emojiCache.has(cacheKey)) return emojiCache.get(cacheKey);
+
+            let result = text;
+            emojis.forEach(em => {
+                const imgTag = `<img src="${em.url}" alt="${em.keyword}" loading="lazy" style="height:1.2em; width:auto; max-width:3em; object-fit:cover; border-radius:4px; display:inline-block; vertical-align:-0.2em; margin:0 2px;">`;
+                result = result.split(em.keyword).join(imgTag);
+            });
+            
+            if (emojiCache.size > 500) emojiCache.clear(); // Keep cache healthy
+            emojiCache.set(cacheKey, result);
+            return result;
+        }
+        
+        function applyEmojiWatcher(element) {
+            if (!element) return;
+            const previewDivId = element.id + '-emoji-preview';
+            let previewDiv = document.getElementById(previewDivId);
+            if (!previewDiv) {
+                previewDiv = document.createElement('div');
+                previewDiv.id = previewDivId;
+                previewDiv.className = 'text-xs text-white mt-2 p-2 bg-black/60 border border-fuchsia-500/30 rounded-lg hidden animate-pop-in';
+                element.parentNode.insertBefore(previewDiv, element.nextSibling);
+            }
+            
+            element.addEventListener('input', () => {
+                const val = element.value;
+                if (state.theme.customEmojis && state.theme.customEmojis.some(e => val.includes(e.keyword))) {
+                    previewDiv.innerHTML = '<span class="text-fuchsia-400/80 mr-2 uppercase tracking-widest" style="font-size:10px;">Emoji Preview:</span>' + renderTextWithEmojis(val);
+                    previewDiv.classList.remove('hidden');
+                } else {
+                    previewDiv.classList.add('hidden');
+                }
+            });
+        }
+
         try {
             window.undo = undo; window.redo = redo; window.showAdd = showAdd; window.saveAsDefaults = saveAsDefaults;
             window.toggleModal = toggleModal; window.closeModal = closeModal; window.showExport = showExport;
@@ -5958,11 +6550,12 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             window.resetThemeOnly = resetThemeOnly; window.resetAppsOnly = resetAppsOnly; window.resetEverything = resetEverything;
             window.copySyncCode = copySyncCode; window.importSyncCode = importSyncCode; window.downloadSyncFile = downloadSyncFile;
             window.handleSyncFileUpload = handleSyncFileUpload; window.toggleExternalTab = toggleExternalTab;
-            window.toggleExitAlert = toggleExitAlert; window.openThemeEditor = openThemeEditor; window.saveThemeColors =
-                saveThemeColors;
+            window.toggleExitAlert = toggleExitAlert; window.openThemeEditor = openThemeEditor; window.saveThemeColors = saveThemeColors;
             window.openDevTools = openDevTools; window.toggleDevMode = toggleDevMode; window.toggleDevSetting = toggleDevSetting;
             window.toggleFastBoot = toggleFastBoot; window.toggleFs = toggleFs;
             window.toggleCardHoverEffect = toggleCardHoverEffect; window.toggleBulkSelectSetting = toggleBulkSelectSetting;
+            window.resetEmojis = resetEmojis; window.saveSettings = saveSettings; 
+            window.togglePerformanceMode = togglePerformanceMode;
             window.smartRefresh = smartRefresh; window.hideUI = hideUI; window.openCodeStudio = openCodeStudio;
             window.openCodeStudioForAddHtml = openCodeStudioForAddHtml; window.openLiveHTMLEditor = openLiveHTMLEditor;
             window.openFullPortalHTMLEditor = openFullPortalHTMLEditor; window.getLiveCssContent = getLiveCssContent;
@@ -5977,11 +6570,18 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             window.resetFilters = resetFilters; window.toggleFxCustom = toggleFxCustom;
             window.updateFilters = updateFilters; window.toggleAppControls = toggleAppControls;
             window.updateFocusMode = updateFocusMode;
+            window.handleSyncUpdateFile = handleSyncUpdateFile; window.showDevNotice = showDevNotice;
+            
+            window.openEmojiHub = openEmojiHub; window.addCustomEmoji = addCustomEmoji;
+            window.deleteCustomEmoji = deleteCustomEmoji; window.copyCustomEmoji = copyCustomEmoji;
+            window.editCustomEmoji = editCustomEmoji; window.copyEmojiAsHtml = copyEmojiAsHtml;
+            window.togglePerformanceMode = togglePerformanceMode; window.handleEmojiOptionAction = handleEmojiOptionAction;
+            window.openEmojiOptions = openEmojiOptions;
         } catch (e) {
             console.error("Error assigning functions to window:", e);
         }
 
-        init(); saveHistory(); applyPortalIcon(); applyTheme(); renderApps();
+        init();
     </script>
 </body>
 
