@@ -89,6 +89,13 @@
         /* Layout Setup */
         .custom-dialog {
             will-change: transform;
+            background: var(--dialog-bg);
+        }
+
+        .scroll-section {
+            transform: translateZ(0);
+            will-change: transform;
+            contain: paint;
         }
 
         html,
@@ -1908,7 +1915,7 @@
     <div id="settings-modal" class="fixed inset-0 z-[1700] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('settings-modal')"></div>
-        <div class="relative z-10 custom-dialog rounded-[2rem] max-w-2xl w-full text-white flex flex-col" style="max-height:90vh;">
+        <div class="relative z-10 custom-dialog rounded-[2rem] max-w-2xl w-full text-white flex flex-col" style="max-height:90vh; background: var(--dialog-bg);">
 
             <!-- Settings Header — changes based on active section -->
             <div class="flex items-center gap-3 p-6 pb-4 border-b border-white/5 shrink-0">
@@ -2938,7 +2945,7 @@
     <div id="help-modal" class="fixed inset-0 z-[1900] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('help-modal')"></div>
-        <div class="relative custom-dialog rounded-[2rem] max-w-xl w-full text-white p-8">
+        <div class="relative custom-dialog rounded-[2rem] max-w-xl w-full text-white p-8" style="background: var(--dialog-bg);">
             <!-- X Close Button -->
             <button onclick="closeModal('help-modal')"
                 class="absolute top-5 right-5 text-slate-500 hover:text-white transition-colors z-10">
@@ -3142,7 +3149,7 @@
     <div id="legacy-updates-modal" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('legacy-updates-modal')"></div>
-        <div class="relative custom-dialog rounded-[2rem] max-w-xl w-full text-white p-8" style="max-height:88vh;display:flex;flex-direction:column;">
+        <div class="relative custom-dialog rounded-[2rem] max-w-xl w-full text-white p-8" style="max-height:88vh;display:flex;flex-direction:column; background: var(--dialog-bg);">
             <!-- Header -->
             <div class="flex items-center gap-3 mb-5 shrink-0">
                 <button onclick="closeModal('legacy-updates-modal')"
@@ -3163,7 +3170,7 @@
             <div class="overflow-y-auto flex-1 scroll-section space-y-5 pr-1">
 
                 <!-- v4.4 April 16 2026 -->
-                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg); content-visibility:auto; contain-intrinsic-size:auto 200px">
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
                     <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
                         style="color:var(--secondary-color)">
                         <i class="ph ph-rocket-launch"></i> v4.4 &mdash; The UI Polish & Mobile Update!
@@ -3178,7 +3185,7 @@
                 </div>
 
                 <!-- v4.3 April 15 2026 -->
-                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg); content-visibility:auto; contain-intrinsic-size:auto 200px">
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
                     <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
                         style="color:var(--secondary-color)">
                         <i class="ph ph-rocket-launch"></i> v4.3 &mdash; The Stability & Fixes Patch!
@@ -3193,7 +3200,7 @@
                 </div>
 
                 <!-- v4.2 April 14-16 2026 -->
-                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg); content-visibility:auto; contain-intrinsic-size:auto 200px">
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
                     <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
                         style="color:var(--secondary-color)">
                         <i class="ph ph-rocket-launch"></i> v4.2 &mdash; April 14–16, 2026 &bull; The Theme Engine &amp; Cloaking Overhaul!
@@ -3214,7 +3221,7 @@
                 </div>
 
                 <!-- v4.1 -->
-                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg); content-visibility:auto; contain-intrinsic-size:auto 200px">
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
                     <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
                         style="color:var(--secondary-color)">
                         <i class="ph ph-smiley-wink"></i> v4.1 &mdash; April 8–9, 2026 &bull; The Theme Engine Update
@@ -3228,7 +3235,7 @@
                 </div>
 
                 <!-- v4.0 -->
-                <div class="rounded-2xl border border-blue-500/15 p-4" style="background:var(--card-bg); content-visibility:auto; contain-intrinsic-size:auto 200px">
+                <div class="rounded-2xl border border-blue-500/15 p-4" style="background:var(--card-bg);">
                     <p class="text-xs font-bold text-blue-400 uppercase tracking-widest font-sans mb-3 flex items-center gap-2">
                         <i class="ph ph-sparkle"></i> v4.0 &mdash; April 7, 2026 &bull; The Mega Quality-of-Life Update
                     </p>
@@ -3242,7 +3249,7 @@
                 </div>
 
                 <!-- v3.5 -->
-                <div class="rounded-2xl border border-white/5 p-4" style="background:var(--card-bg); content-visibility:auto; contain-intrinsic-size:auto 200px">
+                <div class="rounded-2xl border border-white/5 p-4" style="background:var(--card-bg);">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest font-sans mb-3 flex items-center gap-2">
                         <i class="ph ph-clock-counter-clockwise"></i> v3.5 &mdash; The Fun Edition &amp; QoL Update
                     </p>
