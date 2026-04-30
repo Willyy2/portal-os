@@ -247,8 +247,8 @@
         /* --- PERFORMANCE MODE OVERRIDES --- */
         body.perf-mode * {
             backdrop-filter: none !important;
-            animation-duration: 0.1s !important;
-            transition-duration: 0.1s !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
         }
 
         body.perf-mode .app-card {
@@ -1607,9 +1607,10 @@
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-wider font-sans">App Icon
                 (Glyph/URL)</label>
             <div class="flex gap-2">
-                <input type="text" id="element-app-icon" placeholder="ph-bug-beetle or https://..."
-                    class="flex-1 border rounded-xl px-4 py-3 outline-none transition-colors text-xs font-mono focus:border-amber-500"
-                    style="background: color-mix(in srgb, var(--primary-color) 5%, rgba(0,0,0,0.4)); border-color: color-mix(in srgb, var(--primary-color) 20%, rgba(255,255,255,0.1));">
+                <input type="hidden" id="element-app-icon">
+                <button onclick="openImagePicker(document.getElementById('element-app-icon').value, val => { document.getElementById('element-app-icon').value = val; document.getElementById('element-app-icon-preview').className = val ? 'ph ph-image text-sky-400' : 'ph ph-bug-beetle'; })" type="button" class="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-xs text-slate-300 transition-colors border border-white/10 flex items-center justify-center gap-2" style="background: color-mix(in srgb, var(--primary-color) 5%, rgba(0,0,0,0.4)); border-color: color-mix(in srgb, var(--primary-color) 20%, rgba(255,255,255,0.1));">
+                    <i id="element-app-icon-preview" class="ph ph-image"></i> Set Glyph or Custom Image
+                </button>
             </div>
         </div>
         <input type="hidden" id="element-app-target-id">
@@ -1629,7 +1630,7 @@
                     <i class="ph ph-browser text-2xl"></i> Open Inside Portal
                 </button>
                 <button id="launch-cloaked"
-                    class="w-full py-5 rounded-2xl font-bold bg-slate-700/60 hover:bg-slate-700 flex items-center justify-center gap-3 border border-slate-600 text-slate-300 text-sm">
+                    class="w-full py-5 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 border text-sm" style="background: color-mix(in srgb, var(--primary-color) 10%, rgba(0,0,0,0.6)); border-color: color-mix(in srgb, var(--primary-color) 25%, rgba(255,255,255,0.1)); color: var(--primary-color);">
                     <i class="ph ph-mask-happy text-xl"></i> Cloaked Tab
                 </button>
             </div>
@@ -1708,7 +1709,10 @@
                             class="w-full rounded-2xl px-6 py-5 font-mono outline-none focus:border-blue-500 transition-colors text-sm resize-y min-h-[160px] pb-14 border"
                             style="background: color-mix(in srgb, var(--primary-color) 5%, rgba(0,0,0,0.4)); border-color: color-mix(in srgb, var(--primary-color) 20%, rgba(255,255,255,0.1));"></textarea>
                         <button type="button" onclick="openCodeStudioForAddHtml()"
-                            class="absolute bottom-4 left-4 py-2.5 px-4 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 backdrop-blur-md overflow-hidden group text-[10px] font-black uppercase tracking-tighter flex items-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] text-blue-400">
+                            class="absolute bottom-4 left-4 py-2.5 px-4 rounded-xl backdrop-blur-md overflow-hidden group text-[10px] font-black uppercase tracking-tighter flex items-center gap-2 transition-all duration-300"
+                            style="background: color-mix(in srgb, var(--primary-color) 20%, transparent); border: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent); color: var(--primary-color); filter: brightness(1.2);"
+                            onmouseover="this.style.boxShadow='0 0 20px color-mix(in srgb, var(--primary-color) 40%, transparent)';"
+                            onmouseout="this.style.boxShadow='none';">
                             <i class="ph ph-code"></i> Open Code Studio
                         </button>
                     </div>
@@ -1747,7 +1751,10 @@
                             </div>
 
                             <div id="icon-picker" class="icon-grid mb-1"></div>
-
+                            
+                            <button onclick="openImagePicker('', val => { customIconData = val; selectedIcon = 'custom'; document.getElementById('add-emoji').value = ''; renderIconPicker(); })" type="button" class="w-full py-3 rounded-xl font-bold text-[11px] border transition-all flex items-center justify-center gap-2 mt-2" style="font-family: 'Fredoka One', cursive; background: color-mix(in srgb, var(--primary-color) 15%, rgba(0,0,0,0.6)); border-color: color-mix(in srgb, var(--primary-color) 30%, rgba(255,255,255,0.1)); color: var(--primary-color);">
+                                <i class="ph ph-image text-lg"></i> Set Custom Icon Image
+                            </button>
                         </div>
 
                         <div id="redirect-toggle-group"
@@ -1821,20 +1828,9 @@
                                         <div class="space-y-1.5">
                                             <label class="block text-[10px] font-bold text-slate-600 uppercase"
                                                 style="font-family: 'Fredoka One', cursive;">Card
-                                                Wallpaper (URL)</label>
-                                            <div class="flex gap-2">
-                                                <input type="text" id="add-card-bg-img" placeholder="Paste image URL..."
-                                                    class="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-blue-500 text-xs text-slate-300"
-                                                    style="font-family: 'Fredoka One', cursive;">
-                                                <button type="button"
-                                                    onclick="document.getElementById('card-bg-upload').click()"
-                                                    class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg border border-white/10 text-slate-400">
-                                                    <i class="ph ph-upload-simple"></i>
-                                                </button>
-                                                <input type="file" id="card-bg-upload" class="hidden"
-                                                    accept="image/*, image/gif, .gif"
-                                                    onchange="handleCardBgUpload(event)">
-                                            </div>
+                                                Wallpaper</label>
+                                            <input type="hidden" id="add-card-bg-img">
+                                            <button type="button" onclick="openImagePicker(document.getElementById('add-card-bg-img').value, val => document.getElementById('add-card-bg-img').value = val)" class="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-lg font-bold text-xs text-slate-300 transition-colors border border-white/10 flex items-center justify-center gap-2"><i class="ph ph-image"></i> Set Image</button>
                                         </div>
 
                                         <div class="flex items-center justify-between pt-1.5 border-t border-white/5">
@@ -2112,22 +2108,14 @@
                                     style="color:var(--primary-color)">Portal
                                     Icon / Logo</label>
                                 <div class="flex gap-2 mb-2">
-                                    <input type="text" id="portal-icon-url-input" placeholder="Paste image URL..."
-                                        class="flex-1 bg-black/40 border border-slate-700/50 rounded-lg px-3 py-2 outline-none text-xs font-sans"
-                                        style="--tw-ring-color:var(--primary-color)">
-                                    <button onclick="applyPortalIconUrl()"
-                                        class="px-4 py-2 rounded-lg text-xs font-bold transition-colors"
-                                        style="background:var(--action-btn);color:#fff">Set</button>
+                                    <input type="hidden" id="portal-icon-url-input">
+                                    <button type="button" onclick="openImagePicker(document.getElementById('portal-icon-url-input').value, val => { document.getElementById('portal-icon-url-input').value = val; applyPortalIconUrl(); })" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg font-bold text-xs text-slate-300 transition-colors border border-white/10 flex items-center justify-center gap-2">
+                                        <i class="ph ph-image"></i> Change Logo
+                                    </button>
+                                    <button onclick="clearPortalIcon()" class="px-3 py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-colors">
+                                        <i class="ph ph-trash"></i>
+                                    </button>
                                 </div>
-                                <div class="flex gap-2">
-                                    <button onclick="document.getElementById('portal-icon-file').click()"
-                                        class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold border border-slate-700/50 flex items-center justify-center gap-1 transition-colors"><i
-                                            class="ph ph-upload-simple"></i> Upload</button>
-                                    <button onclick="clearPortalIcon()"
-                                        class="px-3 py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-colors">Clear</button>
-                                </div>
-                                <input type="file" id="portal-icon-file" class="hidden"
-                                    accept="image/*, image/gif, .gif" onchange="handlePortalIconUpload(event)">
                             </div>
                         </div>
                     </div>
@@ -2167,11 +2155,9 @@
                                     <div class="dev-toggle-knob"></div>
                                 </button>
                             </div>
-                            <button onclick="document.getElementById('bg-file-upload').click()"
+                            <button onclick="openImagePicker(state.theme.bgImage || '', val => handleBgUpdate(val))"
                                 class="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-xs transition-all border border-slate-700 flex items-center justify-center gap-2"><i
                                     class="ph ph-image"></i> Change Background</button>
-                            <input type="file" id="bg-file-upload" accept="image/*" style="display:none"
-                                onchange="if(typeof handleBgFileUpload === 'function') handleBgFileUpload(event)">
                             <button onclick="toggleGhostMode()"
                                 class="w-full py-3 bg-purple-900/10 text-purple-400 border border-purple-500/20 hover:bg-purple-900/20 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all"><i
                                     class="ph ph-ghost"></i> Ghost Mode</button>
@@ -2295,6 +2281,11 @@
             class="w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
             <i class="ph ph-cursor-click text-purple-400"></i> <span id="app-ctx-select-label">Enter Selection
                 Mode</span>
+        </button>
+        <div class="h-px bg-white/5 my-1"></div>
+        <button onclick="appCtxAction('search')"
+            class="w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
+            <i class="ph ph-magnifying-glass text-sky-400"></i> Global Search
         </button>
     </div>
 
@@ -3029,21 +3020,16 @@
                             style="color: var(--primary-color); opacity: 0.5;"></i>
                     </summary>
                     <div class="px-5 pb-5">
-                        <!-- v4.6 April 28 2026 -->
+                        <!-- v4.7 April 29 2026 -->
                         <div class="mb-4">
                             <p class="text-xs font-bold uppercase tracking-widest font-sans mb-2 flex items-center gap-1"
-                                style="color: var(--primary-color);"><i class="ph ph-rocket-launch"></i> v4.6 &mdash;
-                                The Modern Precision Update!</p>
+                                style="color: var(--primary-color);"><i class="ph ph-rocket-launch"></i> v4.7 &mdash;
+                                The Unified Precision Update!</p>
                             <ul class="text-[11px] font-sans space-y-2 ml-3 list-disc text-slate-300">
-                                <li><b>Magic Text Effects:</b> The Rich Text Editor now features a high-performance GPU-accelerated magic effects system (Rainbow, Neon, Fire, Glitch, Wavy, and more) with a dedicated popup UI. Non-gradient effects can even be dynamically recolored!</li>
-                                <li><b>Empty App Safeguard:</b> Opening an app with no URL/Content will now show a beautifully frosted neon warning screen instead of a broken page or endless loader.</li>
-                                <li><b>Category Engine Upgrade:</b> The 'Move Into Category' feature now displays your
-                                    entire nested folder structure, no matter how deep!</li>
-                                <li><b>Multi-Select Overhaul:</b> Removed legacy 'purple box' artifacts. Selection tools
-                                    now universally use the blue cursor icon for a unified feel.</li>
-                                <li><b>Performance Tweaks:</b> Switched text animations to use hue-rotations and precise relative positioning, completely eliminating UI lag when typing.</li>
-                                <li><b>Dynamic Colors:</b> Apps without custom colors now automatically inherit your
-                                    theme's primary color instead of defaulting to black.</li>
+                                <li><b>Unified Media:</b> Replaced all separate "URL" and "File" inputs with a single, sleek "Change Image" dialog for App Icons, Category Icons, and Backgrounds.</li>
+                                <li><b>Theme Consistency:</b> All legacy hardcoded blue highlights (App Manager tabs, Code Studio buttons) now use your primary theme color.</li>
+                                <li><b>Performance Smoothness:</b> Performance Mode now focuses strictly on saving GPU power (disabling blurs and shadows) without making animations jarringly fast.</li>
+                                <li><b>Search Perfection:</b> Global Search now perfectly renders your real custom App and Category icons instead of defaulting to generic folder icons.</li>
                             </ul>
                         </div>
                         <!-- View Old Updates Button -->
@@ -3051,7 +3037,7 @@
                             class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-xs font-bold text-slate-400 hover:text-slate-300 group active:scale-95">
                             <i
                                 class="ph ph-clock-counter-clockwise text-sm group-hover:rotate-[-15deg] transition-transform"></i>
-                            View Old Updates (v4.5 and earlier)
+                            View Old Updates (v4.6 and earlier)
                         </button>
                     </div>
                 </details>
@@ -3221,7 +3207,7 @@
                 </button>
                 <div class="flex-1">
                     <h2 class="text-2xl font-black tracking-tight">Old Updates</h2>
-                    <p class="text-[11px] text-slate-500 font-sans mt-0.5">v4.5 and earlier — Portal history</p>
+                    <p class="text-[11px] text-slate-500 font-sans mt-0.5">v4.6 and earlier — Portal history</p>
                 </div>
                 <button onclick="closeModal('legacy-updates-modal')"
                     class="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all active:scale-90">
@@ -3231,6 +3217,21 @@
 
             <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1 scroll-section space-y-5 pr-1">
+
+                <!-- v4.6 April 28 2026 -->
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
+                    <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
+                        style="color:var(--secondary-color)">
+                        <i class="ph ph-clock-counter-clockwise"></i> v4.6 &mdash; The Modern Precision Update
+                    </p>
+                    <ul class="text-[11px] font-sans text-slate-400 space-y-2 ml-3 list-disc marker:text-slate-500">
+                        <li><b>Magic Text Effects:</b> High-performance GPU magic effects system added to Rich Text Editor.</li>
+                        <li><b>Empty App Safeguard:</b> Neon warning screen added for empty apps.</li>
+                        <li><b>Category Engine Upgrade:</b> Full nested folder structure in 'Move Into Category'.</li>
+                        <li><b>Multi-Select Overhaul:</b> Unified selection tools with blue cursor icon.</li>
+                        <li><b>Dynamic Colors:</b> Inherit theme primary color instead of defaulting to black.</li>
+                    </ul>
+                </div>
 
                 <!-- v4.5.1 April 27 2026 -->
                 <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
@@ -3690,7 +3691,43 @@
         </div>
     </div>
 
-    <script id="default-config" type="application/json">
+        <!-- Unified Image Choice Modal -->
+    <div id="image-choice-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeImagePicker()"></div>
+        <div class="relative custom-dialog rounded-[1.75rem] w-full max-w-sm shadow-2xl p-6" style="background: var(--dialog-bg);">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-black text-white flex items-center gap-2"><i class="ph ph-image text-sky-400"></i> Change Image</h3>
+                <button onclick="closeImagePicker()" class="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Paste Link or Base64</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="image-choice-url" placeholder="https://..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 outline-none text-white text-sm focus:border-sky-500 transition-colors">
+                        <button onclick="submitImagePickerUrl()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-blue-900/40">Set</button>
+                    </div>
+                </div>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-white/10"></div>
+                    <span class="flex-shrink-0 mx-4 text-slate-500 text-xs font-bold uppercase tracking-widest">OR</span>
+                    <div class="flex-grow border-t border-white/10"></div>
+                </div>
+
+                <button onclick="document.getElementById('image-choice-file').click()" class="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all">
+                    <i class="ph ph-upload-simple text-lg"></i> Upload Local File
+                </button>
+                <input type="file" id="image-choice-file" class="hidden" accept="image/*" onchange="handleImagePickerFileUpload(event)">
+
+                <button onclick="resetImagePicker()" class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all mt-2">
+                    <i class="ph ph-trash-simple text-lg"></i> Reset to Default
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script id="default-config" type="application/json">
         {
           "theme": {
             "name": "⚡Portal⚡",
@@ -4309,6 +4346,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 .hover\\:bg-blue-500:hover { background-color: var(--action-btn) !important; filter: brightness(1.15); }
 .hover\\:bg-blue-600:hover { background-color: var(--action-btn) !important; filter: brightness(1.15); }
 .text-blue-400 { color: var(--action-btn) !important; filter: brightness(1.2); }
+.tab-active { background-color: var(--primary-color) !important; color: white !important; box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color) 30%, transparent) !important; }
 .border-blue-500\\/30 { border-color: color-mix(in srgb, var(--action-btn) 30%, transparent) !important; }
 .bg-blue-600\\/10 { background-color: color-mix(in srgb, var(--action-btn) 10%, transparent) !important; }
 .bg-blue-600\\/20 { background-color: color-mix(in srgb, var(--action-btn) 20%, transparent) !important; }
@@ -6520,11 +6558,11 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 const el = document.getElementById(`add-tab-${id}`);
                 if (!el) return;
                 if (id === t) {
-                    el.classList.add('active', 'bg-blue-600');
-                    el.classList.remove('hover:bg-white/5');
+                    el.classList.add('tab-active');
+                    el.classList.remove('hover:bg-white/5', 'bg-white/5');
                 } else {
-                    el.classList.remove('active', 'bg-blue-600');
-                    el.classList.add('hover:bg-white/5');
+                    el.classList.remove('tab-active');
+                    el.classList.add('hover:bg-white/5', 'bg-white/5');
                 }
             });
 
@@ -6970,7 +7008,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             // Empty App Check Screen
             if (!currentApp.content || currentApp.content.trim() === '') {
                 slot.innerHTML = `
-                <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:9005;color:white;font-family:'Fredoka One',cursive;padding:24px;text-align:center;">
+                <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-color);z-index:9005;color:white;font-family:'Fredoka One',cursive;padding:24px;text-align:center;">
                     <div style="animation:dialogPop 0.5s var(--spring-easing) both;">
                         <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(255,0,0,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: 0 0 60px rgba(255,0,0,0.4); animation: fxShake 0.4s ease-in-out infinite;">
                             <i class="ph ph-warning" style="font-size: 48px; color: #ff3333; text-shadow: 0 0 20px #ff0000;"></i>
@@ -6981,6 +7019,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     </div>
                 </div>`;
                 loader.style.display = 'none';
+                container.style.backgroundColor = 'transparent'; // Fix background visibility!
                 container.style.display = 'flex';
                 container.classList.add('animate-open');
                 if (menu) menu.style.display = 'block';
@@ -6994,6 +7033,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 return;
             }
 
+            container.style.backgroundColor = ''; // Reset background for real apps
+            
             const f = document.createElement('iframe');
             f.id = 'active-frame';
             // Use absolute positioning inside the fixed fullscreen-container
@@ -8798,21 +8839,7 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             if (_origOpenRTE) _origOpenRTE();
         };
 
-        window.handleBgFileUpload = function (e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > 8 * 1024 * 1024) { notify("File too large (max 8MB)", "error"); return; }
-            const reader = new FileReader();
-            reader.onload = (re) => {
-                state.theme.bgImage = re.target.result;
-                document.getElementById('body-bg').style.backgroundImage = `url(${state.theme.bgImage})`;
-                document.getElementById('body-bg').style.backgroundSize = 'cover';
-                document.getElementById('body-bg').style.backgroundPosition = 'center';
-                saveSettings();
-                notify("Background updated!", "success");
-            };
-            reader.readAsDataURL(file);
-        };
+        window.handleBgUpdate = function(val) { state.theme.bgImage = val; document.getElementById("body-bg").style.backgroundImage = val ? `url(${val})` : "none"; document.getElementById("body-bg").style.backgroundSize = "cover"; document.getElementById("body-bg").style.backgroundPosition = "center"; saveSettings(); notify("Background updated!", "success"); };
 
         let appCtxTargetId = null;
         window.showAppContextMenu = function (cx, cy, appId) {
@@ -8900,10 +8927,111 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 } else {
                     openMoveIntoCategoryDialog(id, null);
                 }
+            } else if (action === 'search') {
+                window.openGlobalSearch();
             }
         };
 
-        // --- Move Into Category Dialog ---
+        window.openGlobalSearch = function() {
+            let dlg = document.getElementById('global-search-modal');
+            if (!dlg) {
+                dlg = document.createElement('div');
+                dlg.id = 'global-search-modal';
+                dlg.className = 'fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] p-4';
+                dlg.innerHTML = `
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-md" onclick="closeGlobalSearch()"></div>
+                <div class="relative w-full max-w-2xl bg-black/80 border border-white/20 rounded-[2rem] shadow-2xl p-6" style="animation: dialogPop .3s var(--spring-easing); background: var(--dialog-bg);">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-black text-white flex items-center gap-2" style="font-family:'Fredoka One',cursive;"><i class="ph ph-magnifying-glass text-sky-400"></i> Global Search</h2>
+                        <button onclick="closeGlobalSearch()" class="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all"><i class="ph ph-x"></i></button>
+                    </div>
+                    <div class="relative">
+                        <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-xl text-slate-400"></i>
+                        <input type="text" id="global-search-input" placeholder="Search apps, categories, or links..." 
+                            class="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3 outline-none text-white font-bold font-sans focus:border-sky-500 transition-colors" 
+                            oninput="updateGlobalSearch(this.value)">
+                    </div>
+                    <div id="global-search-results" class="mt-4 max-h-[50vh] overflow-y-auto hidden flex-col gap-2 pr-2 scroll-section"></div>
+                </div>`;
+                document.body.appendChild(dlg);
+            }
+            dlg.style.display = 'flex';
+            const inp = document.getElementById('global-search-input');
+            inp.value = '';
+            document.getElementById('global-search-results').innerHTML = '';
+            document.getElementById('global-search-results').classList.add('hidden');
+            setTimeout(() => inp.focus(), 100);
+        };
+
+        window.closeGlobalSearch = function() {
+            const dlg = document.getElementById('global-search-modal');
+            if (dlg) dlg.style.display = 'none';
+        };
+
+        window.updateGlobalSearch = function(query) {
+            query = query.toLowerCase().trim();
+            const resContainer = document.getElementById('global-search-results');
+            if (!query) {
+                resContainer.innerHTML = '';
+                resContainer.classList.add('hidden');
+                resContainer.classList.remove('flex');
+                return;
+            }
+            
+            const results = [];
+            function getNodeIconSmall(node) { if (node.icon === "text") return `<span style="font-size:0.9em">${node.customText}</span>`; if (node.icon === "custom" && node.customIcon) return `<img src="${node.customIcon}" style="width:1em;height:1em;display:inline-block;vertical-align:middle;border-radius:2px;object-fit:cover">`; if (node.icon === "custom") return `<i class="ph ph-image"></i>`; return `<i class="${node.icon && node.icon.includes("ph-") ? (node.icon.startsWith("ph ") ? node.icon : "ph " + node.icon) : (node.isCategory ? "ph ph-folder" : "ph ph-app-window")}"></i>`; }
+            function searchNode(node, path) {
+                if (node.isCategory) {
+                    if (node.name.toLowerCase().includes(query)) results.push({ type: 'category', item: node, path });
+                    if (node.children) {
+                        const newPath = path ? `${path} <i class="ph ph-caret-right mx-0.5 opacity-50"></i> ${getNodeIconSmall(node)} ${node.name}` : `${getNodeIconSmall(node)} ${node.name}`;
+                        node.children.forEach(c => searchNode(c, newPath));
+                    }
+                } else {
+                    if (node.name.toLowerCase().includes(query) || (node.desc && node.desc.toLowerCase().includes(query))) {
+                        results.push({ type: 'app', item: node, path });
+                    }
+                }
+            }
+            state.userApps.forEach(a => searchNode(a, ''));
+            
+            if (results.length === 0) {
+                resContainer.innerHTML = '<p class="text-slate-500 text-center py-4 font-bold font-sans">No results found.</p>';
+                resContainer.classList.remove('hidden');
+                resContainer.classList.add('flex');
+                return;
+            }
+            
+            resContainer.innerHTML = results.slice(0, 15).map(r => {
+                let iconHTML = '';
+                if (r.item.icon === 'text') {
+                    iconHTML = `<span class="text-xl">${r.item.customText}</span>`;
+                } else if (r.item.icon === 'custom' && r.item.customIcon) {
+                    iconHTML = `<img src="${r.item.customIcon}" class="w-6 h-6 object-cover rounded">`;
+                } else if (r.item.icon) {
+                    const iconCls = r.item.icon.startsWith('ph ') ? r.item.icon : (r.item.icon.includes('ph-') ? 'ph ' + r.item.icon : 'ph ' + r.item.icon);
+                    iconHTML = `<i class="${iconCls} text-xl" style="color: ${r.item.color || 'var(--primary-color)'}"></i>`;
+                } else {
+                    iconHTML = r.type === 'category' ? '<i class="ph ph-folder text-amber-400 text-xl"></i>' : '<i class="ph ph-app-window text-sky-400 text-xl"></i>';
+                }
+                const icon = iconHTML;
+                const action = r.type === "category" ? `closeGlobalSearch(); openCategory('${r.item.id}')` : `closeGlobalSearch(); launchApp('${r.item.id}')`;
+                return `
+                <button onclick="${action}" class="flex items-center gap-4 w-full p-3 rounded-xl hover:bg-white/10 transition-colors text-left group" style="background:var(--card-bg);">
+                    <div class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg shrink-0">
+                        ${icon}
+                    </div>
+                    <div>
+                        <p class="text-white font-bold">${r.item.name}</p>
+                        <p class="text-[10px] uppercase tracking-widest text-slate-500 font-sans mt-0.5 flex items-center gap-1">${r.path || '<i class="ph ph-house"></i> Root'}</p>
+                    </div>
+                    <i class="ph ph-arrow-right ml-auto text-slate-600 group-hover:text-white transition-colors"></i>
+                </button>`;
+            }).join('');
+            resContainer.classList.remove('hidden');
+            resContainer.classList.add('flex');
+        };
+
         function openMoveIntoCategoryDialog(appId, idsArray) {
             // Support single app or multi-select (idsArray takes priority)
             const isBulk = Array.isArray(idsArray) && idsArray.length > 0;
@@ -9085,7 +9213,55 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 }
             }, 150);
         }
-    </script>
+            // --- UNIFIED IMAGE PICKER ---
+        let imagePickerCallback = null;
+        function openImagePicker(currentUrl, callback) {
+            imagePickerCallback = callback;
+            const modal = document.getElementById('image-choice-modal');
+            if(!modal) return;
+            const input = document.getElementById('image-choice-url');
+            input.value = currentUrl || '';
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+        }
+
+        function closeImagePicker() {
+            const modal = document.getElementById('image-choice-modal');
+            if(modal) modal.style.display = 'none';
+            imagePickerCallback = null;
+        }
+
+        function submitImagePickerUrl() {
+            const url = document.getElementById('image-choice-url').value.trim();
+            if(imagePickerCallback) imagePickerCallback(url);
+            closeImagePicker();
+        }
+
+        function resetImagePicker() {
+            if(imagePickerCallback) imagePickerCallback('');
+            closeImagePicker();
+        }
+
+        function handleImagePickerFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                notify('Please select an image file', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if(imagePickerCallback) imagePickerCallback(e.target.result);
+                closeImagePicker();
+            };
+            reader.readAsDataURL(file);
+        }
+
+</script>
 </body>
 
 </html>
+
+
+
+
