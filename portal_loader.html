@@ -4,141 +4,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- LIGHT-SPEED NETWORKING HINTS -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     
-    <title>Portal OS</title>
-    <!-- DEFAULT BURGER FAVICON -->
+    <title>loading...</title>
     <link id="favicon" rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Willyy2/portal-os/main/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-color: #020617; 
+            --bg: #020617; 
             --accent: #7dd3fc; /* Light Blue */
-            --font-main: 'Fredoka One', cursive;
+            --font: 'Fredoka One', cursive;
         }
 
+        /* Perfect Centering */
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
             overflow: hidden;
-            background-color: var(--bg-color);
-            font-family: var(--font-main);
-            -webkit-tap-highlight-color: transparent;
+            background-color: var(--bg);
+            font-family: var(--font);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #portal-frame {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
+            width: 100%; height: 100%;
             border: none;
-            background-color: var(--bg-color); /* Anti-White-Flash Layer */
+            background-color: var(--bg);
             z-index: 1;
-            display: block;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
         }
 
         #loader {
-            position: fixed;
-            inset: 0;
-            z-index: 10;
-            background-color: var(--bg-color);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            pointer-events: none;
-            transition: opacity 0.2s ease-out;
+            z-index: 10;
+            transition: opacity 0.3s ease;
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(125, 211, 252, 0.1);
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(125, 211, 252, 0.1);
             border-top-color: var(--accent);
             border-radius: 50%;
-            animation: spin 0.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; /* Spun up the speed */
+            animation: spin 0.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(125, 211, 252, 0.15);
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .status-text {
+            color: var(--accent);
+            font-size: 14px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(125, 211, 252, 0.3);
+        }
     </style>
 </head>
 <body>
 
     <div id="loader">
         <div class="spinner"></div>
+        <div class="status-text">Booting Portal</div>
     </div>
 
-    <!-- Full permissions, NO sandbox restrictions -->
     <iframe id="portal-frame" allow="camera; microphone; geolocation; autoplay; fullscreen; display-capture; keyboard; clipboard-read; clipboard-write; accelerometer; gyroscope; magnetometer; bluetooth; midi; encrypted-media; picture-in-picture; web-share; usb; xr-spatial-tracking; payment-handler;"></iframe>
 
     <script>
-        // 1. KICK OFF FETCH IMMEDIATELY (Parallel to DOM parsing)
-        const TARGET_URL = "https://cdn.jsdelivr.net/gh/Willyy2/portal-os@main/index.html";
-        const fetchTask = fetch(TARGET_URL + '?fast=' + Date.now(), { priority: 'high', cache: 'no-store' });
+        (function() {
+            const frame = document.getElementById('portal-frame');
+            const loader = document.getElementById('loader');
+            const mainFavicon = document.getElementById('favicon');
+            const DEFAULT_ICON = "https://raw.githubusercontent.com/Willyy2/portal-os/main/favicon.ico";
+            const REPO = "Willyy2/portal-os@main/portal.html";
 
-        const frame = document.getElementById('portal-frame');
-        const loader = document.getElementById('loader');
-        const mainFavicon = document.getElementById('favicon');
-        const DEFAULT_ICON = "https://raw.githubusercontent.com/Willyy2/portal-os/main/favicon.ico";
+            // 1. Parallel Purge & Fetch
+            const purgeUrl = `https://purge.jsdelivr.net/gh/${REPO}`;
+            const fetchUrl = `https://cdn.jsdelivr.net/gh/${REPO}?v=${Date.now()}`;
 
-        // 2. WAIT FOR DOM READY, THEN INJECT
-        document.addEventListener('DOMContentLoaded', async () => {
-            const frameDoc = frame.contentWindow.document;
-            
-            // Pre-paint iframe dark to guarantee 0 white flashes while waiting for network
-            frameDoc.open();
-            frameDoc.write('<style>body{background:#020617;}</style>');
-
-            try {
-                // Await the fetch that has already been running in the background
-                const response = await fetchTask;
-                const html = await response.text();
-
-                // Synchronous Injection - The fastest way to render
-                frameDoc.open();
-                frameDoc.write(html);
-                frameDoc.close();
-
-                // 3. INSTANT SYNC LOGIC (No waiting for intervals to start)
-                const sync = () => {
-                    if (frameDoc.title && document.title !== frameDoc.title) {
-                        document.title = frameDoc.title;
-                    }
-                    const frameIcon = frameDoc.querySelector("link[rel*='icon']");
-                    const newHref = (frameIcon && frameIcon.href && frameIcon.href.length > 5) 
-                                    ? frameIcon.href 
-                                    : DEFAULT_ICON;
-                    if (mainFavicon.href !== newHref) {
-                        mainFavicon.href = newHref;
-                    }
-                };
-
-                const observer = new MutationObserver(sync);
-                observer.observe(frameDoc.head, { childList: true, subtree: true, attributes: true });
-                setInterval(sync, 300);
-                sync(); // Run once instantly
-
-                // Hide loader instantly
-                loader.style.opacity = '0';
-                setTimeout(() => loader.remove(), 200);
-
-            } catch (e) {
-                console.error("Link Failed", e);
-                loader.innerHTML = '<div style="color:#ef4444; font-weight:bold; font-family:\'Fredoka One\', sans-serif;">SYNC FAILED</div>';
+            // Fire purge in background
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(purgeUrl);
+            } else {
+                fetch(purgeUrl, { mode: 'no-cors' }).catch(() => {});
             }
-        });
 
-        // Instant resize handling for S24 FE rotation
-        window.addEventListener('resize', () => {
-            frame.style.height = window.innerHeight + 'px';
-            frame.style.width = window.innerWidth + 'px';
-        });
+            async function launch() {
+                try {
+                    const response = await fetch(fetchUrl, { priority: 'high', cache: 'reload' });
+                    const html = await response.text();
+                    
+                    const doc = frame.contentWindow.document;
+                    doc.open();
+                    doc.write(html);
+                    doc.close();
+
+                    // 2. Advanced Sync Engine (Title + Favicon)
+                    const syncMetadata = () => {
+                        // Title Sync
+                        if (doc.title && document.title !== doc.title) {
+                            document.title = doc.title;
+                        }
+                        // Favicon Sync
+                        const frameIcon = doc.querySelector("link[rel*='icon']");
+                        const targetIcon = (frameIcon && frameIcon.href && frameIcon.href.length > 5) 
+                                           ? frameIcon.href 
+                                           : DEFAULT_ICON;
+                        
+                        if (mainFavicon.href !== targetIcon) {
+                            mainFavicon.href = targetIcon;
+                        }
+                    };
+
+                    // Use MutationObserver for instant updates
+                    const observer = new MutationObserver(syncMetadata);
+                    observer.observe(doc.head, { childList: true, subtree: true, attributes: true });
+                    
+                    // Backup check every 1s
+                    setInterval(syncMetadata, 1000);
+                    syncMetadata();
+
+                    // 3. Reveal and keep Storage Safe
+                    // Since we document.write into the SAME frame origin, localStorage stays!
+                    frame.style.opacity = '1';
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 400);
+
+                } catch (e) {
+                    console.error("Turbo Boot Failed", e);
+                    frame.src = `https://raw.githubusercontent.com/Willyy2/portal-os/main/portal.html`;
+                    frame.style.opacity = '1';
+                    loader.remove();
+                }
+            }
+
+            // Execute
+            if (document.readyState === 'complete') { launch(); } 
+            else { window.addEventListener('load', launch); }
+
+            // S24 FE Resizing (Landscape & Vertical)
+            window.addEventListener('resize', () => {
+                frame.style.width = window.innerWidth + 'px';
+                frame.style.height = window.innerHeight + 'px';
+            });
+        })();
     </script>
 </body>
 </html>
