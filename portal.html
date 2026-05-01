@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -438,29 +439,16 @@
             border-color: #60a5fa;
         }
 
-        /* Dialogs */
-        .custom-dialog {
-            background-color: var(--dialog-bg) !important;
-            border: 1px solid var(--border-color);
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: dialogPop 0.4s var(--spring-easing);
-            will-change: transform, opacity;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        @keyframes backdropFadeIn {
+            from { opacity: 0; backdrop-filter: blur(0px); }
+            to { opacity: 1; }
         }
 
-        .perf-mode-enabled #ambient-grid {
-            animation: none;
-            display: none;
-        }
-
-        .perf-mode-enabled .custom-dialog {
-            backdrop-filter: none !important;
-            box-shadow: none !important;
-        }
-
-        .perf-mode-enabled .floating-btn {
-            backdrop-filter: none !important;
+        /* Prevent mobile GPU stutter by hardware-accelerating & fading backdrop blurs */
+        .fixed.inset-0 > .absolute.inset-0[class*="backdrop-blur"] {
+            transform: translateZ(0);
+            will-change: opacity, backdrop-filter;
+            animation: backdropFadeIn 0.35s ease-out forwards;
         }
 
         @keyframes dialogPop {
@@ -1406,12 +1394,12 @@
             <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest font-sans mb-3">(enter
                 password)</label>
             <div class="relative w-full">
-                <input type="password" id="password-input" placeholder=""
+                <input type="text" id="password-input" placeholder=""
                     class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-4 pr-12 outline-none focus:border-blue-500 transition-colors font-sans text-center text-white shadow-2xl backdrop-blur-md">
                 <button type="button"
                     onclick="var p_el=document.getElementById('password-input'); var i_el=this.querySelector('i'); if(p_el.type==='password'){p_el.type='text';i_el.className='ph ph-eye-slash text-slate-400 text-xl';}else{p_el.type='password';i_el.className='ph ph-eye text-slate-400 text-xl';}"
                     class="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center"><i
-                        class="ph ph-eye text-slate-400 text-xl"></i></button>
+                        class="ph ph-eye-slash text-slate-400 text-xl"></i></button>
             </div>
             <button id="password-submit" onclick="checkPassword()"
                 class="w-full mt-4 py-4 rounded-xl font-bold text-sm text-white theme-gradient-btn flex items-center justify-center gap-2 transition-all">Confirm</button>
@@ -1420,6 +1408,50 @@
             <button onclick="adminBypass()"
                 class="mt-4 text-[10px] text-slate-600 hover:text-slate-400 transition-colors font-sans underline underline-offset-2">admin
                 access</button>
+        </div>
+    </div>
+
+    <!-- Portal Info & QR Dialog -->
+    <div id="portal-info-modal" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('portal-info-modal')"></div>
+        <div class="relative custom-dialog p-8 rounded-3xl w-full max-w-sm text-center text-white shadow-2xl border border-white/10" style="background: var(--dialog-bg); font-family: 'Fredoka One', cursive;">
+            <button onclick="closeModal('portal-info-modal')" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors z-[10]"><i class="ph ph-x text-2xl"></i></button>
+            <h2 class="text-2xl font-black mb-1 text-white tracking-tight">Portal Source</h2>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500 mb-6 font-sans">Current Live URL</p>
+            
+            <div class="bg-black/40 border border-white/10 rounded-xl p-3 mb-6 flex items-center gap-2">
+                <i class="ph ph-link text-slate-400"></i>
+                <input type="text" id="portal-url-display" readonly class="bg-transparent border-none outline-none text-xs text-slate-300 w-full font-mono cursor-text" value="">
+                <button onclick="navigator.clipboard.writeText(document.getElementById('portal-url-display').value); notify('URL Copied!', 'success')" class="text-slate-400 hover:text-white transition-colors p-1"><i class="ph ph-copy text-lg"></i></button>
+            </div>
+
+            <div id="portal-qr-container" class="bg-white p-4 rounded-2xl mx-auto inline-block mb-6 shadow-[0_0_30px_rgba(255,255,255,0.1)]"></div>
+            
+            <button onclick="downloadQRCode()" class="w-full py-4 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-500 text-white transition-colors border border-blue-400/30 flex items-center justify-center gap-2">
+                <i class="ph ph-download-simple text-lg"></i> Download QR Code (PNG)
+            </button>
+        </div>
+    </div>
+
+    <!-- Welcome Dialog -->
+    <div id="welcome-modal" class="fixed inset-0 z-[2100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="/* non-dismissible */"></div>
+        <div class="relative custom-dialog p-8 rounded-3xl w-full max-w-sm text-center text-white shadow-2xl border border-white/10" style="background: #0f172a; font-family: 'Fredoka One', cursive;">
+            <div class="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-6 border border-blue-500/30 shadow-[0_0_30px_rgba(37,99,235,0.3)]">
+                <i class="ph ph-hand-waving text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-3 text-white tracking-tight">Welcome to the Portal</h2>
+            <p class="text-sm text-slate-400 mb-8 leading-relaxed font-sans">
+                I hope someone else did not get you the portal and it was the owner unless I said you can have the portal password..
+            </p>
+            <div class="flex flex-col gap-3">
+                <button onclick="acceptWelcome()" class="w-full py-4 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-500 text-white transition-colors border border-blue-400/30">
+                    Yup I did get permission!
+                </button>
+                <button onclick="rejectWelcome()" class="w-full py-4 rounded-xl font-bold text-sm bg-white/5 hover:bg-red-500/20 text-slate-300 hover:text-red-400 transition-colors border border-white/5">
+                    No I did not..
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2260,8 +2292,11 @@
     <div id="app-context-menu"
         class="fixed z-[9999] hidden border border-white/10 backdrop-blur-md rounded-xl p-1 shadow-2xl overflow-hidden origin-top-left transition-all duration-150 scale-95 opacity-0"
         style="background: var(--dialog-bg); min-width: 210px;">
-        <div id="app-ctx-title"
-            class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 font-sans truncate">
+        <div class="flex items-center justify-between px-3 pt-2 pb-1">
+            <div id="app-ctx-title"
+                class="text-[10px] font-bold uppercase tracking-widest text-slate-500 font-sans truncate pr-2">
+            </div>
+            <button onclick="_dismissAppCtx()" class="text-red-500 hover:text-red-400 transition-colors shrink-0"><i class="ph ph-x font-bold"></i></button>
         </div>
         <div class="h-px bg-white/5 mb-1"></div>
         <button onclick="appCtxAction('options')"
@@ -2783,6 +2818,10 @@
                         class="w-full py-2 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 text-sm flex items-center justify-center gap-2">
                         <i class="ph ph-pencil-simple-line text-lg"></i> Edit Live CSS
                     </button>
+                    <button onclick="fetchAndShowPortalLoader()"
+                        class="w-full py-2 rounded-xl font-bold bg-purple-600 hover:bg-purple-500 text-sm flex items-center justify-center gap-2">
+                        <i class="ph ph-file-code text-lg"></i> View Portal Loader Code
+                    </button>
                     <button onclick="openCodeStudio('json', JSON.stringify(state, null, 2), 'state')"
                         class="w-full py-2 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-sm flex items-center justify-center gap-2">
                         <i class="ph ph-brackets-curly text-lg"></i> Edit App State
@@ -3020,16 +3059,22 @@
                             style="color: var(--primary-color); opacity: 0.5;"></i>
                     </summary>
                     <div class="px-5 pb-5">
-                        <!-- v4.7 April 29 2026 -->
+                        <!-- v4.8 April 30 2026 -->
+                        <!-- v4.8 April 30 2026 -->
                         <div class="mb-4">
                             <p class="text-xs font-bold uppercase tracking-widest font-sans mb-2 flex items-center gap-1"
-                                style="color: var(--primary-color);"><i class="ph ph-rocket-launch"></i> v4.7 &mdash;
-                                The Unified Precision Update!</p>
+                                style="color: var(--primary-color);"><i class="ph ph-rocket-launch"></i> v4.8 &mdash;
+                                The Massive Ecosystem Update!</p>
                             <ul class="text-[11px] font-sans space-y-2 ml-3 list-disc text-slate-300">
-                                <li><b>Unified Media:</b> Replaced all separate "URL" and "File" inputs with a single, sleek "Change Image" dialog for App Icons, Category Icons, and Backgrounds.</li>
-                                <li><b>Theme Consistency:</b> All legacy hardcoded blue highlights (App Manager tabs, Code Studio buttons) now use your primary theme color.</li>
-                                <li><b>Performance Smoothness:</b> Performance Mode now focuses strictly on saving GPU power (disabling blurs and shadows) without making animations jarringly fast.</li>
-                                <li><b>Search Perfection:</b> Global Search now perfectly renders your real custom App and Category icons instead of defaulting to generic folder icons.</li>
+                                <li><b>Background Menu:</b> Right-click the background for quick actions, global search, and tools!</li>
+                                <li><b>Global Search Magic:</b> Hit Ctrl+K to search your apps, settings, help, themes, or changelog instantly.</li>
+                                <li><b>QR Codes & Portal URL:</b> View your original URL and generate a QR code for your portal instantly.</li>
+                                <li><b>Fast Boot Standard:</b> Fast Boot is now ON by default for a lightning-fast experience.</li>
+                                <li><b>Welcome Experience:</b> A new, immersive first-time setup for new users with dynamic greeting animations.</li>
+                                <li><b>Cloaked Tab Pro:</b> Dynamic "App - Portal" titles, ghost micro-animations, and intelligent "Go Back" tracking that seamlessly re-opens your portal.</li>
+                                <li><b>Multi-Link Launcher:</b> Launch entire folders or multiple URLs simultaneously without freezing your browser.</li>
+                                <li><b>Security Bypass:</b> Admins can bypass the password screen for emergency access using the secret passcode.</li>
+                                <li><b>Stability Fixes:</b> Completely solved all "flashing" screens and rendering bugs when cloaking apps.</li>
                             </ul>
                         </div>
                         <!-- View Old Updates Button -->
@@ -3077,6 +3122,11 @@
                         <i class="ph ph-caret-down text-slate-500 transition-transform group-open:rotate-180"></i>
                     </summary>
                     <div class="px-4 pb-4 pt-1 space-y-3">
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-indigo-500/30">
+                            <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i
+                                    class="ph ph-mouse-right-click text-indigo-400"></i> Right-Click Context Menus</p>
+                            <p class="text-xs font-sans text-slate-400">Right-click anywhere on the <strong class="text-white">background</strong> to open Global Search, view your Portal URL (with QR code!), or activate a Cloaked Tab. You can also right-click <strong class="text-white">Apps</strong> to directly edit them or launch them cloaked. Right-click the <strong class="text-white">Settings Button</strong> to instantly access Dev Tools and Changelogs!</p>
+                        </div>
                         <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700/80">
                             <p class="font-bold text-white mb-1 flex items-center gap-2 text-sm"><i
                                     class="ph ph-smiley-wink text-fuchsia-400"></i> Emoji Hub & Rich Text</p>
@@ -3182,6 +3232,37 @@
                                     You're the reason it exists.</p>
                             </div>
                         </div>
+
+                        <!-- MEMES DROPDOWN -->
+                        <details class="group mt-4 rounded-xl overflow-hidden"
+                            style="background: rgba(168, 85, 247, 0.1); border: 1px dashed rgba(168, 85, 247, 0.4);">
+                            <summary class="flex items-center justify-between p-3 cursor-pointer list-none select-none hover:bg-purple-500/10 transition-colors">
+                                <p class="font-bold flex items-center gap-2 text-sm">
+                                    <i class="ph ph-mask-happy text-purple-400"></i>
+                                    <span style="background: linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6, #ec4899); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: portalShimmer 3s linear infinite;">
+                                        HONORABLE MEMESSS!
+                                    </span>
+                                </p>
+                                <i class="ph ph-caret-down transition-transform group-open:rotate-180 text-purple-400 opacity-70"></i>
+                            </summary>
+                            <style>
+                                @keyframes portalShimmer {
+                                    to { background-position: 200% center; }
+                                }
+                            </style>
+                            <div class="px-3 pb-3 space-y-2">
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🥤 protein shake again</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🥁 tung tung tung sahur (triple T)</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🖋️ why? were playin bendy.</p>
+                                </div>
+                            </div>
+                        </details>
+
                     </div>
                 </details>
 
@@ -3217,6 +3298,20 @@
 
             <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1 scroll-section space-y-5 pr-1">
+
+                <!-- v4.7 April 29 2026 -->
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
+                    <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
+                        style="color:var(--secondary-color)">
+                        <i class="ph ph-clock-counter-clockwise"></i> v4.7 &mdash; The Unified Precision Update
+                    </p>
+                    <ul class="text-[11px] font-sans text-slate-400 space-y-2 ml-3 list-disc marker:text-slate-500">
+                        <li><b>Unified Media:</b> Replaced all separate "URL" and "File" inputs with a single, sleek "Change Image" dialog for App Icons, Category Icons, and Backgrounds.</li>
+                        <li><b>Theme Consistency:</b> All legacy hardcoded blue highlights (App Manager tabs, Code Studio buttons) now use your primary theme color.</li>
+                        <li><b>Performance Smoothness:</b> Performance Mode now focuses strictly on saving GPU power (disabling blurs and shadows) without making animations jarringly fast.</li>
+                        <li><b>Search Perfection:</b> Global Search now perfectly renders your real custom App and Category icons instead of defaulting to generic folder icons.</li>
+                    </ul>
+                </div>
 
                 <!-- v4.6 April 28 2026 -->
                 <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
@@ -3754,7 +3849,7 @@
 
     <script>
         /* ██████████████████████████████████████████████████████████████████████████
-           PORTAL OS — MASTER CODE MAP  (v4.6 · April 2026)
+           PORTAL OS — MASTER CODE MAP  (v4.8 · April 2026)
            ██████████████████████████████████████████████████████████████████████████
 
            HOW THIS FILE WORKS
@@ -3860,6 +3955,21 @@
 
         let saveTimeout = null;
         let renderRequested = false;
+
+        // --- Dangling UI State Variables ---
+        let dragState = null,
+            currentOptionsAppId = null,
+            isPaintMode = false,
+            capturedStyle = null,
+            currentFilters = { brightness: 100, contrast: 100, saturate: 100, blur: 0, hue: 0, sepia: 0, opacity: 100, grayscale: false, invert: false },
+            currentEmojiOptionIndex = null,
+            targetRTEInput = null,
+            longPressTimer = null,
+            isDragging = false,
+            rteActiveFX = null,
+            rteFXSavedRange = null,
+            appCtxTargetId = null,
+            imagePickerCallback = null;
 
         // Remove Shift-key trigger — replaced by right-click on settings btn
         // Keeping keydown listener only for Escape to cancel select mode
@@ -3997,6 +4107,12 @@
                     commitChanges(true, true);
                 } else {
                     console.log("💾 Loading saved state...");
+                    
+                    // V4.8: Silence Welcome Dialog for existing users who already have portal-state
+                    if (!localStorage.getItem('portal_first_run')) {
+                        localStorage.setItem('portal_first_run', 'true');
+                    }
+                    
                     state = JSON.parse(storedState);
                     // Critical Schema Migration
                     if (!state.userApps) state.userApps = state.defaultApps || JSON.parse(JSON.stringify(config.defaultApps || []));
@@ -4014,7 +4130,13 @@
                     state.userApps = JSON.parse(JSON.stringify(config.defaultApps || []));
                 }
 
-                if (state.theme.fastBoot) {
+                // V4.8 Migration Note: Fast Boot defaults to false for security, 
+                // but gets auto-enabled during acceptWelcome for a seamless first experience.
+
+                if (window.name && window.name.startsWith("CLOAKED_AUTO_LAUNCH_")) {
+                    document.getElementById('app-container').style.display = 'none'; // Prevent flash
+                    document.body.classList.remove('logged-out');
+                } else if (state.theme.fastBoot || sessionStorage.getItem('portal_unlocked') === 'true' || window.location.search.includes('isPortalCloaked=true')) {
                     document.getElementById('app-container')?.classList.remove('hidden');
                     document.body.classList.remove('logged-out');
                 } else {
@@ -4038,6 +4160,31 @@
                 if (typeof saveHistory === 'function') saveHistory();
 
                 console.log("✅ Portal Successfully Initialized");
+                
+                if (window.location.search.includes('isPortalCloaked=true')) {
+                    // Secret micro-animation inside the real about:blank portal
+                    const cloakWrap = document.createElement('div');
+                    cloakWrap.className = "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#020617] animate-fade-in";
+                    cloakWrap.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-8">
+                            <i class="ph ph-ghost text-purple-400 text-6xl mb-4" style="filter: drop-shadow(0 0 20px rgba(168,85,247,0.4)); animation: dialogPop 0.5s var(--spring-easing);"></i>
+                            <h2 class="text-3xl font-black text-white tracking-tight mb-2">Cloak Engaged</h2>
+                            <p class="text-sm text-purple-400/80 font-sans tracking-wide">Establishing Secure Connection...</p>
+                            <i class="ph ph-spinner-gap animate-spin text-purple-500 text-2xl mt-8"></i>
+                        </div>
+                    `;
+                    document.body.appendChild(cloakWrap);
+
+                    setTimeout(() => {
+                        cloakWrap.style.transition = 'all 0.5s var(--spring-easing)';
+                        cloakWrap.style.opacity = '0';
+                        cloakWrap.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            if (cloakWrap.parentNode) cloakWrap.remove();
+                        }, 500);
+                    }, 1200);
+                }
+
                 // Reveal page cleanly — eliminates any FOUC
                 document.body.classList.add('portal-ready');
             } catch (e) {
@@ -4098,9 +4245,75 @@
         }
 
         function enterPortal() {
-            document.getElementById('password-modal').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-            document.body.classList.remove('logged-out');
+            sessionStorage.setItem('portal_unlocked', 'true');
+            
+            const modal = document.getElementById('password-modal');
+            const innerWrap = modal ? modal.querySelector('.max-w-sm') : null;
+            
+            if (innerWrap && !modal.classList.contains('hidden')) {
+                // Secret "Welcome" animation
+                const ogContent = innerWrap.innerHTML;
+                
+                const isNew = (!state.userApps || state.userApps.length === 0) || !state.theme.name;
+                const titleText = isNew ? "Welcome to Portal OS" : "Welcome Back";
+                const subText = isNew ? "Initializing Ecosystem..." : "Decrypting Ecosystem...";
+
+                innerWrap.innerHTML = `
+                    <div class="flex flex-col items-center justify-center animate-fade-in py-8">
+                        <i class="ph ph-check-circle text-emerald-400 text-6xl mb-4" style="filter: drop-shadow(0 0 20px rgba(52,211,153,0.4)); animation: dialogPop 0.5s var(--spring-easing);"></i>
+                        <h2 class="text-3xl font-black text-white tracking-tight mb-2">${titleText}</h2>
+                        <p class="text-sm text-slate-400 font-sans tracking-wide">${subText}</p>
+                        <i class="ph ph-spinner-gap animate-spin text-slate-500 text-2xl mt-8"></i>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    modal.style.transition = 'all 0.5s var(--spring-easing)';
+                    modal.style.opacity = '0';
+                    modal.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        document.getElementById('app-container').classList.remove('hidden');
+                        document.body.classList.remove('logged-out');
+                        
+                        // Clean up
+                        modal.style.transition = '';
+                        modal.style.opacity = '';
+                        modal.style.transform = '';
+                        innerWrap.innerHTML = ogContent;
+                    }, 500);
+                }, 800);
+            } else {
+                if (modal) modal.classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                document.body.classList.remove('logged-out');
+            }
+        }
+
+        function acceptWelcome() {
+            closeModal('welcome-modal');
+            localStorage.setItem('portal_first_run', 'true');
+            // Auto-enable fast boot for new users after they accept
+            state.theme.fastBoot = true;
+            commitChanges(true, true);
+            // Fancy Welcome Transition
+            const pwdModal = document.getElementById('password-modal');
+            if (pwdModal) pwdModal.style.transition = 'opacity 0.5s ease, filter 0.5s ease';
+            if (pwdModal) pwdModal.style.filter = 'blur(10px) brightness(1.5)';
+            if (pwdModal) pwdModal.style.opacity = '0';
+            setTimeout(() => {
+                if (pwdModal) {
+                    pwdModal.style.filter = '';
+                    pwdModal.style.opacity = '';
+                    pwdModal.style.transition = '';
+                }
+                enterPortal();
+                notify("Welcome to the Ecosystem!", "success", "ph-star");
+            }, 500);
+        }
+
+        function rejectWelcome() {
+            window.location.href = "about:blank"; 
         }
 
         function checkPassword() {
@@ -4109,7 +4322,14 @@
             const expectedRaw = state.theme.portalPassword || getDefaultConfig().theme.portalPassword;
             const expected = expectedRaw.trim().toLowerCase();
             if (input === expected || input === '1126admin') {
-                enterPortal();
+                if (!localStorage.getItem('portal_first_run')) {
+                    toggleModal('welcome-modal');
+                } else {
+                    if (localStorage.getItem('portal_just_reset')) {
+                        localStorage.removeItem('portal_just_reset');
+                    }
+                    enterPortal();
+                }
             } else {
                 notify('Incorrect Password', 'error');
             }
@@ -4118,7 +4338,14 @@
         async function adminBypass() {
             const key = await portalPrompt("Enter admin passkey:", "ph-lock-key", "blue");
             if (key && key.trim().toLowerCase() === '1126admin') {
-                enterPortal();
+                if (!localStorage.getItem('portal_first_run')) {
+                    toggleModal('welcome-modal');
+                } else {
+                    if (localStorage.getItem('portal_just_reset')) {
+                        localStorage.removeItem('portal_just_reset');
+                    }
+                    enterPortal();
+                }
             } else if (key !== null) {
                 notify('Invalid admin passkey', 'error');
             }
@@ -4277,24 +4504,35 @@
                 if (saveTimeout) clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
                     commitChanges(addToHistory, true);
-                }, 1000); // Wait 1 second before writing to disk
+                }, 1000);
+                return;
+            }
+
+            // ── Phase 4: Validate-before-save guard ──
+            // Never write corrupted state to localStorage
+            if (!state.userApps || !Array.isArray(state.userApps) || !state.theme) {
+                console.error('[Portal] commitChanges: state validation failed — save aborted.');
+                notify('Save error: state structure invalid.', 'error', 'ph-warning');
                 return;
             }
 
             const stateJson = JSON.stringify(state);
             try { localStorage.setItem('portal-state', stateJson); } catch (e) { console.warn('localStorage save failed:', e); }
-            // Backup save: cookies (stores a hash/flag so we can detect if LS was cleared)
             try {
                 const appsCount = state.userApps ? state.userApps.length : 0;
                 const cookieVal = encodeURIComponent(JSON.stringify({ appsCount, themeColor: (state.theme && state.theme.colors && state.theme.colors.primary) || '#2563eb', ts: Date.now() }));
                 document.cookie = 'portal_backup_meta=' + cookieVal + '; max-age=2592000; path=/';
-                // Also keep a compressed emergency backup in sessionStorage
                 sessionStorage.setItem('portal-state-session', stateJson);
+                // Timestamped emergency backup (Phase 4 — allows rollback identification)
+                sessionStorage.setItem('portal_emergency_ts', String(Date.now()));
             } catch (e) { /* cookies may be blocked in some environments */ }
             if (addToHistory) saveHistory();
             if (typeof syncSettingsUI === 'function') syncSettingsUI();
         }
 
+        /* ==========================================================================
+           §4. THEME ENGINE — applyTheme(), preset themes, theme modal
+           ========================================================================== */
         function applyTheme() {
             if (!state || !state.theme) return;
             const colors = state.theme.colors || {};
@@ -4543,24 +4781,29 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             return (yiq >= 128) ? '#0f172a' : '#ffffff';
         }
 
+        /* ==========================================================================
+           §5. RENDER ENGINE — renderApps(), card builder, category nav
+           ========================================================================== */
         function renderApps(forceClearCache = false) {
-            if (renderRequested) return; // Debounce multiple rapid render requests
+            if (renderRequested) return;
             renderRequested = true;
 
             requestAnimationFrame(() => {
                 if (forceClearCache && typeof emojiCache !== 'undefined' && emojiCache.clear) emojiCache.clear();
 
                 const grid = document.getElementById('apps-grid');
-                if (!grid) return;
-                grid.innerHTML = '';
+                if (!grid) { renderRequested = false; return; }
+
+                // ── Phase 2: DocumentFragment batch insert (no per-card reflow) ──
+                const frag = document.createDocumentFragment();
                 const currentList = getCurrentList() || [];
 
                 if (currentPath.length > 0) {
                     const backCard = document.createElement('div');
                     backCard.className = 'app-card back-breadcrumb p-10 rounded-[2rem] flex flex-col items-center justify-center text-center animate-pop-in transition-all duration-200';
-                    backCard.onclick = () => { currentPath.pop(); renderApps(); };
+                    backCard.dataset.appId = '__back__';
                     backCard.innerHTML = `<div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-lg bg-slate-800"><i class="ph ph-arrow-left text-4xl text-white"></i></div><h3 class="text-xl font-bold tracking-tight">⬅ Back</h3>`;
-                    grid.appendChild(backCard);
+                    frag.appendChild(backCard);
                 }
 
                 currentList.forEach((app, index) => {
@@ -4569,44 +4812,18 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     const card = document.createElement('div');
                     card.dataset.appId = app.id;
                     card.className = 'app-card p-10 rounded-[2rem] flex flex-col items-center text-center animate-pop-in' + (isSelected ? ' selected-card' : '') + (isCat ? ' category-card' : '');
-                    card.style.backgroundColor = `rgba(var(--card-bg-color-rgb, 15, 23, 42), var(--card-opacity, 0.85))`;
-
                     card.style.animationDelay = `${index * 50}ms`;
 
-                    // Mobile Long Press Context Menu Support
-                    let pressTimer;
-                    card.addEventListener('touchstart', (e) => {
-                        pressTimer = setTimeout(() => {
-                            if (typeof showAppContextMenu === 'function') {
-                                showAppContextMenu(e.touches[0].clientX, e.touches[0].clientY, app.id);
-                            }
-                        }, 600);
-                    }, { passive: true });
-                    card.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
-                    card.addEventListener('touchend', () => clearTimeout(pressTimer), { passive: true });
-                    card.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        if (typeof showAppContextMenu === 'function') {
-                            showAppContextMenu(e.clientX, e.clientY, app.id);
-                        }
-                    });
-
+                    // ── card.onclick handles click/select/launch (delegation handles context/long-press) ──
                     card.onclick = (e) => {
-                        if (isPaintMode) {
-                            applyStyleToApp(app.id);
-                            return;
-                        }
+                        if (isPaintMode) { applyStyleToApp(app.id); return; }
                         if (isSelectMode) { toggleSelectApp(app.id); return; }
                         if (isCat) { currentPath.push(app.id); renderApps(); }
                         else {
                             if (state.theme.alwaysOpenNewTab || app.redirectOnly) {
                                 const a = document.createElement('a');
-                                a.href = app.content;
-                                a.target = '_blank';
-                                a.rel = 'noopener noreferrer';
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
+                                a.href = app.content; a.target = '_blank'; a.rel = 'noopener noreferrer';
+                                document.body.appendChild(a); a.click(); document.body.removeChild(a);
                             } else {
                                 currentApp = app; toggleModal('choice-modal');
                             }
@@ -4624,7 +4841,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     ${app.icon === 'custom' && app.customIcon ?
                             `<div class="w-20 h-20 rounded-3xl mb-6 shadow-xl" style="background-image: url(${app.customIcon}); background-size: cover; background-position: center; border: 1px solid rgba(255,255,255,0.1)"></div>` :
                             app.icon === 'text' && app.customText ?
-                                `<div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 text-4xl font-bold shadow-lg" style="color: ${app.color || 'var(--primary-color)'}; background: ${app.color ? app.color + '20' : 'color-mix(in srgb,var(--primary-color) 12%,transparent)'}; border: 1px solid ${app.color ? app.color + '40' : 'color-mix(in srgb,var(--primary-color) 25%,transparent)'}">${app.customText}</div>` :
+                                `<div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 text-4xl font-bold shadow-lg" style="color: ${app.color || 'var(--primary-color)'}; background: ${app.color ? app.color + '20' : 'color-mix(in srgb,var(--primary-color) 12%,transparent)'}; border: 1px solid ${app.color ? app.color + '40' : 'color-mix(in srgb,var(--primary-color) 25%,transparent)'}">` + (typeof renderTextWithEmojis === 'function' ? renderTextWithEmojis(app.customText) : app.customText) + `</div>` :
                                 `<div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-lg" style="color: ${app.color || 'var(--primary-color)'}; background: ${app.color ? app.color + '20' : 'color-mix(in srgb,var(--primary-color) 12%,transparent)'}; border: 1px solid ${app.color ? app.color + '40' : 'color-mix(in srgb,var(--primary-color) 25%,transparent)'};"><i class="ph ${app.icon} text-4xl"></i></div>`
                         }
                     </div>
@@ -4636,20 +4853,16 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     const bgImg = styles.bgImg || null;
                     const op = styles.opacity !== undefined ? styles.opacity : null;
 
-                    // Determine Auto-Contrast based on resulting background
                     const computedBg = (bgCol && bgCol !== '#0f172a' && bgCol !== 'var(--card-bg)' && bgCol !== '') ? bgCol : (state.theme && state.theme.colors && (state.theme.colors.card || state.theme.colors.dialog)) || '#0f172a';
                     const autoTextCol = getContrastYIQ(computedBg);
                     const autoDescCol = autoTextCol === '#0f172a' ? '#334155' : '#94a3b8';
 
-                    // Per-App Text Colors
                     const docNameCol = document.getElementById('add-text-name') && document.getElementById('add-text-name').dataset.isDefault === 'true' ? null : styles.nameCol;
                     const nameStyle = (docNameCol && docNameCol !== '#ffffff') ? `color: ${docNameCol}` : `color: ${autoTextCol}`;
                     const descStyle = (styles.descCol && styles.descCol !== '#94a3b8') ? `color: ${styles.descCol}` : `color: ${autoDescCol}`;
                     const creatorStyle = (styles.creatorCol && styles.creatorCol !== '#64748b') ? `color: ${styles.creatorCol}` : `color: ${autoDescCol}; opacity: 0.7`;
 
-                    // Sync with Theme: Default to CSS var(--card-bg) which now inherently matches cardOpacity
                     card.style.backgroundColor = '';
-
                     if (bgCol && bgCol !== '#0f172a' && bgCol !== '') {
                         const finalOp = op !== null ? op : (state.theme.cardOpacity !== undefined ? state.theme.cardOpacity : 0.85);
                         card.style.backgroundColor = typeof hexToRgba === 'function' ? hexToRgba(bgCol, finalOp) : bgCol;
@@ -4670,7 +4883,6 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                         const finalGlow = styles.glowCol ? glowColor : `color-mix(in srgb, var(--primary-color) 30%, transparent)`;
                         card.style.boxShadow = `0 0 20px ${finalGlow}`;
                         card.style.border = `1px solid ${finalGlow}`;
-                        // Set CSS variable for hover enhancement
                         card.style.setProperty('--glow-color', glowColor);
                         card.classList.add('glow-card');
                     } else {
@@ -4690,16 +4902,20 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                         ${app.creator ? `<span class="absolute bottom-3 left-4 text-[8px] font-sans uppercase tracking-[0.15em] transition-colors pointer-events-none group-hover:opacity-100" style="${creatorStyle}">by ${renderTextWithEmojis(app.creator)}</span>` : ''}
                     </div>
                 `;
-                    grid.appendChild(card);
+                    frag.appendChild(card);
                 });
-                // Frame Isolation: Only allow new renders AFTER the last one is painted
+
+                // Single DOM write — no mid-loop reflows
+                grid.innerHTML = '';
+                grid.appendChild(frag);
+
                 setTimeout(() => { renderRequested = false; }, 0);
             });
         }
 
-        let dragState = null;
-        let currentOptionsAppId = null;
-
+        /* ==========================================================================
+           §6. APP MANAGER — openOptions(), saveNewApp(), deleteApp()
+           ========================================================================== */
         function openOptions(id, e) {
             if (e) e.stopPropagation();
             currentOptionsAppId = id;
@@ -4799,9 +5015,9 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             notify(`Duplicated ${count} item${count > 1 ? 's' : ''}`, "success", "ph-copy");
         }
 
-        let isPaintMode = false;
-        let capturedStyle = null;
-
+        /* ==========================================================================
+           §9. FORMAT PAINTER — isPaintMode, applyStyleToApp()
+           ========================================================================== */
         function startStylePaint(id) {
             const app = findNodeInTree(state.userApps, id);
             if (!app) return notify("App not found!", "error");
@@ -4956,6 +5172,9 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             overlay.animate([{ opacity: 0, transform: 'scale(0.95)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
         }
 
+        /* ==========================================================================
+           §8. DRAG & DROP — startDragItem(), dragState machine
+           ========================================================================== */
         function startDragItem(id, e) {
             if (e) {
                 e.stopPropagation();
@@ -5061,7 +5280,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 if (targetCard.classList.contains('category-card') && !isBulkShortcut) {
                     // Normal drag: drop into category
                     if (dragState.placeholder.parentNode) dragState.placeholder.remove();
-                    dragState.targetCategory = findAppRecursively(state.userApps, targetCard.dataset.appId);
+                    dragState.targetCategory = findNodeInTree(state.userApps, targetCard.dataset.appId);
                     targetCard.style.boxShadow = '0 0 40px var(--primary-color)';
                     targetCard.style.transform = 'scale(1.05)';
                 } else {
@@ -5102,11 +5321,11 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
             if (dragState.targetBack || dragState.targetCategory || dragState.placeholder.parentNode) {
                 // Remove from current locations
-                itemsToMoveIds.forEach(id => deleteAppRecursively(state.userApps, id));
+                itemsToMoveIds.forEach(id => deleteNodeInTree(state.userApps, id));
 
                 if (dragState.targetBack) {
                     const p = [...currentPath]; p.pop();
-                    let parentList = p.length === 0 ? state.userApps : findAppRecursively(state.userApps, p[p.length - 1]).children;
+                    let parentList = p.length === 0 ? state.userApps : findNodeInTree(state.userApps, p[p.length - 1]).children;
                     parentList.push(...itemsToMove);
                     notify(`Moved ${itemsToMove.length} items up`, "success");
                 } else if (dragState.targetCategory) {
@@ -5146,6 +5365,9 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             commitChanges(); renderApps();
         }
 
+        /* ==========================================================================
+           §7. MULTI-SELECT — toggleSelectMode, toggleSelectApp, updateBulkUI
+           ========================================================================== */
         // Multi-Select & Bulk Actions
         function toggleSelectApp(id) {
             const idx = selectedAppIds.indexOf(id);
@@ -5205,7 +5427,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (!confirm(`Permanently delete ${selectedAppIds.length} apps?`)) return;
             const idsToDelete = [...selectedAppIds];
             idsToDelete.forEach(id => {
-                deleteAppRecursively(state.userApps, id);
+                deleteNodeInTree(state.userApps, id);
             });
             const count = idsToDelete.length;
             selectedAppIds = [];
@@ -5219,16 +5441,16 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (!targetId) { notify("Select a target first!", "error"); return; }
             const appsToMove = [];
             selectedAppIds.forEach(id => {
-                const app = findAppRecursively(state.userApps, id);
+                const app = findNodeInTree(state.userApps, id);
                 if (app) {
                     appsToMove.push(JSON.parse(JSON.stringify(app)));
-                    deleteAppRecursively(state.userApps, id);
+                    deleteNodeInTree(state.userApps, id);
                 }
             });
             if (targetId === 'root') {
                 state.userApps.push(...appsToMove);
             } else {
-                const target = findAppRecursively(state.userApps, targetId);
+                const target = findNodeInTree(state.userApps, targetId);
                 if (target && target.isCategory) {
                     target.children = target.children || [];
                     target.children.push(...appsToMove);
@@ -5241,28 +5463,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             notify(`Relocated ${count} items`, "success", "ph-folder-notch-open");
         }
 
-        function findAppRecursively(list, id) {
-            for (let app of list) {
-                if (app.id === id) return app;
-                if (app.children) {
-                    const found = findAppRecursively(app.children, id);
-                    if (found) return found;
-                }
-            }
-            return null;
-        }
-
-        function deleteAppRecursively(list, id) {
-            const idx = list.findIndex(a => a.id === id);
-            if (idx !== -1) {
-                list.splice(idx, 1);
-                return true;
-            }
-            for (let app of list) {
-                if (app.children && deleteAppRecursively(app.children, id)) return true;
-            }
-            return false;
-        }
+        // findAppRecursively & deleteAppRecursively unified into findNodeInTree / deleteNodeInTree below
 
         function validateEmojiInput(input) {
             // Allow numbers, letters, and emojis.
@@ -5587,8 +5788,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 state.theme = JSON.parse(JSON.stringify(getDefaultConfig().theme));
                 // Only preserve the password, reset ALL other toggles strictly
                 state.theme.portalPassword = currentPassword;
-                state.theme.devMode = false;
                 state.theme.fastBoot = false;
+                state.theme.devMode = false;
                 state.theme.externalTabMode = false;
                 state.theme.disableExitAlert = false;
                 state.theme.disableCardHover = false;
@@ -5599,13 +5800,17 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 state.userApps = [];
 
                 commitChanges(true, true);
+                sessionStorage.removeItem('portal_unlocked');
                 if (typeof syncSettingsUI === 'function') syncSettingsUI();
 
                 // Remove the apps storage key so default apps reload on next visit
                 try { localStorage.removeItem(STORAGE_KEY_APPS); } catch (e) { }
-                applyTheme();
-                notify("Portal reset. Reloading...", "success");
-                setTimeout(() => location.reload(), 600);
+                // NOTE: We DO NOT remove portal_first_run here to preserve the "First Time" status
+                // BUT we do set a flag so checkPassword knows to auto-enable Fast Boot
+                localStorage.setItem('portal_just_reset', 'true');
+                
+                notify("Portal wiped completely. Reloading...", "success", "ph-check");
+                setTimeout(() => location.reload(), 400);
             }
         }
 
@@ -6025,6 +6230,9 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             ).then(() => { });
         }
 
+        /* ==========================================================================
+           §11. DEV TOOLS — openDevTools(), Code Studio, runDevJS()
+           ========================================================================== */
         function openDevTools() {
             updateDevModePill();
             updateDevStorageUsage();
@@ -6645,19 +6853,29 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             var selectLabel = isSelectMode ? 'Disable Multi-Select' : 'Enable Multi-Select';
             var selectIconClass = isSelectMode ? 'ph ph-x text-red-400' : 'ph ph-cursor-click text-blue-400';
 
+            var header = document.createElement('div');
+            header.className = 'flex items-center justify-between px-3 pt-1 pb-1 border-b border-white/5 mb-1';
+            header.innerHTML = '<div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 font-sans truncate pr-2">Settings</div><button class="text-red-500 hover:text-red-400 hover:bg-white/10 rounded-md p-1 transition-colors shrink-0"><i class="ph ph-x font-bold"></i></button>';
+            header.querySelector('button').onclick = function() {
+                menu.classList.add('scale-95', 'opacity-0');
+                menu.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => menu.remove(), 150);
+            };
+
             var openBtn = document.createElement('button');
-            openBtn.className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm font-bold flex items-center gap-3';
-            openBtn.innerHTML = '<i class="ph ph-gear text-slate-400 text-lg"></i> Open Settings';
+            openBtn.className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm font-bold flex items-center gap-3 text-white';
+            openBtn.innerHTML = '<i class="ph ph-gear text-emerald-400 text-lg"></i> Open Settings';
             openBtn.onclick = function () { showSettings(); menu.remove(); };
 
             var sep = document.createElement('div');
             sep.className = 'h-px bg-white/10 my-1 mx-2';
 
             var selBtn = document.createElement('button');
-            selBtn.className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm font-bold flex items-center gap-3';
+            selBtn.className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm font-bold flex items-center gap-3 text-white';
             selBtn.innerHTML = '<i class="' + selectIconClass + ' text-lg"></i> ' + selectLabel;
             selBtn.onclick = function () { toggleSelectModeFromSettings(); menu.remove(); };
-
+            
+            menu.appendChild(header);
             menu.appendChild(openBtn);
             menu.appendChild(sep);
             menu.appendChild(selBtn);
@@ -6685,6 +6903,150 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             }, 10);
         }
 
+        let portalQR = null;
+        function showPortalUrlDialog() {
+            toggleModal('portal-info-modal');
+            const urlInput = document.getElementById('portal-url-display');
+            const currentUrl = window.location.href;
+            urlInput.value = currentUrl;
+            
+            const qrContainer = document.getElementById('portal-qr-container');
+            qrContainer.innerHTML = ''; // Clear old QR
+            
+            if (typeof QRCode !== 'undefined') {
+                portalQR = new QRCode(qrContainer, {
+                    text: currentUrl,
+                    width: 160,
+                    height: 160,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            } else {
+                qrContainer.innerHTML = '<p class="text-xs text-slate-400 font-sans">QR Code library failed to load.</p>';
+            }
+        }
+
+        function downloadQRCode() {
+            const qrContainer = document.getElementById('portal-qr-container');
+            const img = qrContainer.querySelector('img');
+            const canvas = qrContainer.querySelector('canvas');
+            
+            let dataUrl = '';
+            if (img && img.src) dataUrl = img.src;
+            else if (canvas) dataUrl = canvas.toDataURL("image/png");
+            
+            if (dataUrl) {
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = 'portal-qr-code.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                notify("QR Code downloaded!", "success", "ph-check-circle");
+            } else {
+                notify("QR Code not ready yet.", "error");
+            }
+        }
+
+        document.addEventListener('contextmenu', function(e) {
+            // Check if user clicked an active element. If not, it must be the background!
+            if (e.target.closest('.app-card') || e.target.closest('.custom-dialog') || e.target.closest('button') || e.target.closest('input') || e.target.closest('[id$="-ctx-menu"]')) return;
+            
+            e.preventDefault();
+            
+            var existing = document.getElementById('bg-ctx-menu');
+            if (existing) existing.remove();
+
+            var menu = document.createElement('div');
+            menu.id = 'bg-ctx-menu';
+            menu.className = 'fixed z-[9999] p-2 rounded-2xl border border-white/10 shadow-2xl flex flex-col min-w-[220px] backdrop-blur-xl origin-top-left transition-all duration-150 scale-95 opacity-0';
+            menu.style.background = 'var(--card-bg)';
+            menu.style.fontFamily = "'Fredoka One', cursive";
+
+            var x = e.clientX;
+            var y = e.clientY;
+            if (x > window.innerWidth - 240) x = window.innerWidth - 240;
+            if (y > window.innerHeight - 200) y = window.innerHeight - 200;
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+
+            var header = document.createElement('div');
+            header.className = 'flex items-center justify-between px-3 pt-1 pb-1 border-b border-white/5 mb-1';
+            header.innerHTML = '<div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 font-sans truncate pr-2">Actions</div><button class="text-red-500 hover:text-red-400 hover:bg-white/10 rounded-md p-1 transition-colors shrink-0"><i class="ph ph-x font-bold"></i></button>';
+            header.querySelector('button').onclick = function() {
+                menu.classList.add('scale-95', 'opacity-0');
+                menu.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => menu.remove(), 150);
+            };
+
+            function createBtn(icon, text, onClick, colorClass) {
+                var btn = document.createElement('button');
+                btn.className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm font-bold flex items-center gap-3 text-white';
+                btn.innerHTML = `<i class="ph ${icon} text-lg ${colorClass || 'text-slate-400'} transition-colors"></i> <span>${text}</span>`;
+                btn.onclick = function () { onClick(); menu.remove(); };
+                return btn;
+            }
+
+            var searchBtn = createBtn('ph-magnifying-glass', 'Global Search', function() {
+                toggleModal('search-modal');
+                setTimeout(() => document.getElementById('global-search').focus(), 100);
+            }, 'text-sky-400');
+            
+            var cloakBtn;
+            if (window.location.search.includes('isPortalCloaked=true')) {
+                cloakBtn = createBtn('ph-arrow-u-up-left', 'Go back to regular portal', function() {
+                    const originalUrl = window.location.href.split('?')[0];
+                    window.open(originalUrl, '_blank');
+                    try {
+                        if (window.top !== window) window.top.close();
+                        else window.close();
+                    } catch (e) {}
+                }, 'text-purple-400');
+            } else {
+                cloakBtn = createBtn('ph-ghost', 'Activate Cloaked Tab', function() {
+                    launchPortalCloaked();
+                }, 'text-purple-400');
+            }
+            
+            var infoBtn = createBtn('ph-qr-code', 'Portal URL', function() {
+                showPortalUrlDialog();
+            }, 'text-amber-400');
+
+            var sep1 = document.createElement('div'); sep1.className = 'h-px bg-white/10 my-1 mx-2';
+            var sep2 = document.createElement('div'); sep2.className = 'h-px bg-white/10 my-1 mx-2';
+
+            menu.appendChild(header);
+            menu.appendChild(searchBtn);
+            menu.appendChild(sep1);
+            menu.appendChild(cloakBtn);
+            menu.appendChild(sep2);
+            menu.appendChild(infoBtn);
+            
+            document.body.appendChild(menu);
+
+            requestAnimationFrame(function () {
+                menu.classList.remove('scale-95', 'opacity-0');
+                menu.classList.add('scale-100', 'opacity-100');
+            });
+            
+            if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(50);
+
+            setTimeout(function () {
+                var clickOutside = function (ev) {
+                    if (!menu.contains(ev.target)) {
+                        menu.classList.add('scale-95', 'opacity-0');
+                        menu.classList.remove('scale-100', 'opacity-100');
+                        setTimeout(function () { if (menu.parentNode) menu.remove(); }, 150);
+                        document.removeEventListener('click', clickOutside);
+                        document.removeEventListener('contextmenu', clickOutside);
+                    }
+                };
+                document.addEventListener('click', clickOutside);
+                document.addEventListener('contextmenu', clickOutside);
+            }, 10);
+        });
+
 
         function _settingsShowHub() {
             const hub = document.getElementById('settings-hub');
@@ -6710,6 +7072,9 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             }
         }
 
+        /* ==========================================================================
+           §10. SETTINGS — openSettingsSection(), syncSettingsUI()
+           ========================================================================== */
         function openSettingsSection(sectionKey) {
             const hub = document.getElementById('settings-hub');
             const sectionsDiv = document.getElementById('settings-sections');
@@ -7071,6 +7436,12 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (currentApp.isHtml) f.srcdoc = currentApp.content; else f.src = currentApp.content;
 
             slot.appendChild(f);
+            
+            // Dynamic Title for Iframe
+            const portalNm = state.theme.name || 'Portal';
+            const cleanAppName = currentApp.name;
+            document.title = `${cleanAppName} - ${portalNm}${state.theme.devMode ? " [DEV]" : ""}`;
+            
             container.style.display = 'flex';
             container.classList.add('animate-open');
             if (menu) menu.style.display = 'block';
@@ -7103,8 +7474,10 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     // In cloaked mode, ALWAYS close — never redirect (would reload portal in about:blank)
                     try {
                         if (window.opener && !window.opener.closed) {
-                            if (window.opener.notify) window.opener.notify(`Returned to ${window.opener.state && window.opener.state.theme ? window.opener.state.theme.name : 'Portal'}`, "success", "ph-house-line");
                             window.opener.focus();
+                        } else if (window.cloakedSourceUrl) {
+                            window.location.href = window.cloakedSourceUrl;
+                            return;
                         }
                     } catch (e) { }
                     window.close();
@@ -7133,11 +7506,15 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 applyTheme();
             }
 
-            notify(`You Returned To: ${state.theme.name || "Portal"}`, "success", "ph-house-line");
+            // Restore Portal Title
+            const portalNm = state.theme.name || 'Portal';
+            document.title = portalNm + (state.theme.devMode ? " [DEV]" : "");
+
+            notify(`You Returned To: ${portalNm}`, "success", "ph-house-line");
         }
 
         /* ==========================================================================
-           §2. NAVIGATION & LAUNCHERS (Iframe / Cloaked)
+           §10.5. NAVIGATION & LAUNCHERS — Iframe, Cloaked Tab, Portal Menu
            ========================================================================== */
         function smartRefresh() {
             const f = document.querySelector('#dynamic-iframe-slot iframe');
@@ -7303,14 +7680,23 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
                 if (isCloak) {
-                    const w = window.open('about:blank', '_blank');
-                    if (!w) { notify('Pop-up blocked! Allow pop-ups for this site.', 'error'); return; }
-                    const portalNm = state.theme.name || 'Portal';
-                    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${portalNm}</title><link rel="icon" type="image/x-icon" href="${favUrl}"><style>*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;overflow:hidden;background:#020617;}</style></head><body><iframe src="${url}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;background:#0f172a;z-index:1;" allowfullscreen allow="autoplay; encrypted-media; fullscreen;"></iframe></body></html>`);
-                    w.document.close();
+                    setTimeout(() => {
+                        const w = window.open('about:blank', '_blank_' + Math.random().toString(36).substring(7));
+                        if (!w) { notify('Pop-up blocked! Allow pop-ups for this site.', 'error'); return; }
+                        const portalNm = state.theme.name || 'Portal';
+                        
+                        // Extract hostname for title
+                        let docTitle = portalNm;
+                        try { docTitle = new URL(url).hostname + ' - ' + portalNm; } catch(e){}
+                        
+                        w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${docTitle}</title><link rel="icon" type="image/x-icon" href="${favUrl}"><style>*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;overflow:hidden;background:#020617;}#back-btn{position:fixed;top:16px;left:16px;z-index:9999;background:rgba(15,23,42,0.8);color:white;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 16px;font-weight:bold;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(0,0,0,0.5);font-family:'Fredoka One',sans-serif;display:none;transition:all 0.2s;}#back-btn:hover{background:rgba(30,41,59,0.9);}</style></head><body><button id="back-btn" onclick="document.getElementById('portal-frame').contentWindow.history.back()">← Go Back</button><iframe id="portal-frame" src="${url}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;background:#0f172a;z-index:1;" allowfullscreen allow="autoplay; encrypted-media; fullscreen;"></iframe><script>const f=document.getElementById('portal-frame');const b=document.getElementById('back-btn');let loads=0;f.onload=function(){loads++;if(loads>1){b.style.display='block';}};setInterval(()=>{try{if(f.contentWindow.location.href!=='${url}')b.style.display='block';}catch(e){b.style.display='block';}},1000);<\/script></body></html>`);
+                        w.document.close();
+                    }, opened * 60);
                 } else {
-                    const w = window.open(url, '_blank');
-                    if (!w) { notify('Pop-up blocked! Allow pop-ups for this site.', 'error'); return; }
+                    setTimeout(() => {
+                        const w = window.open(url, '_blank');
+                        if (!w) { notify('Pop-up blocked! Allow pop-ups for this site.', 'error'); return; }
+                    }, opened * 60);
                 }
                 opened++;
             });
@@ -7326,19 +7712,38 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         }
 
         function launchPortalCloaked() {
-            const portalName = state.theme.name || "Portal";
-            const favUrl = state.theme.portalIcon || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>?</text></svg>';
             const w = window.open('about:blank', '_blank');
             if (!w) { return notify('Pop-up blocked! Allow pop-ups for this site.', 'error'); }
-            w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${portalName}</title><link rel="icon" type="image/x-icon" href="${favUrl}"><style>*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;overflow:hidden;background:#020617;}</style></head><body><iframe src="${window.location.href}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;background:#0f172a;z-index:1;" allowfullscreen></iframe></body></html>`);
+
+            // Secret micro-animation
+            const cloakIcon = document.createElement('i');
+            cloakIcon.className = "ph ph-ghost text-purple-500 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] pointer-events-none";
+            cloakIcon.style.fontSize = "100px";
+            cloakIcon.style.filter = "drop-shadow(0 0 60px rgba(168,85,247,0.8))";
+            cloakIcon.style.animation = "dialogPop 0.6s var(--spring-easing) forwards, fadeOut 0.4s ease 0.4s forwards";
+            document.body.appendChild(cloakIcon);
+
+            setTimeout(() => {
+                if (cloakIcon.parentNode) cloakIcon.remove();
+            }, 800);
+
+            const portalName = state.theme.name || "Portal";
+            const favUrl = state.theme.portalIcon || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>?</text></svg>';
+            const portalUrl = window.location.href.split('?')[0] + '?isPortalCloaked=true';
+            
+            w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${portalName}</title><link rel="icon" type="image/x-icon" href="${favUrl}"><style>*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;overflow:hidden;background:#020617;}</style></head><body><iframe src="${portalUrl}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;background:#0f172a;z-index:1;" allowfullscreen></iframe></body></html>`);
             w.document.close();
-            notify("Portal launched in about:blank tab!", "success");
             closeModal('settings-modal');
+            
+            setTimeout(() => {
+                try {
+                    window.close();
+                    if (!window.closed) window.location.replace('about:blank');
+                } catch (e) {}
+            }, 600);
         }
 
         /* App Visuals — per-app CSS filter state */
-        let currentFilters = { brightness: 100, contrast: 100, saturate: 100, blur: 0, hue: 0, sepia: 0, opacity: 100, grayscale: false, invert: false };
-
         function updateFilters(el, type, unit) {
             const val = parseFloat(el.value);
             currentFilters[type] = val;
@@ -7403,17 +7808,34 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         });
 
         document.getElementById('launch-iframe').onclick = launchInIframe;
-        document.getElementById('launch-cloaked').onclick = () => {
+        document.getElementById('launch-cloaked').onclick = (e) => {
             const w = window.open('about:blank', '_blank');
             if (!w) return notify("Pop-up blocked!", "error");
 
             // Set window name so the cloned portal knows to auto-launch the iframe
-            w.name = "CLOAKED_AUTO_LAUNCH_" + currentApp.id;
+            w.name = "CLOAKED_AUTO_LAUNCH_" + currentApp.id + "_|_" + window.location.href;
+
+            // Temporarily hide the UI locally so the cloned HTML has display: none built-in
+            const ac = document.getElementById('app-container');
+            const pd = document.getElementById('portal-dash');
+            const pm = document.getElementById('password-modal');
+            const wasAc = ac ? ac.style.display : '';
+            const wasPd = pd ? pd.style.display : '';
+            const wasPm = pm ? pm.style.display : '';
+            
+            if (ac) ac.style.display = 'none';
+            if (pd) pd.style.display = 'none';
+            if (pm) pm.style.display = 'none';
 
             // Clone the entire portal flawlessly!
             const portalHtml = document.documentElement.outerHTML;
             w.document.write("<!DOCTYPE html>\n" + portalHtml);
             w.document.close();
+
+            // Instantly restore UI locally
+            if (ac) ac.style.display = wasAc;
+            if (pd) pd.style.display = wasPd;
+            if (pm) pm.style.display = wasPm;
 
             closeModal('choice-modal');
         };
@@ -7427,7 +7849,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         if (typeof state.theme.fastBoot !== 'boolean') state.theme.fastBoot = false;
 
         /* ==========================================================================
-           §4. DEV TOOLS & FUNCTION PLAYGROUND
+           §11.5. FUNCTION PLAYGROUND — Dev iframe sandbox, runDevJS()
            ========================================================================== */
         function openFunctionPlayground() {
             const iframe = document.getElementById('dev-fn-iframe');
@@ -7783,10 +8205,23 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         }
 
 
+        async function fetchAndShowPortalLoader() {
+            try {
+                notify("Fetching loader code...", "info", "ph-spinner ph-spin");
+                const response = await fetch("https://raw.githubusercontent.com/Willyy2/portal-os/refs/heads/main/portal_loader.html");
+                if (!response.ok) throw new Error("Network response was not ok");
+                const code = await response.text();
+                openCodeStudio('loader_readonly', code, 'loader');
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                notify("Failed to fetch loader code.", "error");
+            }
+        }
+
         function openCodeStudio(mode, initialContent, source) {
             codeStudioSource = source;
             const titleEl = document.getElementById('code-studio-title');
-            const titles = { css: 'Edit Live CSS', state: 'Edit App State', html: 'Edit Source HTML', 'add-html': 'Edit HTML (App)', 'html_full': 'Full Portal HTML' };
+            const titles = { css: 'Edit Live CSS', state: 'Edit App State', html: 'Edit Source HTML', 'add-html': 'Edit HTML (App)', 'html_full': 'Full Portal HTML', 'loader': 'Portal Loader HTML' };
             if (titleEl) titleEl.textContent = titles[source] || 'Code Studio';
             const iframe = document.getElementById('code-studio-iframe');
             if (!iframe) return;
@@ -7826,7 +8261,7 @@ body{font-family:'Fredoka One',cursive;background:${bgCol};color:${txtCol};heigh
   <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 2px"></div>
   <button class="btn" id="clr"><i class="ph ph-trash"></i>Clear</button>
   <input type="file" id="fimport" style="display:none" accept=".html,.css,.json,.js,.txt">
-  <button class="btn" onclick="document.getElementById('fimport').click()"><i class="ph ph-file-arrow-down"></i>Import</button>
+  <button class="btn" id="fimport-btn" onclick="document.getElementById('fimport').click()"><i class="ph ph-file-arrow-down"></i>Import</button>
   <button class="btn" id="fexport"><i class="ph ph-export"></i>Export</button>
   <div class="spacer"></div>
   <button class="btn cancel" id="cancel">Cancel</button>
@@ -7846,6 +8281,15 @@ function updateLn(){
 }
 ed.value=${JSON.stringify(safeContent).replace(/</g, '\\u003c')};
 updateLn();
+if(mode==='loader_readonly'){
+  ed.readOnly=true;
+  document.getElementById('undo').style.display='none';
+  document.getElementById('redo').style.display='none';
+  document.getElementById('clr').style.display='none';
+  document.getElementById('fimport-btn').style.display='none';
+  document.getElementById('save').style.display='none';
+  document.getElementById('cancel').textContent='Close';
+}
 ed.addEventListener('input',updateLn);
 ed.addEventListener('scroll',()=>{ln.scrollTop=ed.scrollTop;});
 document.getElementById('undo').onclick=()=>document.execCommand('undo');
@@ -7930,6 +8374,9 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             toggleModal('emoji-hub-modal');
         }
 
+        /* ==========================================================================
+           §12. EMOJI HUB — emoji creation, rendering, emojiCache
+           ========================================================================== */
         function renderEmojiHub() {
             const list = document.getElementById('emoji-hub-list');
             if (!list) return;
@@ -8014,7 +8461,7 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             renderEmojiHub();
         }
 
-        let currentEmojiOptionIndex = null;
+        currentEmojiOptionIndex = null;
         function openEmojiOptions(idx) {
             currentEmojiOptionIndex = idx;
             const em = (state.theme.customEmojis || [])[idx];
@@ -8256,6 +8703,9 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             }
         });
 
+        /* ==========================================================================
+           §14. GLOBAL INIT & WINDOW EXPORTS — window.* exposures, init() call
+           ========================================================================== */
         try {
             window.undo = undo; window.redo = redo; window.showAdd = showAdd; window.saveAsDefaults = saveAsDefaults;
             window.toggleModal = toggleModal; window.closeModal = closeModal; window.showExport = showExport;
@@ -8478,8 +8928,9 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             };
         })();
 
-        let targetRTEInput = null;
-        let longPressTimer, isDragging = false;
+        targetRTEInput = null;
+        longPressTimer = null;
+        isDragging = false;
 
         document.addEventListener('touchstart', (e) => {
             isDragging = false;
@@ -8658,8 +9109,8 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
         };
 
         // ─── MAGIC FX SYSTEM ────────────────────────────────────────────────────────
-        let rteActiveFX = null; // currently selected effect class (or null)
-        let rteFXSavedRange = null; // saved selection range for FX dialog
+        rteActiveFX = null; // currently selected effect class (or null)
+        rteFXSavedRange = null; // saved selection range for FX dialog
 
         // All registered effects: { id, label, class }
         const RTE_EFFECTS = [
@@ -8841,19 +9292,15 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
 
         window.handleBgUpdate = function(val) { state.theme.bgImage = val; document.getElementById("body-bg").style.backgroundImage = val ? `url(${val})` : "none"; document.getElementById("body-bg").style.backgroundSize = "cover"; document.getElementById("body-bg").style.backgroundPosition = "center"; saveSettings(); notify("Background updated!", "success"); };
 
-        let appCtxTargetId = null;
+        /* ==========================================================================
+           §13. CONTEXT MENUS — showAppContextMenu(), settings ctx menu
+           ========================================================================== */
+        appCtxTargetId = null;
         window.showAppContextMenu = function (cx, cy, appId) {
             appCtxTargetId = appId;
             const menu = document.getElementById('app-context-menu');
             if (!menu) return;
-            // Use recursive search to find name (handles apps in categories)
-            const foundApp = (function searchTree(list) {
-                for (const a of list) {
-                    if (String(a.id) === String(appId)) return a;
-                    if (a.children && a.children.length) { const sub = searchTree(a.children); if (sub) return sub; }
-                }
-                return null;
-            })(state.userApps);
+            const foundApp = findNodeInTree(state.userApps, appId);
             const appName = foundApp ? foundApp.name : 'App';
             document.getElementById('app-ctx-title').innerHTML = typeof renderTextWithEmojis === 'function' ? renderTextWithEmojis(appName) : appName;
 
@@ -8995,6 +9442,20 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             }
             state.userApps.forEach(a => searchNode(a, ''));
             
+            // System Keywords
+            const systemKeywords = [
+                { keyword: 'settings', title: 'Portal Settings', icon: '<i class="ph ph-gear text-emerald-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
+                { keyword: 'help', title: 'Portal Help', icon: '<i class="ph ph-question text-sky-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
+                { keyword: 'changelog', title: 'Update Changelog', icon: '<i class="ph ph-list-numbers text-purple-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
+                { keyword: 'dev', title: 'Developer Tools', icon: '<i class="ph ph-code text-rose-400 text-xl"></i>', action: "closeGlobalSearch(); openDevTools()" },
+                { keyword: 'theme', title: 'Theme Customization', icon: '<i class="ph ph-palette text-fuchsia-400 text-xl"></i>', action: "closeGlobalSearch(); openThemeEditor()" }
+            ];
+            systemKeywords.forEach(sys => {
+                if (sys.keyword.includes(query) || sys.title.toLowerCase().includes(query)) {
+                    results.push({ type: 'system', item: sys, path: 'System Settings' });
+                }
+            });
+            
             if (results.length === 0) {
                 resContainer.innerHTML = '<p class="text-slate-500 text-center py-4 font-bold font-sans">No results found.</p>';
                 resContainer.classList.remove('hidden');
@@ -9003,6 +9464,20 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             }
             
             resContainer.innerHTML = results.slice(0, 15).map(r => {
+                if (r.type === 'system') {
+                    return `
+                    <button onclick="${r.item.action}" class="flex items-center gap-4 w-full p-3 rounded-xl hover:bg-white/10 transition-colors text-left group" style="background:var(--card-bg);">
+                        <div class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg shrink-0">
+                            ${r.item.icon}
+                        </div>
+                        <div>
+                            <p class="text-white font-bold">${r.item.title}</p>
+                            <p class="text-[10px] uppercase tracking-widest text-slate-500 font-sans mt-0.5 flex items-center gap-1"><i class="ph ph-gear"></i> ${r.path}</p>
+                        </div>
+                        <i class="ph ph-arrow-right ml-auto text-slate-600 group-hover:text-white transition-colors"></i>
+                    </button>`;
+                }
+
                 let iconHTML = '';
                 if (r.item.icon === 'text') {
                     iconHTML = `<span class="text-xl">${r.item.customText}</span>`;
@@ -9122,16 +9597,10 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
 
             let moved = 0;
             ids.forEach(appId => {
-                const app = (function find(list) {
-                    for (const a of list) {
-                        if (String(a.id) === String(appId)) return a;
-                        if (a.children) { const s = find(a.children); if (s) return s; }
-                    }
-                    return null;
-                })(state.userApps);
+                const app = findNodeInTree(state.userApps, appId);
                 if (!app) return;
 
-                deleteAppRecursively(state.userApps, app.id);
+                deleteNodeInTree(state.userApps, app.id);
 
                 if (targetId === 'root') {
                     state.userApps.push(app);
@@ -9179,7 +9648,10 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
 
         // Cloaked Tab Native Auto-Launch Detector
         if (window.name && window.name.startsWith("CLOAKED_AUTO_LAUNCH_")) {
-            const cloakedRawId = window.name.split("CLOAKED_AUTO_LAUNCH_")[1];
+            const rawParts = window.name.split("CLOAKED_AUTO_LAUNCH_")[1].split("_|_");
+            const cloakedRawId = rawParts[0];
+            window.cloakedSourceUrl = rawParts[1] || "";
+            
             // Immediately hide the underlying dashboard wrapper to prevent flashing
             const dash = document.getElementById('portal-dash');
             if (dash) dash.style.display = 'none';
@@ -9213,8 +9685,48 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 }
             }, 150);
         }
+            // ── Phase 2: Delegated grid event handlers (replaces per-card listeners) ──
+            // One touchstart on the grid covers ALL cards — zero per-card listener overhead
+            (function setupGridDelegation() {
+                const grid = document.getElementById('apps-grid');
+                if (!grid) return;
+                let _pressTimer = null;
+                let _pressMoved = false;
+
+                grid.addEventListener('touchstart', (e) => {
+                    _pressMoved = false;
+                    const card = e.target.closest('.app-card[data-app-id]');
+                    if (!card) return;
+                    const appId = card.dataset.appId;
+                    if (!appId || appId === '__back__') return;
+                    _pressTimer = setTimeout(() => {
+                        if (!_pressMoved && typeof showAppContextMenu === 'function') {
+                            showAppContextMenu(e.touches[0].clientX, e.touches[0].clientY, appId);
+                        }
+                    }, 600);
+                }, { passive: true });
+
+                grid.addEventListener('touchmove', () => { _pressMoved = true; clearTimeout(_pressTimer); }, { passive: true });
+                grid.addEventListener('touchend', () => clearTimeout(_pressTimer), { passive: true });
+
+                grid.addEventListener('contextmenu', (e) => {
+                    const card = e.target.closest('.app-card[data-app-id]');
+                    if (!card) return;
+                    const appId = card.dataset.appId;
+                    if (!appId || appId === '__back__') return;
+                    e.preventDefault();
+                    if (typeof showAppContextMenu === 'function') showAppContextMenu(e.clientX, e.clientY, appId);
+                });
+
+                // Back card click delegation
+                grid.addEventListener('click', (e) => {
+                    const card = e.target.closest('.app-card[data-app-id="__back__"]');
+                    if (card) { currentPath.pop(); renderApps(); }
+                });
+            })();
+
             // --- UNIFIED IMAGE PICKER ---
-        let imagePickerCallback = null;
+        imagePickerCallback = null;
         function openImagePicker(currentUrl, callback) {
             imagePickerCallback = callback;
             const modal = document.getElementById('image-choice-modal');
