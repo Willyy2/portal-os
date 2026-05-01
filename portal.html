@@ -6989,8 +6989,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             }
 
             var searchBtn = createBtn('ph-magnifying-glass', 'Global Search', function() {
-                toggleModal('search-modal');
-                setTimeout(() => document.getElementById('global-search').focus(), 100);
+                if (typeof openGlobalSearch === 'function') openGlobalSearch();
             }, 'text-sky-400');
             
             var cloakBtn;
@@ -9447,8 +9446,25 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 { keyword: 'settings', title: 'Portal Settings', icon: '<i class="ph ph-gear text-emerald-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
                 { keyword: 'help', title: 'Portal Help', icon: '<i class="ph ph-question text-sky-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
                 { keyword: 'changelog', title: 'Update Changelog', icon: '<i class="ph ph-list-numbers text-purple-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
-                { keyword: 'dev', title: 'Developer Tools', icon: '<i class="ph ph-code text-rose-400 text-xl"></i>', action: "closeGlobalSearch(); openDevTools()" },
-                { keyword: 'theme', title: 'Theme Customization', icon: '<i class="ph ph-palette text-fuchsia-400 text-xl"></i>', action: "closeGlobalSearch(); openThemeEditor()" }
+                { keyword: 'dev mode', title: 'Developer Tools', icon: '<i class="ph ph-code text-rose-400 text-xl"></i>', action: "closeGlobalSearch(); openDevTools()" },
+                { keyword: 'developer', title: 'Developer Tools', icon: '<i class="ph ph-code text-rose-400 text-xl"></i>', action: "closeGlobalSearch(); openDevTools()" },
+                { keyword: 'theme', title: 'Theme Customization', icon: '<i class="ph ph-palette text-fuchsia-400 text-xl"></i>', action: "closeGlobalSearch(); openThemeEditor()" },
+                { keyword: 'experimental', title: 'Experimental Settings', icon: '<i class="ph ph-flask text-amber-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
+                { keyword: 'right click', title: 'Right Click Help', icon: '<i class="ph ph-mouse-right-click text-indigo-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
+                { keyword: 'context menu', title: 'Context Menu Help', icon: '<i class="ph ph-mouse-right-click text-indigo-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
+                { keyword: 'fast boot', title: 'Fast Boot Setting', icon: '<i class="ph ph-rocket-launch text-emerald-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
+                { keyword: 'performance', title: 'Performance Mode', icon: '<i class="ph ph-lightning text-yellow-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
+                { keyword: 'emoji', title: 'Emoji Hub', icon: '<i class="ph ph-smiley-wink text-fuchsia-400 text-xl"></i>', action: "closeGlobalSearch(); openEmojiHub()" },
+                { keyword: 'export', title: 'Export / Import Data', icon: '<i class="ph ph-export text-blue-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('export-modal')" },
+                { keyword: 'sync hub', title: 'Data Management & Sync Hub', icon: '<i class="ph ph-cloud-arrow-up text-blue-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('export-modal')" },
+                { keyword: 'qr code', title: 'QR Code & Portal URL', icon: '<i class="ph ph-qr-code text-amber-400 text-xl"></i>', action: "closeGlobalSearch(); showPortalUrlDialog()" },
+                { keyword: 'password', title: 'Change Password', icon: '<i class="ph ph-lock text-red-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
+                { keyword: 'background', title: 'Change Background', icon: '<i class="ph ph-image text-pink-400 text-xl"></i>', action: "closeGlobalSearch(); openThemeEditor()" },
+                { keyword: 'app manager', title: 'App & Category Manager', icon: '<i class="ph ph-squares-four text-blue-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('add-modal')" },
+                { keyword: 'add app', title: 'Add New App', icon: '<i class="ph ph-plus-circle text-emerald-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('add-modal')" },
+                { keyword: 'cloaked tab', title: 'Activate Cloaked Tab', icon: '<i class="ph ph-ghost text-purple-400 text-xl"></i>', action: "closeGlobalSearch(); launchPortalCloaked()" },
+                { keyword: 'function playground', title: 'Function Playground', icon: '<i class="ph ph-terminal-window text-rose-400 text-xl"></i>', action: "closeGlobalSearch(); openFunctionPlayground()" },
+                { keyword: 'code studio', title: 'Code Studio (HTML/CSS)', icon: '<i class="ph ph-brackets-curly text-indigo-400 text-xl"></i>', action: "closeGlobalSearch(); openCodeStudioForAddHtml()" }
             ];
             systemKeywords.forEach(sys => {
                 if (sys.keyword.includes(query) || sys.title.toLowerCase().includes(query)) {
