@@ -251,6 +251,15 @@
             box-shadow: none !important;
             text-shadow: none !important;
         }
+        /* FX spans are exempt — they NEED text-shadow and animation to work */
+        body.perf-mode .portal-fx {
+            text-shadow: unset !important;
+            animation: unset !important;
+            -webkit-text-fill-color: unset !important;
+            background: unset !important;
+            color: unset !important;
+            transform: unset !important;
+        }
 
         body.perf-mode .app-card {
             box-shadow: none !important;
@@ -363,6 +372,54 @@
             border-radius: 10px;
             opacity: 0.3;
         }
+
+        /* ---- Scrollable Context Menus ---- */
+        #app-context-menu,
+        #rte-context-menu,
+        #settings-ctx-menu {
+            max-height: 85vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) transparent;
+        }
+        #app-context-menu::-webkit-scrollbar,
+        #rte-context-menu::-webkit-scrollbar,
+        #settings-ctx-menu::-webkit-scrollbar { width: 3px; }
+        #app-context-menu::-webkit-scrollbar-thumb,
+        #rte-context-menu::-webkit-scrollbar-thumb,
+        #settings-ctx-menu::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+
+        /* ---- Cloaked Tab Overlay (original tab) ---- */
+        #cloaked-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: var(--bg-color, #020617);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            font-family: 'Fredoka One', cursive;
+        }
+        #cloaked-overlay.active { display: flex; }
+        #cloaked-overlay .cloak-icon { font-size: 5rem; color: var(--primary-color); margin-bottom: 1.5rem; animation: cloak-float 3s ease-in-out infinite; }
+        @keyframes cloak-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        #cloaked-overlay h1 { font-size: 2.5rem; margin-bottom: 1rem; color: var(--text-main, #ffffff); }
+        #cloaked-overlay p { font-size: 1rem; color: var(--text-dim, #94a3b8); margin-bottom: 2.5rem; font-family: 'Outfit', sans-serif; line-height: 1.6; }
+        #cloaked-overlay .cloak-return-btn {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 1rem 2.5rem;
+            border-radius: 1rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 30px color-mix(in srgb, var(--primary-color) 40%, transparent);
+        }
+        #cloaked-overlay .cloak-return-btn:hover { transform: scale(1.06); filter: brightness(1.12); }
 
         .action-btns {
             position: absolute;
@@ -493,11 +550,6 @@
 
 
         /* ─── MAGIC TEXT EFFECTS ────────────────────────────────────────────────── */
-        /* Optimized for GPU and inheritance */
-        .portal-fx {
-            display: inline !important;
-            position: relative;
-        }
         /* Gradient-clip helpers - these override text color intentionally */
         .fx-rainbow,.fx-gold,.fx-ice,.fx-cosmic {
             -webkit-background-clip: text !important;
@@ -506,66 +558,152 @@
             color: transparent !important;
             background-size: 300% auto !important;
         }
-        .fx-rainbow { background-image: linear-gradient(90deg,#ff0066,#ff7700,#ffee00,#00cc44,#0088ff,#8833ff,#ff0066) !important; animation: fxRainbow 3s linear infinite; font-weight:bold; }
+        .fx-rainbow {
+            background-image: linear-gradient(90deg,#ff0066,#ff7700,#ffee00,#00cc44,#0088ff,#8833ff,#ff0066) !important;
+            animation: fxRainbow 3s linear infinite; font-weight: 900;
+        }
         @keyframes fxRainbow { to { filter: hue-rotate(360deg); } }
 
-        .fx-gold { background-image: linear-gradient(90deg,#aa7718,#fde68a,#d4a017,#fff8b0,#b8860b,#fde68a,#aa7718) !important; animation: fxGold 2.5s ease-in-out infinite alternate; font-weight:bold; }
-        @keyframes fxGold { 0% { filter: brightness(0.9); } 100% { filter: brightness(1.3) drop-shadow(0 0 2px rgba(255,215,0,0.5)); } }
+        .fx-gold {
+            background-image: linear-gradient(90deg,#aa7718,#fde68a,#d4a017,#fff8b0,#b8860b,#fde68a,#aa7718) !important;
+            animation: fxGold 2.5s ease-in-out infinite alternate; font-weight: 900;
+        }
+        @keyframes fxGold { 0% { filter: brightness(0.9); } 100% { filter: brightness(1.35) drop-shadow(0 0 3px rgba(255,215,0,0.6)); } }
 
-        .fx-ice { background-image: linear-gradient(90deg,#a8edff,#e0f7ff,#60c8ff,#fff,#b0e8ff,#a8edff) !important; animation: fxIce 3s ease-in-out infinite alternate; font-weight:bold; }
-        @keyframes fxIce { 0% { filter: brightness(0.9); } 100% { filter: brightness(1.2) hue-rotate(15deg); } }
+        .fx-ice {
+            background-image: linear-gradient(90deg,#a8edff,#e0f7ff,#60c8ff,#fff,#b0e8ff,#a8edff) !important;
+            animation: fxIce 3s ease-in-out infinite alternate; font-weight: 900;
+        }
+        @keyframes fxIce { 0% { filter: brightness(0.9) drop-shadow(0 0 4px #7dd3fc88); } 100% { filter: brightness(1.25) drop-shadow(0 0 10px #bae6fdaa); } }
 
-        .fx-cosmic { background-image: linear-gradient(90deg,#c026d3,#818cf8,#fb7185,#a78bfa,#e879f9,#c026d3) !important; animation: fxCosmic 4s linear infinite; font-weight:bold; }
+        .fx-cosmic {
+            background-image: linear-gradient(90deg,#c026d3,#818cf8,#fb7185,#a78bfa,#e879f9,#c026d3) !important;
+            animation: fxCosmic 4s linear infinite; font-weight: 900;
+        }
         @keyframes fxCosmic { to { filter: hue-rotate(-360deg); } }
+        /* All fx spans need inline-block so transform-based effects (wavy, shake) work */
+        .portal-fx {
+            display: inline-block;
+            position: relative;
+        }
 
-        /* Inheriting effects - recolorable via RTE */
-        .fx-neon { font-weight:bold; animation: fxNeon 3s ease-in-out infinite alternate; color: inherit; }
+        /* ── Glow / Shadow FX — uses currentColor so they inherit RTE color ── */
+        .fx-neon {
+            font-weight: 900;
+            color: inherit;
+            text-shadow:
+                0 0 5px currentColor,
+                0 0 15px currentColor,
+                0 0 30px currentColor;
+            animation: fxNeon 2s ease-in-out infinite alternate;
+            text-rendering: optimizeLegibility;
+        }
         @keyframes fxNeon {
-            0%,19%,21%,23%,25%,54%,56%,100% { text-shadow:0 0 5px currentColor,0 0 15px currentColor,0 0 30px currentColor; }
-            20%,24%,55% { text-shadow:none; opacity:0.8; }
+            0%   { text-shadow: 0 0 5px currentColor, 0 0 15px currentColor, 0 0 30px currentColor; opacity: 1; }
+            45%  { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor; opacity: 0.7; }
+            55%  { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor; opacity: 0.7; }
+            100% { text-shadow: 0 0 8px currentColor, 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; opacity: 1; }
         }
-        .fx-fire { font-weight:bold; animation: fxFire 0.15s infinite alternate; color: inherit; }
+
+        .fx-fire {
+            font-weight: 900;
+            color: inherit;
+            animation: fxFire 0.12s ease-in-out infinite alternate;
+            text-rendering: optimizeLegibility;
+        }
         @keyframes fxFire {
-            0%   { text-shadow:0 -2px 4px currentColor,0 -4px 6px currentColor,0 -6px 10px currentColor; }
-            100% { text-shadow:0 -3px 6px currentColor,0 -6px 8px currentColor,0 -9px 12px currentColor; opacity:.9; }
+            0%   { text-shadow: 0 -1px 3px currentColor, 0 -3px 6px currentColor, 0 -6px 12px currentColor, 0 -8px 18px currentColor; }
+            100% { text-shadow: 0 -2px 5px currentColor, 0 -5px 8px currentColor, 0 -8px 14px currentColor, 0 -12px 24px currentColor; opacity: .88; }
         }
-        .fx-matrix { font-family:'Courier New',monospace !important; letter-spacing:.05em; color: inherit;
-            text-shadow:0 0 5px currentColor,0 0 10px currentColor; animation: fxMatrix 1.5s ease-in-out infinite; }
-        @keyframes fxMatrix { 0%,100%{opacity:1;} 50%{opacity:.6;} }
 
-        .fx-glitch { font-weight:bold; animation: fxGlitch 2s steps(1) infinite; color: inherit; }
+        .fx-matrix {
+            font-family: 'Courier New', monospace !important;
+            letter-spacing: .08em;
+            color: inherit;
+            text-shadow: 0 0 5px currentColor, 0 0 12px currentColor, 0 0 20px currentColor;
+            animation: fxMatrix 1.8s ease-in-out infinite;
+            text-rendering: optimizeLegibility;
+        }
+        @keyframes fxMatrix { 0%,100% { opacity: 1; } 50% { opacity: .55; text-shadow: 0 0 2px currentColor; } }
+
+        .fx-glitch {
+            font-weight: 900;
+            color: inherit;
+            position: relative;
+            animation: fxGlitch 3s steps(1) infinite;
+        }
         @keyframes fxGlitch {
-            0%,90%,100%{text-shadow:none; left:0;}
-            92%{text-shadow:-2px 0 red,2px 0 cyan; left:-2px;}
-            94%{text-shadow:2px 0 red,-2px 0 cyan; left:2px;}
-            96%{text-shadow:-2px 0 red,2px 0 cyan; left:-1px;}
-            98%{text-shadow:2px 0 red,-2px 0 cyan; left:1px;}
+            0%,88%,100% { text-shadow: none; transform: translate(0); }
+            90%  { text-shadow: -3px 0 #ff0040, 3px 0 #00ffff; transform: translate(-2px); }
+            92%  { text-shadow:  3px 0 #ff0040,-3px 0 #00ffff; transform: translate(2px); }
+            94%  { text-shadow: -2px 0 #ff0040, 2px 0 #00ffff; transform: translate(-1px); }
+            96%  { text-shadow:  2px 0 #ff0040,-2px 0 #00ffff; transform: translate(1px); }
+            98%  { text-shadow: none; transform: translate(0); }
         }
-        .fx-wavy { animation: fxWavy 1.8s ease-in-out infinite; color: inherit; }
-        @keyframes fxWavy { 0%,100%{top:0px;} 50%{top:-4px;} }
 
-        .fx-shake { font-weight:bold; animation: fxShake .4s ease-in-out infinite; color: inherit; }
-        @keyframes fxShake { 0%,100%{left:0px;} 20%{left:-2px;} 40%{left:2px;} 60%{left:-1px;} 80%{left:1px;} }
+        .fx-wavy {
+            color: inherit;
+            display: inline-block;
+            animation: fxWavy 2s ease-in-out infinite;
+        }
+        @keyframes fxWavy { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-        .fx-ghost { font-style:italic; animation: fxGhost 2.5s ease-in-out infinite; color: inherit; }
-        @keyframes fxGhost { 0%,100%{opacity:0.8;text-shadow:0 0 8px currentColor;} 50%{opacity:.3;text-shadow:0 0 20px currentColor;} }
+        .fx-shake {
+            font-weight: 900;
+            color: inherit;
+            display: inline-block;
+            animation: fxShake .35s ease-in-out infinite;
+        }
+        @keyframes fxShake {
+            0%,100% { transform: translateX(0); }
+            20%     { transform: translateX(-3px); }
+            40%     { transform: translateX(3px); }
+            60%     { transform: translateX(-2px); }
+            80%     { transform: translateX(2px); }
+        }
 
-        .fx-retro { font-weight:bold; letter-spacing:.06em; color: inherit;
-            -webkit-text-stroke:1.5px color-mix(in srgb, currentColor 30%, #000);
-            text-shadow:3px 3px 0 color-mix(in srgb, currentColor 40%, #000), 5px 5px 0 rgba(0,0,0,.4); }
+        .fx-ghost {
+            font-style: italic;
+            color: inherit;
+            animation: fxGhost 2.5s ease-in-out infinite;
+        }
+        @keyframes fxGhost {
+            0%,100% { opacity: 0.9; text-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
+            50%     { opacity: .3; text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+        }
 
-        .fx-shadow-pop { font-weight:bold; color: inherit;
-            text-shadow:1px 1px 0 color-mix(in srgb, currentColor 70%, #000),
-                2px 2px 0 color-mix(in srgb, currentColor 50%, #000),
-                3px 3px 0 color-mix(in srgb, currentColor 30%, #000); }
+        .fx-retro {
+            font-weight: 900;
+            letter-spacing: .07em;
+            color: inherit;
+            -webkit-text-stroke: 1.5px color-mix(in srgb, currentColor 25%, #000);
+            text-shadow:
+                3px 3px 0 color-mix(in srgb, currentColor 35%, #000),
+                5px 5px 0 rgba(0,0,0,.45),
+                7px 7px 0 rgba(0,0,0,.2);
+        }
 
-        .fx-typewriter { border-right:2px solid currentColor; padding-right:2px; color: inherit;
-            animation: fxCaret .8s step-end infinite; }
-        @keyframes fxCaret { 0%,100%{border-color:currentColor;} 50%{border-color:transparent;} }
+        .fx-shadow-pop {
+            font-weight: 900;
+            color: inherit;
+            text-shadow:
+                1px 1px 0 color-mix(in srgb, currentColor 80%, #000),
+                2px 2px 0 color-mix(in srgb, currentColor 55%, #000),
+                3px 3px 0 color-mix(in srgb, currentColor 35%, #000),
+                4px 4px 6px rgba(0,0,0,.4);
+        }
 
-        /* Perf mode: kill FX animations */
-        body.perf-mode .portal-fx { animation:none !important; -webkit-text-fill-color:initial !important; background:none !important; text-shadow:none !important; color:inherit !important; top:0 !important; left:0 !important; }
-        @media (prefers-reduced-motion: reduce) { .portal-fx { animation:none !important; } }
+        .fx-typewriter {
+            border-right: 2.5px solid currentColor;
+            padding-right: 3px;
+            color: inherit;
+            animation: fxCaret .75s step-end infinite;
+        }
+        @keyframes fxCaret { 0%,100% { border-color: currentColor; } 50% { border-color: transparent; } }
+
+        /* Perf mode: kill all FX animations — but only when NOT portal-fx (handled above) */
+        body.perf-mode .portal-fx { animation: unset !important; -webkit-text-fill-color: unset !important; background: unset !important; text-shadow: unset !important; color: unset !important; transform: unset !important; }
+        @media (prefers-reduced-motion: reduce) { .portal-fx { animation: none !important; } }
 
         /* FX dialog item cards */
         .rte-fx-card {
@@ -1647,22 +1785,31 @@
         </div>
         <input type="hidden" id="element-app-target-id">
     </div>
+    <!-- Cloaked Overlay for Original Tab -->
+    <div id="cloaked-overlay">
+        <i class="ph ph-ghost cloak-icon"></i>
+        <h1>Portal is Cloaked</h1>
+        <p>Your session is active in a secret tab.<br>This page is hidden for your privacy.</p>
+        <button class="cloak-return-btn" onclick="const o=document.getElementById('cloaked-overlay'); if(o) o.classList.remove('active');">&#8617; Return to Portal</button>
+    </div>
+
     <div id="choice-modal" class="fixed inset-0 z-[1500] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300"
             onclick="closeModal('choice-modal')"></div>
         <div
             class="relative custom-dialog p-8 rounded-[2rem] w-full max-w-sm shadow-2xl text-white text-center transform transition-all duration-300">
-            <h2 class="text-3xl font-black mb-2 tracking-tight">Launch</h2>
-            <p class="text-xs text-slate-400 mb-8 px-4 font-medium uppercase tracking-widest font-sans">Open in Portal
-            </p>
-            <div class="space-y-4">
+            <!-- App Icon -->
+            <div id="choice-app-icon" class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"></div>
+            <h2 class="text-2xl font-black mb-1 tracking-tight">Launch <span id="choice-app-name" style="color: var(--primary-color);"></span></h2>
+            <p class="text-xs text-slate-500 mb-6 px-4 font-medium uppercase tracking-widest font-sans">How do you want to open it?</p>
+            <div class="space-y-3">
                 <button id="launch-iframe"
-                    class="w-full py-5 rounded-2xl font-bold bg-blue-600 hover:bg-blue-500 flex items-center justify-center gap-3 shadow-lg shadow-blue-900/50">
-                    <i class="ph ph-browser text-2xl"></i> Open Inside Portal
+                    class="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95" style="background: var(--primary-color); color: #fff; box-shadow: 0 8px 24px color-mix(in srgb, var(--primary-color) 35%, transparent);">
+                    <i class="ph ph-browser text-xl"></i> Open Inside Portal
                 </button>
                 <button id="launch-cloaked"
-                    class="w-full py-5 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 border text-sm" style="background: color-mix(in srgb, var(--primary-color) 10%, rgba(0,0,0,0.6)); border-color: color-mix(in srgb, var(--primary-color) 25%, rgba(255,255,255,0.1)); color: var(--primary-color);">
+                    class="w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 border text-sm active:scale-95" style="background: color-mix(in srgb, var(--primary-color) 10%, rgba(0,0,0,0.6)); border-color: color-mix(in srgb, var(--primary-color) 25%, rgba(255,255,255,0.1)); color: var(--primary-color);">
                     <i class="ph ph-mask-happy text-xl"></i> Cloaked Tab
                 </button>
             </div>
@@ -1759,6 +1906,13 @@
                     </button>
                 </div>
 
+
+                <div id="bulk-move-cat-group" class="hidden">
+                    <button onclick="openMoveIntoCategoryDialog(null, [...selectedAppIds])"
+                        class="w-full py-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all">
+                        <i class="ph ph-folder-open text-xl"></i> Move Selected to Category
+                    </button>
+                </div>
 
                 <details class="bg-black/40 border border-white/5 rounded-2xl overflow-hidden group">
                     <summary
@@ -2290,8 +2444,8 @@
 
     <!-- App Card Context Menu -->
     <div id="app-context-menu"
-        class="fixed z-[9999] hidden border border-white/10 backdrop-blur-md rounded-xl p-1 shadow-2xl overflow-hidden origin-top-left transition-all duration-150 scale-95 opacity-0"
-        style="background: var(--dialog-bg); min-width: 210px;">
+        class="fixed z-[9999] hidden border border-white/10 backdrop-blur-md rounded-xl p-1 shadow-2xl origin-top-left transition-all duration-150 scale-95 opacity-0"
+        style="background: var(--dialog-bg); min-width: 210px; max-height: 85vh; overflow-y: auto;">
         <div class="flex items-center justify-between px-3 pt-2 pb-1">
             <div id="app-ctx-title"
                 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 font-sans truncate pr-2">
@@ -2326,8 +2480,8 @@
 
     <!-- Context Menu for Rich Text -->
     <div id="rte-context-menu"
-        class="fixed z-[9999] hidden border border-white/20 backdrop-blur-md rounded-xl p-1 shadow-2xl overflow-hidden scale-95 opacity-0 transition-all duration-150 origin-top-left"
-        style="background: var(--dialog-bg);">
+        class="fixed z-[9999] hidden border border-white/20 backdrop-blur-md rounded-xl p-1 shadow-2xl scale-95 opacity-0 transition-all duration-150 origin-top-left"
+        style="background: var(--dialog-bg); max-height: 85vh; overflow-y: auto;">
         <button onclick="openRichTextEditor()"
             class="w-full text-left px-4 py-3 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
             <i class="ph ph-magic-wand text-fuchsia-400"></i> Open Rich Text Editor
@@ -3059,22 +3213,22 @@
                             style="color: var(--primary-color); opacity: 0.5;"></i>
                     </summary>
                     <div class="px-5 pb-5">
-                        <!-- v4.8 April 30 2026 -->
-                        <!-- v4.8 April 30 2026 -->
+                        <!-- v4.8 — May 6 2026 -->
                         <div class="mb-4">
                             <p class="text-xs font-bold uppercase tracking-widest font-sans mb-2 flex items-center gap-1"
                                 style="color: var(--primary-color);"><i class="ph ph-rocket-launch"></i> v4.8 &mdash;
-                                The Massive Ecosystem Update!</p>
+                                The Precision Patch</p>
                             <ul class="text-[11px] font-sans space-y-2 ml-3 list-disc text-slate-300">
-                                <li><b>Background Menu:</b> Right-click the background for quick actions, global search, and tools!</li>
-                                <li><b>Global Search Magic:</b> Hit Ctrl+K to search your apps, settings, help, themes, or changelog instantly.</li>
-                                <li><b>QR Codes & Portal URL:</b> View your original URL and generate a QR code for your portal instantly.</li>
-                                <li><b>Fast Boot Standard:</b> Fast Boot is now ON by default for a lightning-fast experience.</li>
-                                <li><b>Welcome Experience:</b> A new, immersive first-time setup for new users with dynamic greeting animations.</li>
-                                <li><b>Cloaked Tab Pro:</b> Dynamic "App - Portal" titles, ghost micro-animations, and intelligent "Go Back" tracking that seamlessly re-opens your portal.</li>
-                                <li><b>Multi-Link Launcher:</b> Launch entire folders or multiple URLs simultaneously without freezing your browser.</li>
-                                <li><b>Security Bypass:</b> Admins can bypass the password screen for emergency access using the secret passcode.</li>
-                                <li><b>Stability Fixes:</b> Completely solved all "flashing" screens and rendering bugs when cloaking apps.</li>
+                                <li><b>Launch Dialog Overhaul:</b> Redesigned app launch screen now shows the app icon, combined title ("Launch [App]"), and uses app & theme colors throughout.</li>
+                                <li><b>Context Menus Fixed:</b> All right-click menus are now properly scrollable with dynamic viewport-aware positioning — no more cut-off menus on small screens.</li>
+                                <li><b>Context Menu Animation:</b> Fixed the slide-from-top-left ghost animation on right-click. Menus now pop in from exactly where you clicked.</li>
+                                <li><b>Text Effects Overhaul:</b> All FX (Neon, Fire, Glitch, Shake, Wavy, Ghost, Retro etc.) rebuilt with GPU-accelerated transforms, deeper glows, and proper <code>currentColor</code> inheritance.</li>
+                                <li><b>Refresh Fixed:</b> Portal menu "Refresh" button now correctly reloads both URL and HTML apps.</li>
+                                <li><b>Replace URL Fixed:</b> Changing an app's URL now forces a full reload instead of showing a white screen.</li>
+                                <li><b>Multi-Select Stability:</b> Opening the Bulk Manager no longer kills your active selection. Move-to-Category button restored.</li>
+                                <li><b>Global Search Navigation:</b> Clicking a search result now correctly navigates to apps and nested categories.</li>
+                                <li><b>Cloaked Tab:</b> Original tab now shows a clean "Portal is Cloaked" overlay instead of a blue screen. Favicon fixed.</li>
+                                <li><b>Loop Guard:</b> Categories that contain themselves no longer cause infinite navigation loops.</li>
                             </ul>
                         </div>
                         <!-- View Old Updates Button -->
@@ -3082,7 +3236,7 @@
                             class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-xs font-bold text-slate-400 hover:text-slate-300 group active:scale-95">
                             <i
                                 class="ph ph-clock-counter-clockwise text-sm group-hover:rotate-[-15deg] transition-transform"></i>
-                            View Old Updates (v4.6 and earlier)
+                            View Old Updates (v4.7 and earlier)
                         </button>
                     </div>
                 </details>
@@ -3288,7 +3442,7 @@
                 </button>
                 <div class="flex-1">
                     <h2 class="text-2xl font-black tracking-tight">Old Updates</h2>
-                    <p class="text-[11px] text-slate-500 font-sans mt-0.5">v4.6 and earlier — Portal history</p>
+                    <p class="text-[11px] text-slate-500 font-sans mt-0.5">v4.7 and earlier — Portal history</p>
                 </div>
                 <button onclick="closeModal('legacy-updates-modal')"
                     class="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all active:scale-90">
@@ -3299,11 +3453,30 @@
             <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1 scroll-section space-y-5 pr-1">
 
-                <!-- v4.7 April 29 2026 -->
+                <!-- v4.7 April 30 2026 -->
                 <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
                     <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
                         style="color:var(--secondary-color)">
-                        <i class="ph ph-clock-counter-clockwise"></i> v4.7 &mdash; The Unified Precision Update
+                        <i class="ph ph-rocket-launch"></i> v4.7 &mdash; The Massive Ecosystem Update
+                    </p>
+                    <ul class="text-[11px] font-sans text-slate-400 space-y-2 ml-3 list-disc marker:text-slate-500">
+                        <li><b>Background Menu:</b> Right-click the background for quick actions, global search, and tools!</li>
+                        <li><b>Global Search Magic:</b> Hit Ctrl+K to search your apps, settings, help, themes, or changelog instantly.</li>
+                        <li><b>QR Codes &amp; Portal URL:</b> View your original URL and generate a QR code for your portal instantly.</li>
+                        <li><b>Fast Boot Standard:</b> Fast Boot is now ON by default for a lightning-fast experience.</li>
+                        <li><b>Welcome Experience:</b> A new, immersive first-time setup for new users with dynamic greeting animations.</li>
+                        <li><b>Cloaked Tab Pro:</b> Dynamic "App - Portal" titles, ghost micro-animations, and intelligent "Go Back" tracking.</li>
+                        <li><b>Multi-Link Launcher:</b> Launch entire folders or multiple URLs simultaneously.</li>
+                        <li><b>Security Bypass:</b> Admins can bypass the password screen for emergency access using the secret passcode.</li>
+                        <li><b>Stability Fixes:</b> Solved all "flashing" screens and rendering bugs when cloaking apps.</li>
+                    </ul>
+                </div>
+
+                <!-- v4.6 April 29 2026 -->
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
+                    <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
+                        style="color:var(--secondary-color)">
+                        <i class="ph ph-clock-counter-clockwise"></i> v4.6 &mdash; The Unified Precision Update
                     </p>
                     <ul class="text-[11px] font-sans text-slate-400 space-y-2 ml-3 list-disc marker:text-slate-500">
                         <li><b>Unified Media:</b> Replaced all separate "URL" and "File" inputs with a single, sleek "Change Image" dialog for App Icons, Category Icons, and Backgrounds.</li>
@@ -3983,31 +4156,15 @@
             }
         });
 
-        // Long-press on settings button (for Xbox / controller users)
+        // Settings button — icon only, no long-press select mode (right-click opens context menu instead)
         (function setupSettingsBtnLongPress() {
             const btn = document.getElementById('settings-btn');
             if (!btn) return;
-            // Set the icon now since we removed it from HTML
+            // Set the icon (moved from HTML to keep it dynamic)
             btn.innerHTML = '<i class="ph ph-gear"></i>';
-            let pressTimer = null;
-            btn.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return; // only main button
-                pressTimer = setTimeout(() => {
-                    pressTimer = null;
-                    toggleSelectModeFromSettings();
-                }, 500);
-            });
-            btn.addEventListener('mouseup', () => clearTimeout(pressTimer));
-            btn.addEventListener('mouseleave', () => clearTimeout(pressTimer));
-            btn.addEventListener('touchstart', (e) => {
-                pressTimer = setTimeout(() => {
-                    pressTimer = null;
-                    toggleSelectModeFromSettings();
-                    if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(50);
-                }, 500);
-            }, { passive: true });
-            btn.addEventListener('touchend', () => clearTimeout(pressTimer), { passive: true });
-            btn.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+            // NOTE: Long-press to trigger SelectMode has been intentionally removed.
+            // This was causing unintended multi-select activation on mobile when right-clicking.
+            // Users should use the right-click context menu on the settings button instead.
         })();
 
         function toggleSelectModeFromSettings() {
@@ -4760,7 +4917,16 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
         function getCurrentList() {
             let list = state.userApps;
+            const seen = new Set();
             for (let id of currentPath) {
+                // Loop guard: if we've seen this ID before, the category tree is circular — break out
+                if (seen.has(id)) {
+                    console.warn('[Portal] Circular category reference detected in path. Breaking loop.');
+                    notify('Circular category detected — navigation reset.', 'error', 'ph-warning');
+                    currentPath = [];
+                    return state.userApps;
+                }
+                seen.add(id);
                 let cat = list.find(a => a.id === id);
                 if (cat && cat.children) list = cat.children;
                 else break;
@@ -4818,7 +4984,14 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     card.onclick = (e) => {
                         if (isPaintMode) { applyStyleToApp(app.id); return; }
                         if (isSelectMode) { toggleSelectApp(app.id); return; }
-                        if (isCat) { currentPath.push(app.id); renderApps(); }
+                        if (isCat) {
+                            // Guard: don't navigate into a category already in the path (prevents loops)
+                            if (currentPath.includes(app.id)) {
+                                notify('This category is already in your current path — circular reference prevented.', 'error', 'ph-warning');
+                                return;
+                            }
+                            currentPath.push(app.id); renderApps();
+                        }
                         else {
                             if (state.theme.alwaysOpenNewTab || app.redirectOnly) {
                                 const a = document.createElement('a');
@@ -6845,10 +7018,23 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
             var x = e.touches ? e.touches[0].clientX : e.clientX;
             var y = e.touches ? e.touches[0].clientY : e.clientY;
-            if (x > window.innerWidth - 220) x = window.innerWidth - 220;
-            if (y > window.innerHeight - 180) y = window.innerHeight - 180;
+
+            // Clamp + dynamic max-height so menu never goes off-screen and scrolls if needed
+            var pad = 10;
+            var vw = window.innerWidth;
+            var vh = window.innerHeight;
+            var estimatedW = 220;
+            if (x + estimatedW > vw - pad) x = vw - estimatedW - pad;
+            if (x < pad) x = pad;
+
+            var spaceBelow = vh - y - pad;
+            var maxH = Math.min(Math.max(spaceBelow, 160), Math.floor(vh * 0.85));
+            if (spaceBelow < 160) y = Math.max(pad, vh - maxH - pad);
+
             menu.style.left = x + 'px';
             menu.style.top = y + 'px';
+            menu.style.maxHeight = maxH + 'px';
+            menu.style.overflowY = 'auto';
 
             var selectLabel = isSelectMode ? 'Disable Multi-Select' : 'Enable Multi-Select';
             var selectIconClass = isSelectMode ? 'ph ph-x text-red-400' : 'ph ph-cursor-click text-blue-400';
@@ -7193,8 +7379,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         }
 
         function showAdd() {
-            // Stability reset: exiting select mode when opening manager
-            isSelectMode = false;
+            // Do NOT reset isSelectMode here — user may have selected items intentionally before opening bulk manager
+            // Only sync the UI to reflect current state
             updateBulkUI();
 
             editingAppId = null;
@@ -7516,18 +7702,28 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
            §10.5. NAVIGATION & LAUNCHERS — Iframe, Cloaked Tab, Portal Menu
            ========================================================================== */
         function smartRefresh() {
-            const f = document.querySelector('#dynamic-iframe-slot iframe');
-            if (!f) return;
+            const f = document.getElementById('active-frame');
+            if (!f) { notify('No app is currently open.', 'info', 'ph-info'); return; }
             const icon = document.querySelector('.portal-trigger i');
             if (icon) { icon.classList.add('spin-once'); setTimeout(() => icon.classList.remove('spin-once'), 600); }
 
-            // Standard reload
             if (f.srcdoc) {
-                const old = f.srcdoc; f.srcdoc = '';
-                setTimeout(() => f.srcdoc = old, 10);
-            } else {
-                f.src = f.src;
+                // For HTML apps: blank then reassign to force reload
+                const old = f.srcdoc;
+                f.srcdoc = '';
+                setTimeout(() => { f.srcdoc = old; }, 50);
+            } else if (f.src && f.src !== 'about:blank') {
+                // For URL apps: use contentWindow.location.reload for a true reload
+                try {
+                    f.contentWindow.location.reload();
+                } catch (e) {
+                    // Cross-origin: reassign src
+                    const s = f.src;
+                    f.src = 'about:blank';
+                    setTimeout(() => { f.src = s; }, 50);
+                }
             }
+            notify('Refreshing...', 'info', 'ph-arrows-clockwise');
         }
 
         function togglePortalMenu(e) {
@@ -7597,21 +7793,24 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (!url) return notify('Please enter a URL', 'error');
             if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
-            // Update the live iframe
+            // Update the live iframe — force a real reload by blanking then reassigning
             const f = document.getElementById('active-frame');
-            if (f) { f.src = url; f.srcdoc = ''; }
+            if (f) {
+                f.srcdoc = '';
+                f.src = 'about:blank';
+                setTimeout(() => { f.src = url; }, 80);
+            }
 
             // Update the state/currentApp
             if (currentApp) {
                 currentApp.content = url;
                 currentApp.isHtml = false;
-                // Persist to the state tree
                 const app = findNodeInTree(state.userApps, currentApp.id);
                 if (app) { app.content = url; app.isHtml = false; }
                 commitChanges();
             }
 
-            notify('App URL updated!', 'success', 'ph-check-circle');
+            notify('App URL updated — reloading!', 'success', 'ph-check-circle');
             closeModal('replace-url-modal');
         }
 
@@ -7806,37 +8005,115 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (p) p.style.display = 'none';
         });
 
+        // ── Populate choice-modal with the app's icon and name every time it opens ──
+        (function wireChoiceModal() {
+            const origToggleModal = window.toggleModal;
+            // Patch toggleModal to detect choice-modal opens
+            window.toggleModal = function(id) {
+                origToggleModal(id);
+                if (id === 'choice-modal' && currentApp) {
+                    _populateChoiceModal();
+                }
+            };
+        })();
+
+        function _populateChoiceModal() {
+            const nameEl = document.getElementById('choice-app-name');
+            const iconEl = document.getElementById('choice-app-icon');
+            if (!currentApp || !nameEl || !iconEl) return;
+
+            // App name (supports HTML)
+            const rawName = currentApp.name || 'App';
+            const isHtmlName = /<[a-z][\s\S]*>/i.test(rawName);
+            nameEl.innerHTML = typeof renderTextWithEmojis === 'function'
+                ? renderTextWithEmojis(rawName)
+                : rawName;
+            // Color: use the app's icon color for plain names, theme color for HTML-rich names
+            nameEl.style.color = (!isHtmlName && currentApp.color)
+                ? currentApp.color
+                : 'var(--primary-color)';
+
+            // Icon background — use the app's own color (with alpha) or fall back to primary
+            const appColor = currentApp.color || null;
+            const bgColor = appColor
+                ? `color-mix(in srgb, ${appColor} 18%, rgba(0,0,0,0.5))`
+                : 'color-mix(in srgb, var(--primary-color) 15%, rgba(0,0,0,0.5))';
+            const borderColor = appColor
+                ? `color-mix(in srgb, ${appColor} 35%, transparent)`
+                : 'color-mix(in srgb, var(--primary-color) 30%, transparent)';
+            iconEl.style.background = bgColor;
+            iconEl.style.border = `1px solid ${borderColor}`;
+            iconEl.style.boxShadow = appColor ? `0 4px 20px ${appColor}33` : '';
+
+            // App icon content
+            if (currentApp.icon === 'custom' && currentApp.customIcon) {
+                iconEl.innerHTML = `<img src="${currentApp.customIcon}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+                iconEl.style.background = 'transparent';
+                iconEl.style.border = 'none';
+            } else if (currentApp.icon === 'text' && currentApp.customText) {
+                iconEl.innerHTML = `<span style="font-size:2rem;">${currentApp.customText}</span>`;
+            } else {
+                const iconCls = currentApp.icon && currentApp.icon.includes('ph-')
+                    ? (currentApp.icon.startsWith('ph ') ? currentApp.icon : 'ph ' + currentApp.icon)
+                    : 'ph ph-app-window';
+                iconEl.innerHTML = `<i class="${iconCls}" style="font-size:2rem; color:${appColor || 'var(--primary-color)'}"></i>`;
+            }
+
+            // The "Open Inside Portal" button always uses the user's theme color
+            const launchBtn = document.getElementById('launch-iframe');
+            if (launchBtn) {
+                launchBtn.style.background = 'var(--primary-color)';
+                launchBtn.style.boxShadow = '0 8px 24px color-mix(in srgb, var(--primary-color) 35%, transparent)';
+            }
+        }
+
         document.getElementById('launch-iframe').onclick = launchInIframe;
+
         document.getElementById('launch-cloaked').onclick = (e) => {
+
             const w = window.open('about:blank', '_blank');
-            if (!w) return notify("Pop-up blocked!", "error");
+            if (!w) return notify("Pop-up blocked! Please allow pop-ups for this site.", "error");
+
+            // Determine the favicon to use in the cloaked tab
+            const faviconUrl = (state.theme && state.theme.portalIcon)
+                ? state.theme.portalIcon
+                : `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>`;
 
             // Set window name so the cloned portal knows to auto-launch the iframe
             w.name = "CLOAKED_AUTO_LAUNCH_" + currentApp.id + "_|_" + window.location.href;
 
-            // Temporarily hide the UI locally so the cloned HTML has display: none built-in
+            // Temporarily hide the UI locally so the cloned HTML has display:none built-in
             const ac = document.getElementById('app-container');
             const pd = document.getElementById('portal-dash');
             const pm = document.getElementById('password-modal');
             const wasAc = ac ? ac.style.display : '';
             const wasPd = pd ? pd.style.display : '';
             const wasPm = pm ? pm.style.display : '';
-            
+
             if (ac) ac.style.display = 'none';
             if (pd) pd.style.display = 'none';
             if (pm) pm.style.display = 'none';
 
-            // Clone the entire portal flawlessly!
+            // Clone the entire portal
             const portalHtml = document.documentElement.outerHTML;
-            w.document.write("<!DOCTYPE html>\n" + portalHtml);
+
+            // Inject the correct favicon into the cloned portal head
+            const faviconTag = `<link rel="icon" href="${faviconUrl.replace(/"/g, '&quot;')}">`;
+            const clonedHtml = portalHtml.replace('</head>', faviconTag + '</head>');
+
+            w.document.write("<!DOCTYPE html>\n" + clonedHtml);
             w.document.close();
 
-            // Instantly restore UI locally
+            // Restore original UI
             if (ac) ac.style.display = wasAc;
             if (pd) pd.style.display = wasPd;
             if (pm) pm.style.display = wasPm;
 
             closeModal('choice-modal');
+
+            // Show the cloaked overlay on THIS tab instead of leaving a blue screen
+            const overlay = document.getElementById('cloaked-overlay');
+            if (overlay) overlay.classList.add('active');
         };
 
         // Normalize theme structure for older saves
@@ -9191,18 +9468,19 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             const hasSelection = sel.rangeCount && !sel.isCollapsed;
 
             if (!fxClass || fxClass === 'none') {
-                // Clear effect: unwrap any portal-fx parent around cursor
+                // Clear ALL portal-fx spans in the whole editor
                 rteActiveFX = null;
-                if (hasSelection) document.execCommand('removeFormat', false, null);
-                let node = sel.anchorNode?.parentElement;
-                while (node && node !== editor) {
-                    if (node.classList?.contains('portal-fx')) {
-                        const p = node.parentElement;
-                        while (node.firstChild) p.insertBefore(node.firstChild, node);
-                        p.removeChild(node);
-                        break;
-                    }
-                    node = node.parentElement;
+                if (editor) {
+                    const fxSpans = [...editor.querySelectorAll('.portal-fx')];
+                    fxSpans.forEach(span => {
+                        const parent = span.parentNode;
+                        while (span.firstChild) parent.insertBefore(span.firstChild, span);
+                        parent.removeChild(span);
+                    });
+                }
+                // Also clear any lingering selection formatting
+                if (hasSelection) {
+                    try { document.execCommand('removeFormat', false, null); } catch(e) {}
                 }
             } else if (hasSelection) {
                 // Apply to selection — replace existing fx instead of nesting
@@ -9312,19 +9590,54 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 if (icon) icon.className = isSelectMode ? 'ph ph-x-circle text-red-400' : 'ph ph-cursor-click text-purple-400';
             }
 
+            // --- Position calculation ---
+            // Measure off-screen with transitions disabled to avoid the 0,0 slide animation
+            const prevTransition = menu.style.transition;
+            menu.style.transition = 'none';
+            menu.style.left = '-9999px';
+            menu.style.top = '-9999px';
+            menu.classList.remove('hidden');
+            menu.classList.remove('scale-100', 'opacity-100');
+            menu.classList.add('scale-95', 'opacity-0');
+
+            // Force layout to get real dimensions
+            const menuH = menu.offsetHeight || 280;
+            const menuW = menu.offsetWidth || 220;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const pad = 10;
+
             let bx = cx;
             let by = cy;
-            if (bx > window.innerWidth - 230) bx = window.innerWidth - 230;
-            if (by > window.innerHeight - 200) by = window.innerHeight - 200;
+            if (bx + menuW > vw - pad) bx = vw - menuW - pad;
+            if (bx < pad) bx = pad;
 
+            const spaceBelow = vh - cy - pad;
+            const spaceAbove = cy - pad;
+            let maxH;
+            if (spaceBelow >= menuH || spaceBelow >= spaceAbove) {
+                by = cy;
+                maxH = Math.min(spaceBelow, Math.floor(vh * 0.85));
+            } else {
+                maxH = Math.min(spaceAbove, Math.floor(vh * 0.85));
+                by = Math.max(pad, cy - Math.min(menuH, maxH));
+            }
+
+            // Place at correct position BEFORE restoring transition
             menu.style.left = bx + 'px';
             menu.style.top = by + 'px';
-            menu.classList.remove('hidden');
+            menu.style.maxHeight = maxH + 'px';
+            menu.style.overflowY = 'auto';
 
+            // Re-enable transition, then animate in
             requestAnimationFrame(() => {
-                menu.classList.remove('scale-95', 'opacity-0');
-                menu.classList.add('scale-100', 'opacity-100');
+                menu.style.transition = prevTransition || '';
+                requestAnimationFrame(() => {
+                    menu.classList.remove('scale-95', 'opacity-0');
+                    menu.classList.add('scale-100', 'opacity-100');
+                });
             });
+
             if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(50);
         };
 
@@ -9412,6 +9725,48 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
         window.closeGlobalSearch = function() {
             const dlg = document.getElementById('global-search-modal');
             if (dlg) dlg.style.display = 'none';
+        };
+
+        // ── Global Search Bridge: navigate to a category by reconstructing the full path ──
+        window.openCategory = function(categoryId) {
+            closeGlobalSearch();
+            // Walk the full tree to find the path to this category
+            function findPath(list, targetId, pathSoFar) {
+                for (const node of list) {
+                    if (String(node.id) === String(targetId)) return [...pathSoFar, node.id];
+                    if (node.children) {
+                        const found = findPath(node.children, targetId, [...pathSoFar, node.id]);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+            const path = findPath(state.userApps, categoryId, []);
+            if (path) {
+                // path includes the category itself — we want to navigate INTO it
+                currentPath = path;
+                renderApps();
+                // Close settings modal if open
+                closeModal('settings-modal');
+            } else {
+                notify('Category not found.', 'error', 'ph-warning');
+            }
+        };
+
+        // ── Global Search Bridge: launch an app by its ID ──
+        window.launchApp = function(appId) {
+            closeGlobalSearch();
+            const app = findNodeInTree(state.userApps, appId);
+            if (!app) return notify('App not found.', 'error', 'ph-warning');
+            closeModal('settings-modal');
+            if (state.theme.alwaysOpenNewTab || app.redirectOnly) {
+                const a = document.createElement('a');
+                a.href = app.content; a.target = '_blank'; a.rel = 'noopener noreferrer';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            } else {
+                currentApp = app;
+                toggleModal('choice-modal');
+            }
         };
 
         window.updateGlobalSearch = function(query) {
