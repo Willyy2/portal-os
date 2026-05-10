@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style id="dynamic-element-styles"></style>
@@ -275,19 +276,13 @@
             display: none !important;
         }
 
-        /* Single consolidated hover rule — GPU-accelerated */
         .app-card:hover {
-            transform: translate3d(0, -10px, 0) scale(1.08) !important;
+            transform: translate3d(0, -8px, 0) !important;
             border-color: var(--primary-color) !important;
-            filter: brightness(1.15) saturate(1.1) !important;
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 25px var(--primary-color) !important;
             z-index: 50 !important;
             opacity: 1 !important;
             visibility: visible !important;
-        }
-        /* Don't double-brighten when neon FX is present — the neon has its own filter */
-        .app-card:hover:has(.fx-neon) {
-            filter: saturate(1.05) !important;
         }
 
         .app-card.selected-card {
@@ -1426,16 +1421,15 @@
         }
 
         .custom-dialog button {
-            transition: all 0.3s var(--spring-easing);
+            transition: all 0.2s ease;
         }
 
         .custom-dialog button:hover {
-            transform: scale(1.03);
             filter: brightness(1.1);
         }
 
         .custom-dialog button:active {
-            transform: scale(0.95);
+            filter: brightness(0.9);
         }
 
         #notification-container {
@@ -1954,6 +1948,10 @@
                     class="w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 border text-sm active:scale-95" style="background: color-mix(in srgb, var(--primary-color) 10%, rgba(0,0,0,0.6)); border-color: color-mix(in srgb, var(--primary-color) 25%, rgba(255,255,255,0.1)); color: var(--primary-color);">
                     <i class="ph ph-mask-happy text-xl"></i> Cloaked Tab
                 </button>
+                <button id="launch-new-tab" onclick="closeModal('choice-modal'); const a=document.createElement('a'); a.href=currentApp.content; a.target='_blank'; a.rel='noopener noreferrer'; document.body.appendChild(a); a.click(); document.body.removeChild(a);"
+                    class="w-full py-4 rounded-2xl font-bold transition-all items-center justify-center gap-3 border text-sm active:scale-95" style="display:none; background: color-mix(in srgb, var(--primary-color) 10%, rgba(0,0,0,0.6)); border-color: color-mix(in srgb, var(--primary-color) 25%, rgba(255,255,255,0.1)); color: var(--primary-color);">
+                    <i class="ph ph-arrow-square-out text-xl"></i> Open in New Tab
+                </button>
             </div>
         </div>
     </div>
@@ -2317,7 +2315,7 @@
                     </div>
                     <div class="text-left flex-1">
                         <p class="font-bold text-sm">Toggles &amp; Preferences</p>
-                        <p class="text-[11px] text-slate-500 font-sans">Fast boot, dev mode, exit alert &amp; more</p>
+                        <p class="text-[11px] text-slate-500 font-sans">Fast boot, dev mode &amp; more</p>
                     </div>
                     <i class="ph ph-caret-right text-slate-600 group-hover:text-slate-400 transition-colors"></i>
                 </button>
@@ -2369,11 +2367,8 @@
                     <div
                         class="bg-black/40 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4">
                         <div>
-                            <p class="text-xs uppercase text-slate-400 font-bold tracking-widest font-sans">Always
-                                Open New Tab</p>
-                            <p class="text-[11px] text-slate-500 font-sans">Force all apps to open externally</p>
-                            <p class="text-[9px] text-red-500 font-bold uppercase tracking-tighter mt-1">ONLY USE
-                                THIS FOR WEBSITES THAT ARE NOT BLOCKED!!</p>
+                            <p class="text-xs uppercase text-slate-400 font-bold tracking-widest font-sans">Show "Open in New Tab" Default</p>
+                            <p class="text-[11px] text-slate-500 font-sans">Show 'Open in New Tab' button on every app launch dialog.</p>
                         </div>
                         <button id="external-tab-toggle" onclick="toggleExternalTab()" class="dev-toggle" type="button">
                             <div class="dev-toggle-knob"></div>
@@ -2388,17 +2383,6 @@
                             <p class="text-[11px] text-slate-500 font-sans">Skip password entry on next visit</p>
                         </div>
                         <button id="fast-boot-toggle" onclick="toggleFastBoot()" class="dev-toggle" type="button">
-                            <div class="dev-toggle-knob"></div>
-                        </button>
-                    </div>
-                    <div
-                        class="bg-black/40 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4">
-                        <div>
-                            <p class="text-xs uppercase text-slate-400 font-bold tracking-widest font-sans">Exit
-                                Alert</p>
-                            <p class="text-[11px] text-slate-500 font-sans">Confirm close & auto-copy sync data</p>
-                        </div>
-                        <button id="exit-alert-toggle" onclick="toggleExitAlert()" class="dev-toggle" type="button">
                             <div class="dev-toggle-knob"></div>
                         </button>
                     </div>
@@ -2426,7 +2410,7 @@
                                 <label class="text-[11px] uppercase text-slate-400 font-bold mb-2 block font-sans">Title
                                     <span class="text-[8px] text-slate-600 ml-1 italic">(HTML
                                         Supported)</span></label>
-                                <input type="text" id="set-name"
+                                <input type="text" id="set-name" oninput="backgroundSaveSettings()"
                                     class="w-full bg-black/40 border border-slate-700/50 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition-all text-sm font-sans">
                             </div>
                             <div>
@@ -2434,7 +2418,7 @@
                                     class="text-[11px] uppercase text-slate-400 font-bold mb-2 block font-sans">Description
                                     <span class="text-[8px] text-slate-600 ml-1 italic">(HTML
                                         Supported)</span></label>
-                                <textarea id="set-desc"
+                                <textarea id="set-desc" oninput="backgroundSaveSettings()"
                                     class="w-full bg-black/40 border border-slate-700/50 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition-all text-sm font-sans"
                                     rows="2"></textarea>
                             </div>
@@ -2468,7 +2452,7 @@
                             <div>
                                 <label class="text-[11px] uppercase text-slate-400 font-bold mb-2 block font-sans">Quick
                                     Accent Preview</label>
-                                <input type="color" id="set-col-primary"
+                                <input type="color" id="set-col-primary" oninput="backgroundSaveSettings()"
                                     class="w-full h-10 rounded-lg cursor-pointer bg-transparent border border-white/10 outline-none">
                             </div>
                         </div>
@@ -2582,12 +2566,6 @@
                         class="w-full py-4 bg-red-900/20 text-red-400 border border-red-900/30 rounded-xl font-bold text-xs hover:bg-red-900/30">Reset
                         Everything</button>
                 </div>
-                <!-- Save button at bottom of sections panel -->
-                <button id="settings-save-btn" onclick="saveSettings()"
-                    class="w-full py-4 rounded-2xl font-black text-sm mt-2 transition-colors"
-                    style="display:none; background:var(--primary-color);color:#fff;box-shadow:0 8px 24px color-mix(in srgb,var(--primary-color) 35%,transparent)">
-                    Save Changes
-                </button>
             </div>
         </div>
     </div>
@@ -2646,15 +2624,21 @@
 
         <div class="h-px bg-white/5 my-0.5"></div>
 
-        <!-- Top-level actions -->
-        <button onclick="appCtxAction('select')"
-            class="ctx-item">
-            <i class="ph ph-cursor-click text-purple-400"></i> <span id="app-ctx-select-label">Enter Selection Mode</span>
-        </button>
-        <button onclick="appCtxAction('search')"
-            class="ctx-item">
-            <i class="ph ph-magnifying-glass text-sky-400"></i> Global Search
-        </button>
+        <!-- ▸ Tools group -->
+        <details class="ctx-group">
+            <summary class="ctx-group-header">
+                <i class="ph ph-wrench text-slate-400"></i> Tools
+                <i class="ph ph-caret-right ctx-group-caret"></i>
+            </summary>
+            <div class="ctx-group-body">
+                <button onclick="appCtxAction('select')" class="ctx-item">
+                    <i class="ph ph-cursor-click text-purple-400"></i> <span id="app-ctx-select-label">Enter Selection Mode</span>
+                </button>
+                <button onclick="appCtxAction('search')" class="ctx-item">
+                    <i class="ph ph-magnifying-glass text-sky-400"></i> Global Search
+                </button>
+            </div>
+        </details>
     </div>
 
     <!-- Context Menu for Rich Text -->
@@ -3418,30 +3402,12 @@
                                 <li><b>Connection Resilience:</b> Failed-connection timeout extended to 40s; Refresh button fully rebuilds the iframe.</li>
                             </ul>
                         </div>
-                        <!-- v4.8 — May 6 2026 -->
-                        <div class="mb-4">
-                            <p class="text-xs font-bold uppercase tracking-widest font-sans mb-2 flex items-center gap-1"
-                                style="color: var(--primary-color);"><i class="ph ph-rocket-launch"></i> v4.8 &mdash;
-                                The Precision Patch</p>
-                            <ul class="text-[11px] font-sans space-y-2 ml-3 list-disc text-slate-300">
-                                <li><b>Launch Dialog Overhaul:</b> Redesigned app launch screen now shows the app icon, combined title ("Launch [App]"), and uses app & theme colors throughout.</li>
-                                <li><b>Context Menus Fixed:</b> All right-click menus are now properly scrollable with dynamic viewport-aware positioning — no more cut-off menus on small screens.</li>
-                                <li><b>Context Menu Animation:</b> Fixed the slide-from-top-left ghost animation on right-click. Menus now pop in from exactly where you clicked.</li>
-                                <li><b>Text Effects Overhaul:</b> All FX (Neon, Fire, Glitch, Shake, Wavy, Ghost, Retro etc.) rebuilt with GPU-accelerated transforms, deeper glows, and proper <code>currentColor</code> inheritance.</li>
-                                <li><b>Refresh Fixed:</b> Portal menu "Refresh" button now correctly reloads both URL and HTML apps.</li>
-                                <li><b>Replace URL Fixed:</b> Changing an app's URL now forces a full reload instead of showing a white screen.</li>
-                                <li><b>Multi-Select Stability:</b> Opening the Bulk Manager no longer kills your active selection. Move-to-Category button restored.</li>
-                                <li><b>Global Search Navigation:</b> Clicking a search result now correctly navigates to apps and nested categories.</li>
-                                <li><b>Cloaked Tab:</b> Original tab now shows a clean "Portal is Cloaked" overlay instead of a blue screen. Favicon fixed.</li>
-                                <li><b>Loop Guard:</b> Categories that contain themselves no longer cause infinite navigation loops.</li>
-                            </ul>
-                        </div>
                         <!-- View Old Updates Button -->
                         <button onclick="toggleModal('legacy-updates-modal')"
                             class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-xs font-bold text-slate-400 hover:text-slate-300 group active:scale-95">
                             <i
                                 class="ph ph-clock-counter-clockwise text-sm group-hover:rotate-[-15deg] transition-transform"></i>
-                            View Old Updates (v4.7 and earlier)
+                            View Old Updates (v4.8 and earlier)
                         </button>
                     </div>
                 </details>
@@ -3619,6 +3585,36 @@
                                 <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
                                     <p class="font-bold text-sm text-purple-200">🖋️ why? were playin bendy.</p>
                                 </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🌳 are you, are you coming to the tree???</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🗿 tikiii tikiii tikii tiki (random stuff i dont know) tikiii tikii tikiii duh duh duh dum dum dua uda dah dah dah! auraaa farmmm</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🧅 sonion</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">⬛ obsidan man</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🌍 earth man</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🔥 fire man</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🤷‍♂️ etc of all of those mans you know!??</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🍕 italin brainrot idk</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🐁 Amigo.. where is el squeak squeak...</p>
+                                </div>
+                                <div class="p-2.5 rounded-lg border border-purple-500/20" style="background: rgba(168,85,247,0.15);">
+                                    <p class="font-bold text-sm text-purple-200">🍩 HOMER DROPPED HIS DOUNT DOU'GHHHHH</p>
+                                </div>
                             </div>
                         </details>
 
@@ -3657,6 +3653,24 @@
 
             <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1 scroll-section space-y-5 pr-1">
+
+                <!-- v4.8 — May 6 2026 -->
+                <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
+                    <p class="text-xs font-bold uppercase tracking-widest font-sans mb-3 flex items-center gap-2"
+                        style="color: var(--primary-color);"><i class="ph ph-rocket-launch"></i> v4.8 &mdash; The Precision Patch</p>
+                    <ul class="text-[11px] font-sans text-slate-400 space-y-2 ml-3 list-disc marker:text-slate-500">
+                        <li><b>Launch Dialog Overhaul:</b> Redesigned app launch screen now shows the app icon, combined title ("Launch [App]"), and uses app & theme colors throughout.</li>
+                        <li><b>Context Menus Fixed:</b> All right-click menus are properly scrollable with dynamic viewport-aware positioning.</li>
+                        <li><b>Context Menu Animation:</b> Menus now pop in from exactly where you clicked.</li>
+                        <li><b>Text Effects Overhaul:</b> All FX rebuilt with GPU-accelerated transforms and deeper glows.</li>
+                        <li><b>Refresh Fixed:</b> Portal menu "Refresh" button now correctly reloads both URL and HTML apps.</li>
+                        <li><b>Replace URL Fixed:</b> Changing an app's URL now forces a full reload instead of showing a white screen.</li>
+                        <li><b>Multi-Select Stability:</b> Opening the Bulk Manager no longer kills your active selection.</li>
+                        <li><b>Global Search Navigation:</b> Clicking a search result navigates to apps and nested categories correctly.</li>
+                        <li><b>Cloaked Tab:</b> Original tab now shows a clean "Portal is Cloaked" overlay.</li>
+                        <li><b>Loop Guard:</b> Categories that contain themselves no longer cause infinite navigation loops.</li>
+                    </ul>
+                </div>
 
                 <!-- v4.7 April 30 2026 -->
                 <div class="rounded-2xl border border-white/8 p-4" style="background:var(--card-bg);">
@@ -3871,6 +3885,10 @@
         style="display: none;">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('export-modal')"></div>
         <div class="relative custom-dialog rounded-[2rem] max-w-xl w-full text-white p-8">
+            <!-- Developer Converter Tool Button -->
+            <button onclick="toggleModal('converter-modal')" class="absolute top-6 left-6 p-2 rounded-full hover:bg-white/10 transition-colors text-slate-500 hover:text-blue-400 group" title="Developer Conversion Tool">
+                 <i class="ph ph-magic-wand text-xl"></i>
+            </button>
             <h2 class="text-2xl font-bold mb-4 text-center">Sync / Backup</h2>
 
             <!-- Output / Export -->
@@ -3980,7 +3998,6 @@
                         class="ph ph-sliders-horizontal"></i> App Visuals</button>
                 <button class="dropdown-item" onclick="promptReplaceUrl(event)"><i class="ph ph-link"></i> Replace App
                     URL</button>
-                <button class="dropdown-item" onclick="openGlobalSearch()"><i class="ph ph-magnifying-glass text-sky-400"></i> Global Search</button>
             </div>
             <div style="height:1px; background:rgba(255,255,255,0.1); margin:4px 8px;"></div>
             <button class="dropdown-item" style="color:#f87171" onclick="goBack()"><i class="ph ph-house-line"></i> Back
@@ -4038,9 +4055,14 @@
             style="background: var(--dialog-bg); max-height: 88vh;">
             <!-- Header -->
             <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/5 shrink-0">
-                <h2 class="text-lg font-black flex items-center gap-2 tracking-tight">
-                    <i class="ph ph-sparkle" style="color: var(--primary-color);"></i> Misc Features
-                </h2>
+                <div>
+                    <h2 class="text-lg font-black flex items-center gap-2 tracking-tight">
+                        <i class="ph ph-sparkle" style="color: var(--primary-color);"></i> Misc Features
+                    </h2>
+                    <p class="text-[9px] text-slate-500 font-sans mt-1 leading-relaxed max-w-[95%]">
+                        your only place to easliy see some of the features that can also be acsessed via right click or from other places! and these features are here because i have no where else to put them sadly.
+                    </p>
+                </div>
                 <button onclick="closeModal('misc-modal')" class="p-1.5 hover:bg-white/10 rounded-full transition-all text-slate-400 hover:text-white"><i class="ph ph-x text-sm"></i></button>
             </div>
             <!-- Grid body -->
@@ -4290,10 +4312,13 @@
             </div>
             <h2 id="pd-title" class="text-2xl font-black mb-3 tracking-tight">Portal Message</h2>
             <p id="pd-message" class="text-slate-400 mb-8 text-sm leading-relaxed"></p>
-            <div id="pd-input-group" class="hidden mb-6">
+            <div id="pd-input-group" class="hidden mb-6 relative w-full">
                 <input type="text" id="pd-input"
-                    class="w-full bg-black/60 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition-colors text-white text-sm"
+                    class="w-full bg-black/60 border border-slate-700 rounded-xl px-4 py-3 pr-10 outline-none focus:border-blue-500 transition-colors text-white text-sm"
                     placeholder="Type here...">
+                <button type="button" id="pd-eye-toggle" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-xl transition-colors hidden items-center justify-center">
+                    <i class="ph ph-eye text-slate-400 text-xl"></i>
+                </button>
             </div>
             <div class="flex gap-3">
                 <button id="pd-cancel-btn"
@@ -4562,42 +4587,7 @@
             document.body.classList.remove('ghost-active');
         }
 
-        // Exit Alert Global Hooks
-        window.addEventListener('beforeunload', function (e) {
-            if (state && state.theme && state.theme.exitAlert) {
-                try {
-                    const backupCode = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-                    // Emergency localstorage backup in case tab crashes or is forcefully closed
-                    localStorage.setItem('portal_emergency_backup', backupCode);
-
-                    const tx = document.createElement('textarea');
-                    tx.value = backupCode;
-                    tx.style.position = 'fixed';
-                    tx.style.opacity = '0';
-                    document.body.appendChild(tx);
-                    tx.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tx);
-                } catch (err) { }
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            // Smarter exit alert natively intercepts a tags instead of waiting for standard beforeunload window
-            if (state && state.theme && state.theme.exitAlert) {
-                const link = e.target.closest('a');
-                if (link && link.href && !link.href.startsWith('javascript:')) {
-                    if (link.target !== '_blank' && !link.href.includes(window.location.host)) {
-                        e.preventDefault();
-                        portalConfirm("You are about to navigate away from the portal. Are you sure?", "ph-warning", "red").then(ok => {
-                            if (ok) window.location.href = link.href;
-                        });
-                    }
-                }
-            }
-        });
+        // Exit alert removed
 
         function init() {
             console.log("🚀 Portal Initialization Started...");
@@ -4634,12 +4624,31 @@
                 } else {
                     console.log("💾 Loading saved state...");
                     
-                    // V4.8: Silence Welcome Dialog for existing users who already have portal-state
-                    if (!localStorage.getItem('portal_first_run')) {
-                        localStorage.setItem('portal_first_run', 'true');
+                    // Detection & Migration Logic
+                    if (storedState && storedState.startsWith('LZB:')) {
+                        console.log("💎 Loading optimized LZ-Base64 state...");
+                        state = JSON.parse(LZString.decompressFromBase64(storedState.substring(4)));
+                    } else if (storedState && storedState.startsWith('LZ:')) {
+                        console.log("💎 Loading optimized LZ-UTF16 state (Legacy)...");
+                        state = JSON.parse(LZString.decompressFromUTF16(storedState.substring(3)));
+                        setTimeout(() => commitChanges(true, true), 500);
+                    } else {
+                        console.log("💾 Loading legacy Base64/JSON state...");
+                        if (storedState.startsWith('{')) {
+                            state = JSON.parse(storedState);
+                        } else {
+                            try {
+                                state = JSON.parse(decodeURIComponent(escape(atob(storedState))));
+                            } catch(e) {
+                                console.error("Legacy decode failed:", e);
+                                state = JSON.parse(storedState); 
+                            }
+                        }
+                        // Immediate migration to LZ-String
+                        console.log("🚀 Migrating storage to LZ-String...");
+                        setTimeout(() => commitChanges(true, true), 500);
                     }
                     
-                    state = JSON.parse(storedState);
                     // Critical Schema Migration
                     if (!state.userApps) state.userApps = state.defaultApps || JSON.parse(JSON.stringify(config.defaultApps || []));
                     if (!state.theme) state.theme = JSON.parse(JSON.stringify(config.theme || {}));
@@ -4888,7 +4897,7 @@
         }
 
         async function adminBypass() {
-            const key = await portalPrompt("Enter admin passkey:", "ph-lock-key", "blue");
+            const key = await portalPrompt("Enter admin passkey:", "ph-lock-key", "blue", true);
             if (key && key.trim().toLowerCase() === '1126admin') {
                 if (!localStorage.getItem('portal_first_run')) {
                     toggleModal('welcome-modal');
@@ -5073,12 +5082,13 @@
             }
 
             const stateJson = JSON.stringify(state);
-            try { localStorage.setItem('portal-state', stateJson); } catch (e) { console.warn('localStorage save failed:', e); }
+            const compressed = "LZB:" + LZString.compressToBase64(stateJson);
+            try { localStorage.setItem('portal-state', compressed); } catch (e) { console.warn('localStorage save failed:', e); }
             try {
                 const appsCount = state.userApps ? state.userApps.length : 0;
                 const cookieVal = encodeURIComponent(JSON.stringify({ appsCount, themeColor: (state.theme && state.theme.colors && state.theme.colors.primary) || '#2563eb', ts: Date.now() }));
                 document.cookie = 'portal_backup_meta=' + cookieVal + '; max-age=2592000; path=/';
-                sessionStorage.setItem('portal-state-session', stateJson);
+                sessionStorage.setItem('portal-state-session', compressed);
                 // Timestamped emergency backup (Phase 4 — allows rollback identification)
                 sessionStorage.setItem('portal_emergency_ts', String(Date.now()));
             } catch (e) { /* cookies may be blocked in some environments */ }
@@ -5244,7 +5254,6 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (typeof updateDevToggleFromState === 'function') updateDevToggleFromState();
             if (typeof updateFocusMode === 'function') updateFocusMode();
             if (typeof updateFastBootToggleFromState === 'function') updateFastBootToggleFromState();
-            if (typeof updateExitAlertToggleFromState === 'function') updateExitAlertToggleFromState();
             if (typeof updateCardHoverToggleFromState === 'function') updateCardHoverToggleFromState();
             if (typeof updateBulkSelectToggleFromState === 'function') updateBulkSelectToggleFromState();
             if (typeof updatePerformanceModeToggleFromState === 'function') updatePerformanceModeToggleFromState();
@@ -5401,12 +5410,17 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                             currentPath.push(app.id); renderApps();
                         }
                         else {
-                            if (state.theme.alwaysOpenNewTab || app.redirectOnly) {
+                            if (app.redirectOnly) {
                                 const a = document.createElement('a');
                                 a.href = app.content; a.target = '_blank'; a.rel = 'noopener noreferrer';
                                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
                             } else {
-                                currentApp = app; toggleModal('choice-modal');
+                                currentApp = app; 
+                                const newTabBtn = document.getElementById('launch-new-tab');
+                                if (newTabBtn) {
+                                    newTabBtn.style.display = (state.theme && state.theme.alwaysOpenNewTab) ? 'flex' : 'none';
+                                }
+                                toggleModal('choice-modal');
                             }
                         }
                     };
@@ -6446,8 +6460,15 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
 
 
+        let _currentExportCode = "";
         function showExport() {
-            document.getElementById('sync-code-area').value = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+            _currentExportCode = "LZB:" + LZString.compressToBase64(JSON.stringify(state));
+            const area = document.getElementById('sync-code-area');
+            if (_currentExportCode.length > 50000) {
+                area.value = "Data is too large to display directly (" + _currentExportCode.length + " chars).\n\nHowever, you can still click 'Copy to Clipboard' or 'Download .txt File' below to use it safely!";
+            } else {
+                area.value = _currentExportCode;
+            }
             document.getElementById('import-code-area').value = '';
             // Reset sync-naming modal state
             const choice = document.getElementById('sync-naming-choice');
@@ -6524,7 +6545,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         }
 
         function copySyncCode() {
-            navigator.clipboard.writeText(document.getElementById('sync-code-area').value).then(() => {
+            const valToCopy = _currentExportCode || document.getElementById('sync-code-area').value;
+            navigator.clipboard.writeText(valToCopy).then(() => {
                 notify("Copied!", "success");
             }, () => {
                 notify("Copy failed!", "error");
@@ -6533,21 +6555,28 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
         function importSyncCode() {
             try {
-                const code = document.getElementById('import-code-area').value.trim();
+                let code = document.getElementById('import-code-area').value.trim();
                 if (!code) return notify("Please paste a code first or upload a file", "error");
-                const importedState = JSON.parse(decodeURIComponent(escape(atob(code))));
-
-                const currentPassword = state.theme ? state.theme.portalPassword : getDefaultConfig().theme.portalPassword;
-                const currentDevMode = state.theme ? state.theme.devMode : false;
-                const currentFastBoot = state.theme ? state.theme.fastBoot : false;
+                
+                let importedState;
+                if (code.startsWith('LZB:')) {
+                    importedState = JSON.parse(LZString.decompressFromBase64(code.substring(4)));
+                } else if (code.startsWith('LZ:')) {
+                    importedState = JSON.parse(LZString.decompressFromUTF16(code.substring(3)));
+                } else {
+                    // Legacy Base64 Support
+                    importedState = JSON.parse(decodeURIComponent(escape(atob(code))));
+                }
 
                 state = importedState;
                 if (!state.theme) state.theme = {};
-                state.theme.portalPassword = currentPassword;
-                state.theme.devMode = currentDevMode;
-                state.theme.fastBoot = currentFastBoot;
+                
+                const defaultConf = getDefaultConfig().theme;
+                if (state.theme.portalPassword === undefined) state.theme.portalPassword = defaultConf.portalPassword;
+                if (state.theme.devMode === undefined) state.theme.devMode = defaultConf.devMode;
+                if (state.theme.fastBoot === undefined) state.theme.fastBoot = defaultConf.fastBoot;
 
-                commitChanges(); applyTheme(); renderApps(); notify("Imported!", "success"); closeModal('export-modal');
+                commitChanges(); applyTheme(); renderApps(); syncSettingsUI(); notify("Imported!", "success"); closeModal('export-modal');
             } catch (e) { notify("Invalid code", "error"); }
         }
 
@@ -6577,20 +6606,6 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             commitChanges(); applyTheme();
             syncSettingsUI();
             notify(state.theme.fastBoot ? "Fast Boot enabled" : "Fast Boot disabled", "info");
-        }
-
-        function updateExitAlertToggleFromState() {
-            const btn = document.getElementById('exit-alert-toggle');
-            if (!btn) return;
-            if (state.theme.exitAlert) btn.classList.add('dev-toggle-on');
-            else btn.classList.remove('dev-toggle-on');
-        }
-
-        function toggleExitAlert() {
-            state.theme.exitAlert = !state.theme.exitAlert;
-            commitChanges(); applyTheme();
-            syncSettingsUI();
-            notify(state.theme.exitAlert ? "Exit Alert enabled" : "Exit Alert disabled", "info");
         }
 
         function updateCardHoverToggleFromState() {
@@ -7333,7 +7348,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             });
         }
 
-        function portalPrompt(msg, icon = 'ph-pencil-simple', color = 'blue') {
+        function portalPrompt(msg, icon = 'ph-pencil-simple', color = 'blue', isPassword = false) {
             return new Promise(resolve => {
                 const modal = document.getElementById('portal-dialog-modal');
                 const title = document.getElementById('pd-title');
@@ -7343,6 +7358,25 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 const cancelBtn = document.getElementById('pd-cancel-btn');
                 const inputGroup = document.getElementById('pd-input-group');
                 const input = document.getElementById('pd-input');
+                const toggleEye = document.getElementById('pd-eye-toggle');
+
+                if (isPassword) {
+                    input.type = "password";
+                    toggleEye.style.display = 'flex';
+                    toggleEye.innerHTML = '<i class="ph ph-eye text-slate-400 text-xl"></i>';
+                    toggleEye.onclick = () => {
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            toggleEye.innerHTML = '<i class="ph ph-eye-slash text-slate-400 text-xl"></i>';
+                        } else {
+                            input.type = 'password';
+                            toggleEye.innerHTML = '<i class="ph ph-eye text-slate-400 text-xl"></i>';
+                        }
+                    };
+                } else {
+                    input.type = "text";
+                    toggleEye.style.display = 'none';
+                }
 
                 message.textContent = msg;
                 title.textContent = "Input Required";
@@ -7449,7 +7483,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         }
 
         const SETTINGS_SECTION_META = {
-            toggles: { title: 'Toggles & Preferences', subtitle: 'Fast boot, dev mode, exit alerts & more', color: null, icon: 'ph-toggle-right' },
+            toggles: { title: 'Toggles & Preferences', subtitle: 'Fast boot, dev mode & more', color: null, icon: 'ph-toggle-right' },
             theme: { title: 'Theme & Layout', subtitle: 'Colors, background, identity & menu position', color: null, icon: 'ph-palette' },
             experimental: { title: 'Experimental Features', subtitle: 'Emoji Hub, multi-select, ML & more', color: '#34d399', icon: 'ph-flask' },
             danger: { title: 'Danger Zone', subtitle: 'Reset theme, apps, emojis or everything', color: '#f87171', icon: 'ph-warning' },
@@ -7727,7 +7761,6 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
             // Hide all section <details> first, then show only the matching one
             const allDetails = sectionsDiv.querySelectorAll('[data-settings-section]');
-            const saveBtn = document.getElementById('settings-save-btn');
             let found = false;
 
             allDetails.forEach(d => {
@@ -7743,9 +7776,6 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
             if (!found) return;
 
-            // Only show save button for sections that edit state
-            const noSaveSections = ['danger'];
-            if (saveBtn) saveBtn.style.display = noSaveSections.includes(sectionKey) ? 'none' : '';
 
             // Update header
             const meta = SETTINGS_SECTION_META[sectionKey] || { title: sectionKey, subtitle: '', color: null, icon: 'ph-gear' };
@@ -7808,7 +7838,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         };
 
 
-        function saveSettings() {
+        function backgroundSaveSettings() {
             try {
                 const nameInput = document.getElementById('set-name')?.value;
                 const descInput = document.getElementById('set-desc')?.value;
@@ -7823,16 +7853,24 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     state.theme.colors.primary = primaryInput;
                 }
 
-                commitChanges(true, true); // Immediate save to prevent data loss 
+                commitChanges(true, true);
                 applyTheme();
-                if (typeof emojiCache !== 'undefined') emojiCache.clear();
-                renderApps();
-                closeModal('settings-modal');
-                notify("Settings Saved", "success", "ph-check-circle");
+                
+                const pName = document.getElementById('p-name');
+                const pDesc = document.getElementById('p-desc');
+                if (pName) pName.innerHTML = state.theme.name;
+                if (pDesc) pDesc.innerHTML = state.theme.desc;
             } catch (e) {
                 console.error("Save Error:", e);
-                notify("Failed to save settings: " + e.message, "error");
             }
+        }
+
+        function saveSettings() {
+            backgroundSaveSettings();
+            if (typeof emojiCache !== 'undefined') emojiCache.clear();
+            renderApps();
+            closeModal('settings-modal');
+            notify("Settings Saved", "success", "ph-check-circle");
         }
 
         function showAdd() {
@@ -10362,12 +10400,16 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             const app = findNodeInTree(state.userApps, appId);
             if (!app) return notify('App not found.', 'error', 'ph-warning');
             closeModal('settings-modal');
-            if (state.theme.alwaysOpenNewTab || app.redirectOnly) {
+            if (app.redirectOnly) {
                 const a = document.createElement('a');
                 a.href = app.content; a.target = '_blank'; a.rel = 'noopener noreferrer';
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
             } else {
                 currentApp = app;
+                const newTabBtn = document.getElementById('launch-new-tab');
+                if (newTabBtn) {
+                    newTabBtn.style.display = (state.theme && state.theme.externalTabMode) ? 'flex' : 'none';
+                }
                 toggleModal('choice-modal');
             }
         };
@@ -10964,9 +11006,87 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
         }
         window.openMiscPickerFormatPaint = openMiscPickerFormatPaint;
 
-</script>
-</body>
+        /* ── Developer: LZ-String Conversion Tooling ────────────────────── */
+        window.runConversion = function() {
+            const input = document.getElementById('converter-input').value.trim();
+            if (!input) return notify("Input is empty", "error");
+            try {
+                let json;
+                if (input.startsWith('{')) {
+                    json = input;
+                } else if (input.startsWith('LZB:')) {
+                    json = LZString.decompressFromBase64(input.substring(4));
+                } else if (input.startsWith('LZ:')) {
+                    json = LZString.decompressFromUTF16(input.substring(3));
+                } else {
+                    json = decodeURIComponent(escape(atob(input)));
+                }
+                JSON.parse(json); // Validate
+                const result = "LZB:" + LZString.compressToBase64(json);
+                document.getElementById('converter-output').value = result;
+                notify("Converted to LZ-String!", "success", "ph-lightning");
+            } catch (e) {
+                notify("Conversion failed: Invalid format", "error");
+            }
+        };
 
+        window.handleConverterUpload = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = ev => {
+                document.getElementById('converter-input').value = ev.target.result;
+                window.runConversion();
+            };
+            r.readAsText(file);
+        };
+
+        window.copyConverterResult = function() {
+            const res = document.getElementById('converter-output').value;
+            if (!res) return notify("Nothing to copy", "info");
+            navigator.clipboard.writeText(res).then(() => notify("Result copied!", "success"));
+        };
+
+</script>
+    <!-- Developer Converter Modal -->
+    <div id="converter-modal" class="fixed inset-0 z-[1900] hidden flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-md" onclick="closeModal('converter-modal')"></div>
+        <div class="relative custom-dialog rounded-[2rem] max-w-md w-full text-white p-8 border border-blue-500/20 bg-slate-950 shadow-2xl">
+            <h3 class="text-xl font-bold mb-2 text-blue-400 flex items-center gap-2">
+                <i class="ph ph-wrench"></i> LZ-String Converter
+            </h3>
+            <p class="text-xs text-slate-500 mb-6 leading-relaxed">Utility to convert legacy Base64 sync codes into optimized LZ-String format for better storage efficiency.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Input (Base64 / JSON / LZ)</label>
+                    <textarea id="converter-input" placeholder="Paste your code here..." rows="4" class="w-full bg-black/40 border border-slate-800 rounded-xl px-4 py-3 font-mono text-[10px] outline-none focus:border-blue-500 transition-colors"></textarea>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="runConversion()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2">
+                        <i class="ph ph-lightning"></i> Convert Now
+                    </button>
+                    <button onclick="document.getElementById('converter-upload').click()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-xs transition-colors border border-slate-700">
+                        <i class="ph ph-upload-simple"></i>
+                    </button>
+                    <input type="file" id="converter-upload" class="hidden" accept=".txt" onchange="handleConverterUpload(event)">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Result (LZ-String)</label>
+                    <textarea id="converter-output" readonly placeholder="Output will appear here..." rows="4" class="w-full bg-black/60 border border-slate-800 rounded-xl px-4 py-3 font-mono text-[10px] outline-none text-blue-300"></textarea>
+                </div>
+                
+                <button onclick="copyConverterResult()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-xs transition-colors border border-slate-700 flex items-center justify-center gap-2">
+                    <i class="ph ph-copy"></i> Copy Result
+                </button>
+            </div>
+            
+            <button onclick="closeModal('converter-modal')" class="w-full mt-6 text-slate-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">Close Utility</button>
+        </div>
+    </div>
+</body>
 </html>
 
 
