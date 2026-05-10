@@ -1277,7 +1277,7 @@
             right: 176px;
         }
 
-        /* Misc Features button — right of help-btn, identical floating-btn style */
+        /* Misc Features/Stuff button — right of help-btn, identical floating-btn style */
         .misc-btn {
             bottom: 32px;
             left: 176px;
@@ -1290,9 +1290,14 @@
 
         body.dev-mode .dev-btn {
             display: flex !important;
-            background: #dc2626;
-            box-shadow: 0 0 30px rgba(248, 113, 113, 0.9);
-            border-color: rgba(248, 250, 252, 0.8);
+            background: var(--primary-color);
+            box-shadow: 0 0 30px color-mix(in srgb, var(--primary-color) 60%, transparent);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        body.dev-mode .dev-btn:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 40px var(--primary-color);
         }
 
         .history-controls {
@@ -1565,6 +1570,22 @@
             display: block;
         }
 
+        /* Tooltip CSS */
+        .portal-tooltip {
+            position: fixed;
+            background: #0f172a;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 99999;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+
         /* Mobile Responsiveness Fixes */
         @media (max-width: 600px) {
             .floating-btn {
@@ -1678,6 +1699,31 @@
             <button onclick="adminBypass()"
                 class="mt-4 text-[10px] text-slate-600 hover:text-slate-400 transition-colors font-sans underline underline-offset-2">admin
                 access</button>
+        </div>
+
+        <!-- Tiny Secret Button -->
+        <button onclick="toggleModal('secret-entry-modal')" 
+            class="fixed bottom-8 right-8 w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-600 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all z-[2001] group shadow-lg">
+            <i class="ph ph-question text-xl group-hover:scale-110 transition-transform"></i>
+        </button>
+    </div>
+
+    <!-- Secret Entry Modal -->
+    <div id="secret-entry-modal" class="fixed inset-0 z-[2500] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="closeModal('secret-entry-modal')"></div>
+        <div class="relative w-full max-w-sm custom-dialog rounded-[2.5rem] text-white shadow-2xl border border-white/10 p-8 flex flex-col gap-6" style="background: var(--dialog-bg);">
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-3xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4 border border-amber-500/30">
+                    <i class="ph ph-shooting-star text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black tracking-tight text-amber-50">Hidden Fragment</h2>
+                <div class="mt-4 p-4 bg-white/5 rounded-2xl border border-white/5 text-sm text-slate-300 leading-relaxed font-medium italic">
+                    "heheheheehe, you found little secert but this is a portal thingy i made.. if you did not already know!"
+                </div>
+            </div>
+            <button onclick="closeModal('secret-entry-modal')" class="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-sm transition-all border border-white/10 flex items-center justify-center gap-2 text-slate-300">
+                Found it!
+            </button>
         </div>
     </div>
 
@@ -2394,6 +2440,16 @@
                             <p class="text-[11px] text-slate-500 font-sans">Enable developer tools & sidebar</p>
                         </div>
                         <button id="dev-toggle" onclick="toggleDevSetting()" class="dev-toggle" type="button">
+                            <div class="dev-toggle-knob"></div>
+                        </button>
+                    </div>
+                    <div
+                        class="bg-black/40 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-xs uppercase text-slate-400 font-bold tracking-widest font-sans">Floating Tooltips</p>
+                            <p class="text-[11px] text-slate-500 font-sans">Show helpful info when hovering over buttons</p>
+                        </div>
+                        <button id="tooltip-toggle" onclick="toggleTooltips()" class="dev-toggle" type="button">
                             <div class="dev-toggle-knob"></div>
                         </button>
                     </div>
@@ -3390,7 +3446,7 @@
                             <p class="text-xs font-bold uppercase tracking-widest font-sans mb-2 flex items-center gap-1"
                                 style="color: var(--primary-color);"><i class="ph ph-sparkle"></i> v4.9</p>
                             <ul class="text-[11px] font-sans space-y-2 ml-3 list-disc text-slate-300">
-                                <li><b>Misc Features Hub:</b> New ✦ sparkle button opens a central hub with Global Search, Rich Text Editor, Multi-Link Tool, Portal URL &amp; QR Code, Move App, Format Painter, Emoji Hub, Cloaked Tab and Bulk Manager — all in one place.</li>
+                                <li><b>Misc Features/Stuff Hub:</b> New ✦ sparkle button opens a central hub with Global Search, Rich Text Editor, Multi-Link Tool, Portal URL &amp; QR Code, Move App, Format Painter, Emoji Hub, Cloaked Tab and Bulk Manager — all in one place.</li>
                                 <li><b>Rich Text Editor Export:</b> New &ldquo;Export HTML&rdquo; button in the RTE lets you copy your styled text as raw HTML and paste it anywhere.</li>
                                 <li><b>Smart Pickers:</b> Move App and Format Painter now use a live search-picker dialog instead of typing names manually — search apps or categories and select with one click.</li>
                                 <li><b>Version Update Toast:</b> A notification now appears the first time you open a new version of Portal, with a direct link to the changelog.</li>
@@ -4057,7 +4113,7 @@
             <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/5 shrink-0">
                 <div>
                     <h2 class="text-lg font-black flex items-center gap-2 tracking-tight">
-                        <i class="ph ph-sparkle" style="color: var(--primary-color);"></i> Misc Features
+                        <i class="ph ph-sparkle" style="color: var(--primary-color);"></i> Misc Features/Stuff
                     </h2>
                     <p class="text-[9px] text-slate-500 font-sans mt-1 leading-relaxed max-w-[95%]">
                         your only place to easliy see some of the features that can also be acsessed via right click or from other places! and these features are here because i have no where else to put them sadly.
@@ -4325,15 +4381,11 @@
     </div>
 
     <!-- Dashboard Buttons -->
-    <button class="floating-btn dev-btn" onclick="openDevTools()" title="Dev Mode"><i
-            class="ph ph-bug-beetle"></i></button>
-    <button class="floating-btn add-btn" onclick="showAdd()" title="Add App"><i class="ph ph-plus"></i></button>
-    <button class="floating-btn help-btn" onclick="toggleModal('help-modal')" title="Changelogs, Help & More!"><i
-            class="ph ph-newspaper"></i></button>
-    <button class="floating-btn export-btn" onclick="showExport()" title="Sync Data"><i
-            class="ph ph-share-network"></i></button>
-    <button class="floating-btn misc-btn" id="misc-features-btn" onclick="openMiscModal()" title="Misc Features"><i
-            class="ph ph-sparkle"></i></button>
+    <button class="floating-btn dev-btn" onclick="openDevTools()" title="Dev Mode"><i class="ph ph-bug-beetle"></i></button>
+    <button class="floating-btn add-btn" onclick="showAdd()" title="App Manager"><i class="ph ph-plus"></i></button>
+    <button class="floating-btn help-btn" onclick="toggleModal('help-modal')" title="News & Help"><i class="ph ph-newspaper"></i></button>
+    <button class="floating-btn export-btn" onclick="showExport()" title="Sync Hub"><i class="ph ph-share-network"></i></button>
+    <button class="floating-btn misc-btn" id="misc-features-btn" onclick="openMiscModal()" title="Misc Features/Stuff"><i class="ph ph-sparkle"></i></button>
     <button class="floating-btn settings-btn" id="settings-btn" onclick="showSettings()"
         oncontextmenu="showSettingsContextMenu(event)" title="Settings"></button>
     <!-- Settings button icon is set by JS to allow dynamic update -->
@@ -4513,7 +4565,7 @@
             },
             "bgImage": "",
             "portalPassword": "i cant tell you",
-            "fastBoot": false
+            "fastBoot": true
           },
           "defaultApps": [
             { "id": "d1", "name": "DuckMath", "color": "#fbbf24", "icon": "ph-bird", "desc": "a ducklike fun math game where you can collect ducks but you have to do math equations (just kidding has alot of unblocked games)", "content": "https://duckmath.org", "isDefault": true, "creator": "Automated" },
@@ -4787,6 +4839,8 @@
                     if (!state.theme) state.theme = JSON.parse(JSON.stringify(config.theme || {}));
                     if (!state.theme.colors) state.theme.colors = JSON.parse(JSON.stringify(config.theme.colors || {}));
                     if (!state.theme.customEmojis) state.theme.customEmojis = [];
+                    if (!state.config) state.config = {};
+                    if (state.config.showTooltips === undefined) state.config.showTooltips = true;
                 }
 
                 migrateTree();
@@ -4807,7 +4861,7 @@
                 if (window.name && window.name.startsWith("CLOAKED_AUTO_LAUNCH_")) {
                     document.getElementById('app-container').style.display = 'none'; // Prevent flash
                     document.body.classList.remove('logged-out');
-                } else if (state.theme.fastBoot || sessionStorage.getItem('portal_unlocked') === 'true' || window.location.search.includes('isPortalCloaked=true')) {
+                } else if (state.theme.fastBoot || (state.theme.fastBoot !== false && sessionStorage.getItem('portal_unlocked') === 'true') || window.location.search.includes('isPortalCloaked=true')) {
                     document.getElementById('app-container')?.classList.remove('hidden');
                     document.body.classList.remove('logged-out');
                 } else {
@@ -4831,6 +4885,7 @@
                 if (typeof saveHistory === 'function') saveHistory();
 
                 console.log("✅ Portal Successfully Initialized");
+                initTooltips();
                 
                 if (window.location.search.includes('isPortalCloaked=true')) {
                     // Secret micro-animation inside the real about:blank portal
@@ -5155,6 +5210,105 @@
             toggleModal('notification-log-modal');
         }
 
+        function toggleTooltips() {
+            if (!state.config) state.config = {};
+            state.config.showTooltips = !state.config.showTooltips;
+            commitChanges();
+            updateTooltipToggle();
+            notify(state.config.showTooltips ? "Tooltips Enabled" : "Tooltips Disabled", "success", "ph-chat-circle-dots");
+        }
+
+        function updateTooltipToggle() {
+            const btn = document.getElementById('tooltip-toggle');
+            if (!btn) return;
+            if (state.config && state.config.showTooltips) {
+                btn.classList.add('dev-toggle-on');
+            } else {
+                btn.classList.remove('dev-toggle-on');
+            }
+        }
+
+        function initTooltips() {
+            const btns = document.querySelectorAll('.floating-btn');
+            let tooltip = document.getElementById('portal-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.id = 'portal-tooltip';
+                tooltip.className = 'fixed pointer-events-none opacity-0 z-[9999]';
+                tooltip.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                tooltip.style.transform = 'translateY(10px)';
+                document.body.appendChild(tooltip);
+            }
+
+            const tooltipData = {
+                'dev-btn': { title: 'Dev Mode', desc: 'Developer Tools. Access system logs, debugging utilities, and experimental features.', icon: 'ph-bug-beetle' },
+                'add-btn': { title: 'App Manager', desc: 'Create new shortcuts, edit your current layout, and organize categories.', icon: 'ph-plus' },
+                'help-btn': { title: 'News & Help', desc: 'Changelogs & Help. Read the latest updates, tips for usage, and honorable mentions.', icon: 'ph-newspaper' },
+                'export-btn': { title: 'Sync Hub', desc: 'Sync Hub. Export your setup to a file or import a backup to restore your Portal.', icon: 'ph-share-network' },
+                'misc-btn': { title: 'Misc Features/Stuff', desc: 'A central hub for Global Search, RTE, Multi-Link, and more.', icon: 'ph-sparkle' },
+                'settings-btn': { title: 'Settings', desc: 'System Settings. Customize your theme, manage preferences, and reset data.', icon: 'ph-gear' }
+            };
+
+            btns.forEach(btn => {
+                // Also restore the icons since I removed them from HTML for a cleaner look
+                let data = null;
+                for (const cls of btn.classList) {
+                    if (tooltipData[cls]) { data = tooltipData[cls]; break; }
+                }
+                if (btn.id && tooltipData[btn.id]) data = tooltipData[btn.id];
+                if (data && !btn.querySelector('i') && !btn.classList.contains('settings-btn')) {
+                    btn.innerHTML = `<i class="${data.icon}"></i>`;
+                }
+
+                btn.addEventListener('mouseenter', (e) => {
+                    if (state.config && state.config.showTooltips === false) return;
+                    
+                if (!data) return;
+
+                const iconHtml = btn.querySelector('i') ? btn.querySelector('i').className : `ph ${data.icon}`;
+
+                tooltip.innerHTML = `
+                    <div class="bg-black/90 backdrop-blur-xl border border-white/15 p-3 rounded-2xl shadow-2xl flex flex-col gap-1.5 min-w-[180px] max-w-[220px]"
+                         style="border-color: color-mix(in srgb, var(--primary-color) 20%, rgba(255,255,255,0.1)); 
+                                box-shadow: 0 10px 40px -10px color-mix(in srgb, var(--primary-color) 20%, transparent);">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[11px] font-black text-white uppercase tracking-tight">${data.title}</span>
+                            <i class="${iconHtml} text-[10px] opacity-80" style="color: var(--primary-color);"></i>
+                        </div>
+                        <p class="text-[10px] text-slate-400 leading-tight font-sans font-medium">${data.desc}</p>
+                    </div>
+                `;
+
+                const rect = btn.getBoundingClientRect();
+                const tooltipWidth = tooltip.offsetWidth || 160; 
+                let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+                    
+                    // Screen edge protection
+                    if (left < 10) left = 10;
+                    if (left + tooltipWidth > window.innerWidth - 10) left = window.innerWidth - tooltipWidth - 10;
+
+                    // Position instantly while transparent
+                    tooltip.style.transition = 'none';
+                    tooltip.style.left = `${left}px`;
+                    tooltip.style.top = `${rect.top - 85}px`;
+                    
+                    // Force reflow
+                    void tooltip.offsetWidth;
+
+                    // Re-enable transition and show
+                    tooltip.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    tooltip.style.opacity = '1';
+                    tooltip.style.transform = 'translateY(0)';
+                });
+
+                btn.addEventListener('mouseleave', () => {
+                    tooltip.style.opacity = '0';
+                    tooltip.style.transform = 'translateY(10px)';
+                });
+            });
+            updateTooltipToggle();
+        }
+
 
         /* ==========================================================================
            §3. APP MANAGEMENT (Search, Render, Filter)
@@ -5291,7 +5445,11 @@
                 const brd = colors.border || 'rgba(255,255,255,0.05)';
                 const txM = colors.textMain || '#ffffff';
                 const txD = colors.textDim || '#94a3b8';
-                const hdr = p; // Make header color follow primary explicitly
+                
+                const portalName = state.theme.name || '⚡Portal⚡';
+                const isHtml = /<[a-z][\s\S]*>/i.test(portalName);
+                const hdr = isHtml ? p : `color-mix(in srgb, ${p} 80%, white)`;
+                
                 const actBtn = colors.actionBtn || colors.primary || '#2563eb';
                 themeVarsEl.textContent = `:root {
     --primary-color: ${p};
@@ -5444,6 +5602,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 if (state.theme.holdAndDrag) hd.classList.add('dev-toggle-on');
                 else hd.classList.remove('dev-toggle-on');
             }
+            updateTooltipToggle();
         }
 
         function handleBackgroundUpload(event) {
@@ -8848,7 +9007,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         state.theme.colors = Object.assign(getDefaultConfig().theme.colors, state.theme.colors);
         if (typeof state.theme.devMode !== 'boolean') state.theme.devMode = false;
         if (typeof state.theme.portalPassword !== 'string') state.theme.portalPassword = getDefaultConfig().theme.portalPassword;
-        if (typeof state.theme.fastBoot !== 'boolean') state.theme.fastBoot = false;
+        if (typeof state.theme.fastBoot !== 'boolean') state.theme.fastBoot = true;
 
         /* ==========================================================================
            §11.5. FUNCTION PLAYGROUND — Dev iframe sandbox, runDevJS()
