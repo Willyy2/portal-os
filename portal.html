@@ -1449,7 +1449,7 @@
             background: var(--dialog-bg);
             border: 1px solid var(--border-color);
             padding: 12px 24px;
-            border-radius: 99px;
+            border-radius: 1rem;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
@@ -3367,7 +3367,7 @@
     </div>
 
     <!-- Emoji Options Modal (Unified Looking) -->
-    <div id="emoji-options-modal" class="fixed inset-0 z-[1860] hidden flex items-center justify-center p-4"
+    <div id="emoji-options-modal" class="fixed inset-0 z-[2340] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('emoji-options-modal')"></div>
         <div class="relative custom-dialog p-8 rounded-[2rem] w-full max-w-sm text-white text-center"
@@ -4151,6 +4151,9 @@
                     <span class="misc-card-desc">Launch multiple URLs or a whole folder</span>
                 </button>
 
+                <!-- Row Divider -->
+                <div class="col-span-3 h-px bg-white/10 w-3/4 mx-auto my-2 rounded-full"></div>
+
                 <!-- Portal URL -->
                 <button onclick="showPortalUrlDialog();" class="misc-card">
                     <div class="misc-card-icon bg-amber-500/15 text-amber-400">
@@ -4177,6 +4180,9 @@
                     <span class="misc-card-name">Format Painter</span>
                     <span class="misc-card-desc">Copy one app's style and paste to others</span>
                 </button>
+
+                <!-- Row Divider -->
+                <div class="col-span-3 h-px bg-white/10 w-3/4 mx-auto my-2 rounded-full"></div>
 
                 <!-- Emoji Hub -->
                 <button onclick="openEmojiHub();" class="misc-card">
@@ -4205,6 +4211,9 @@
                     <span class="misc-card-desc">Select multiple apps to edit or delete at once</span>
                 </button>
 
+                <!-- Row Divider -->
+                <div class="col-span-3 h-px bg-white/10 w-3/4 mx-auto my-2 rounded-full"></div>
+
                 <!-- Portal Loader Raw Code -->
                 <button onclick="fetchAndShowPortalLoader();" class="misc-card">
                     <div class="misc-card-icon bg-indigo-500/15 text-indigo-400">
@@ -4223,13 +4232,13 @@
                     <span class="misc-card-desc">View all notifications from this session</span>
                 </button>
 
-                <!-- Ways to Get Portal -->
+                <!-- Portal Url's -->
                 <button onclick="toggleModal('get-portal-choice-modal');" class="misc-card">
                     <div class="misc-card-icon bg-teal-500/15 text-teal-400">
                         <i class="ph ph-planet text-2xl"></i>
                     </div>
-                    <span class="misc-card-name">Get Portal</span>
-                    <span class="misc-card-desc">Active links and HTML deployment methods</span>
+                    <span class="misc-card-name">Portal Url's</span>
+                    <span class="misc-card-desc">Check the Google Forums or see ways to get Portal</span>
                 </button>
 
             </div>
@@ -4296,20 +4305,48 @@
         <div class="relative w-full max-w-sm custom-dialog rounded-[2.5rem] text-white shadow-2xl border border-white/10 p-8 flex flex-col gap-6" style="background: var(--dialog-bg);">
             <div class="text-center">
                 <div class="w-16 h-16 rounded-3xl bg-teal-500/20 text-teal-400 flex items-center justify-center mx-auto mb-4 border border-teal-500/30">
-                    <i class="ph ph-planet text-3xl"></i>
+                    <i class="ph ph-link text-3xl"></i>
                 </div>
+                <h2 class="text-2xl font-black tracking-tight">Portal Url's</h2>
+                <p class="text-[11px] text-slate-500 font-sans mt-1 uppercase tracking-widest font-bold">Pick your destination</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSddJCmZf-d_IJkmCM6WQnbC3jOt92HOQqfRbg1oORjiq25ciw/viewform?usp=dialog', '_blank')" class="w-full py-4 bg-teal-600 hover:bg-teal-500 rounded-2xl font-black text-sm transition-all shadow-lg shadow-teal-900/20 flex items-center justify-center gap-3">
+                    <i class="ph ph-google-logo"></i> Check Google Forums
+                </button>
+                <button onclick="closeModal('get-portal-choice-modal'); toggleModal('how-to-get-portal-modal')" class="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-sm transition-all border border-white/10 flex items-center justify-center gap-3 text-slate-300">
+                    <i class="ph ph-planet"></i> See ways to get Portal
+                </button>
+            </div>
+            <button onclick="closeModal('get-portal-choice-modal')" class="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors">Maybe later</button>
+        </div>
+    </div>
+
+    <!-- How to Get Portal Modal (Sub-choice) -->
+    <div id="how-to-get-portal-modal" class="fixed inset-0 z-[2505] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/85 backdrop-blur-md" onclick="closeModal('how-to-get-portal-modal')"></div>
+        <div class="relative w-full max-w-sm custom-dialog rounded-[2.5rem] text-white shadow-2xl border border-white/10 p-8 flex flex-col gap-6" style="background: var(--dialog-bg);">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/30">
+                    <i class="ph ph-planet text-2xl"></i>
+                </div>
+                <button onclick="closeModal('how-to-get-portal-modal'); toggleModal('get-portal-choice-modal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                    <i class="ph ph-arrow-left"></i>
+                </button>
+            </div>
+            <div>
                 <h2 class="text-2xl font-black tracking-tight">Ways to get Portal</h2>
                 <p class="text-[11px] text-slate-500 font-sans mt-1 uppercase tracking-widest font-bold">Pick your preferred method</p>
             </div>
             <div class="space-y-3">
-                <button onclick="closeModal('get-portal-choice-modal'); toggleModal('portal-urls-modal')" class="w-full py-4 bg-teal-600 hover:bg-teal-500 rounded-2xl font-black text-sm transition-all shadow-lg shadow-teal-900/20 flex items-center justify-center gap-3">
+                <button onclick="closeModal('how-to-get-portal-modal'); toggleModal('portal-urls-modal')" class="w-full py-4 bg-teal-600 hover:bg-teal-500 rounded-2xl font-black text-sm transition-all shadow-lg shadow-teal-900/20 flex items-center justify-center gap-3">
                     <i class="ph ph-link"></i> See active portal urls
                 </button>
-                <button onclick="closeModal('get-portal-choice-modal'); toggleModal('html-method-modal')" class="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-sm transition-all border border-white/10 flex items-center justify-center gap-3 text-slate-300">
+                <button onclick="closeModal('how-to-get-portal-modal'); toggleModal('html-method-modal')" class="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-sm transition-all border border-white/10 flex items-center justify-center gap-3 text-slate-300">
                     <i class="ph ph-file-html"></i> HTML method
                 </button>
             </div>
-            <button onclick="closeModal('get-portal-choice-modal')" class="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors">Maybe later</button>
+            <button onclick="closeModal('how-to-get-portal-modal')" class="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors">Close</button>
         </div>
     </div>
 
@@ -4322,7 +4359,7 @@
                     <h2 class="text-xl font-black flex items-center gap-2">Official Mirrors</h2>
                     <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Copy and paste these links</p>
                 </div>
-                <button onclick="closeModal('portal-urls-modal'); toggleModal('get-portal-choice-modal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                <button onclick="closeModal('portal-urls-modal'); toggleModal('how-to-get-portal-modal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
                     <i class="ph ph-arrow-left"></i>
                 </button>
             </div>
@@ -4330,21 +4367,30 @@
                 <div class="p-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col gap-2">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-teal-400 font-bold uppercase tracking-widest">Mirror 1</span>
-                        <button onclick="copyToClipboard('https://burst-trade-526.techsmart.cc/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                        <div class="flex flex-col items-end gap-1">
+                            <button onclick="copyToClipboard('https://burst-trade-526.techsmart.cc/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                            <button onclick="window.open('https://burst-trade-526.techsmart.cc/', '_blank')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-arrow-square-out"></i> Open in new tab</button>
+                        </div>
                     </div>
                     <code class="text-xs text-slate-300 break-all font-mono">https://burst-trade-526.techsmart.cc/</code>
                 </div>
                 <div class="p-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col gap-2">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Mirror 2</span>
-                        <button onclick="copyToClipboard('https://portal-w2.vercel.app/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                        <div class="flex flex-col items-end gap-1">
+                            <button onclick="copyToClipboard('https://portal-w2.vercel.app/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                            <button onclick="window.open('https://portal-w2.vercel.app/', '_blank')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-arrow-square-out"></i> Open in new tab</button>
+                        </div>
                     </div>
                     <code class="text-xs text-slate-300 break-all font-mono">https://portal-w2.vercel.app/</code>
                 </div>
                 <div class="p-4 bg-white/5 border border-teal-500/20 rounded-2xl flex flex-col gap-2">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Mirror 3 (OG)</span>
-                        <button onclick="copyToClipboard('https://simple-weather-592.techsmart.cc/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                        <div class="flex flex-col items-end gap-1">
+                            <button onclick="copyToClipboard('https://simple-weather-592.techsmart.cc/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                            <button onclick="window.open('https://simple-weather-592.techsmart.cc/', '_blank')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-arrow-square-out"></i> Open in new tab</button>
+                        </div>
                     </div>
                     <code class="text-xs text-slate-300 break-all font-mono">https://simple-weather-592.techsmart.cc/</code>
                 </div>
@@ -4361,7 +4407,7 @@
                 <div class="w-12 h-12 rounded-2xl bg-violet-600/20 text-violet-400 flex items-center justify-center border border-violet-500/30">
                     <i class="ph ph-file-html text-2xl"></i>
                 </div>
-                <button onclick="closeModal('html-method-modal'); toggleModal('get-portal-choice-modal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                <button onclick="closeModal('html-method-modal'); toggleModal('how-to-get-portal-modal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
                     <i class="ph ph-arrow-left"></i>
                 </button>
             </div>
@@ -4810,28 +4856,54 @@
                     console.log("💾 Loading saved state...");
                     
                     // Detection & Migration Logic
-                    if (storedState && storedState.startsWith('LZB:')) {
-                        console.log("💎 Loading optimized LZ-Base64 state...");
-                        state = JSON.parse(LZString.decompressFromBase64(storedState.substring(4)));
-                    } else if (storedState && storedState.startsWith('LZ:')) {
-                        console.log("💎 Loading optimized LZ-UTF16 state (Legacy)...");
-                        state = JSON.parse(LZString.decompressFromUTF16(storedState.substring(3)));
-                        setTimeout(() => commitChanges(true, true), 500);
-                    } else {
-                        console.log("💾 Loading legacy Base64/JSON state...");
-                        if (storedState.startsWith('{')) {
-                            state = JSON.parse(storedState);
+                    let decodedState = null;
+                    try {
+                        if (storedState && storedState.startsWith('LZB:')) {
+                            console.log("💎 Loading optimized LZ-Base64 state...");
+                            let b64 = storedState.substring(4).replace(/ /g, '+');
+                            while (b64.length % 4 > 0) b64 += '=';
+                            let decomp = LZString.decompressFromBase64(b64);
+                            if (!decomp) decomp = LZString.decompressFromUTF16(storedState.substring(4)); // Fallback
+                            decodedState = JSON.parse(decomp);
+                        } else if (storedState && storedState.startsWith('LZ:')) {
+                            console.log("💎 Loading optimized LZ-UTF16 state...");
+                            decodedState = JSON.parse(LZString.decompressFromUTF16(storedState.substring(3)));
                         } else {
-                            try {
-                                state = JSON.parse(decodeURIComponent(escape(atob(storedState))));
-                            } catch(e) {
-                                console.error("Legacy decode failed:", e);
-                                state = JSON.parse(storedState); 
+                            console.log("💾 Loading legacy Base64/JSON state...");
+                            if (storedState.startsWith('{')) {
+                                decodedState = JSON.parse(storedState);
+                            } else {
+                                try {
+                                    decodedState = JSON.parse(decodeURIComponent(escape(atob(storedState))));
+                                } catch(e) {
+                                    console.error("Legacy decode failed:", e);
+                                    decodedState = JSON.parse(storedState); 
+                                }
                             }
+                            // Immediate migration to LZ-String
+                            console.log("🚀 Migrating storage to LZ-String...");
+                            setTimeout(() => commitChanges(true, true), 500);
                         }
-                        // Immediate migration to LZ-String
-                        console.log("🚀 Migrating storage to LZ-String...");
-                        setTimeout(() => commitChanges(true, true), 500);
+                    } catch (decodeErr) {
+                        console.error("❌ STATE DECODE ERROR:", decodeErr);
+                    }
+
+                    if (decodedState && decodedState.userApps) {
+                        state = decodedState;
+                    } else {
+                        console.error("⚠️ Parsed state was empty or invalid. Attempting emergency recovery...");
+                        const oldApps = localStorage.getItem('apps');
+                        const oldTheme = localStorage.getItem('theme');
+                        if (oldApps) {
+                            console.log("🚚 Recovered from legacy uncompressed apps!");
+                            state = {
+                                userApps: JSON.parse(oldApps),
+                                theme: oldTheme ? JSON.parse(oldTheme) : JSON.parse(JSON.stringify(config.theme))
+                            };
+                            setTimeout(() => commitChanges(true, true), 500);
+                        } else {
+                            throw new Error("State is completely corrupted and no legacy fallback exists.");
+                        }
                     }
                     
                     // Critical Schema Migration
@@ -4915,6 +4987,12 @@
                 document.body.classList.add('portal-ready');
             } catch (e) {
                 console.error("❌ CRITICAL INIT ERROR:", e);
+                // Backup corrupted state
+                try {
+                    const failedState = localStorage.getItem('portal-state');
+                    if (failedState) localStorage.setItem('portal-state-backup-error', failedState);
+                } catch(err) {}
+                
                 // Still reveal the page even on error — never leave user with blank screen
                 document.body.classList.add('portal-ready');
                 document.getElementById('password-modal')?.classList.remove('hidden');
@@ -5260,51 +5338,62 @@
                     btn.innerHTML = `<i class="${data.icon}"></i>`;
                 }
 
-                btn.addEventListener('mouseenter', (e) => {
+                const showTooltip = (e) => {
                     if (state.config && state.config.showTooltips === false) return;
-                    
-                if (!data) return;
-
-                const iconHtml = btn.querySelector('i') ? btn.querySelector('i').className : `ph ${data.icon}`;
-
-                tooltip.innerHTML = `
-                    <div class="bg-black/90 backdrop-blur-xl border border-white/15 p-3 rounded-2xl shadow-2xl flex flex-col gap-1.5 min-w-[180px] max-w-[220px]"
-                         style="border-color: color-mix(in srgb, var(--primary-color) 20%, rgba(255,255,255,0.1)); 
-                                box-shadow: 0 10px 40px -10px color-mix(in srgb, var(--primary-color) 20%, transparent);">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-[11px] font-black text-white uppercase tracking-tight">${data.title}</span>
-                            <i class="${iconHtml} text-[10px] opacity-80" style="color: var(--primary-color);"></i>
+                    if (!data) return;
+                    const iconHtml = btn.querySelector('i') ? btn.querySelector('i').className : `ph ${data.icon}`;
+                    tooltip.innerHTML = `
+                        <div class="bg-black/90 backdrop-blur-xl border border-white/15 p-3 rounded-2xl shadow-2xl flex flex-col gap-1.5 min-w-[180px] max-w-[220px]"
+                             style="border-color: color-mix(in srgb, var(--primary-color) 20%, rgba(255,255,255,0.1)); 
+                                    box-shadow: 0 10px 40px -10px color-mix(in srgb, var(--primary-color) 20%, transparent);">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[11px] font-black text-white uppercase tracking-tight">${data.title}</span>
+                                <i class="${iconHtml} text-[10px] opacity-80" style="color: var(--primary-color);"></i>
+                            </div>
+                            <p class="text-[10px] text-slate-400 leading-tight font-sans font-medium">${data.desc}</p>
                         </div>
-                        <p class="text-[10px] text-slate-400 leading-tight font-sans font-medium">${data.desc}</p>
-                    </div>
-                `;
-
-                const rect = btn.getBoundingClientRect();
-                const tooltipWidth = tooltip.offsetWidth || 160; 
-                let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-                    
-                    // Screen edge protection
+                    `;
+                    const rect = btn.getBoundingClientRect();
+                    const tooltipWidth = tooltip.offsetWidth || 160; 
+                    let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
                     if (left < 10) left = 10;
                     if (left + tooltipWidth > window.innerWidth - 10) left = window.innerWidth - tooltipWidth - 10;
-
-                    // Position instantly while transparent
                     tooltip.style.transition = 'none';
                     tooltip.style.left = `${left}px`;
                     tooltip.style.top = `${rect.top - 85}px`;
-                    
-                    // Force reflow
                     void tooltip.offsetWidth;
-
-                    // Re-enable transition and show
                     tooltip.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                     tooltip.style.opacity = '1';
                     tooltip.style.transform = 'translateY(0)';
-                });
+                };
 
-                btn.addEventListener('mouseleave', () => {
+                const hideTooltip = () => {
                     tooltip.style.opacity = '0';
                     tooltip.style.transform = 'translateY(10px)';
-                });
+                };
+
+                const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+                let touchTimer;
+
+                if (!isTouch) {
+                    btn.addEventListener('mouseenter', showTooltip);
+                    btn.addEventListener('mouseleave', hideTooltip);
+                } else {
+                    btn.addEventListener('touchstart', (e) => {
+                        touchTimer = setTimeout(() => showTooltip(e), 200); 
+                    }, {passive: true});
+                    btn.addEventListener('touchend', () => {
+                        clearTimeout(touchTimer);
+                        hideTooltip();
+                    });
+                    btn.addEventListener('touchcancel', () => {
+                        clearTimeout(touchTimer);
+                        hideTooltip();
+                    });
+                }
+                
+                // Hide tooltip on click for both mobile and PC
+                btn.addEventListener('click', hideTooltip);
             });
             updateTooltipToggle();
         }
@@ -5405,7 +5494,7 @@
             }
 
             const stateJson = JSON.stringify(state);
-            const compressed = "LZB:" + LZString.compressToBase64(stateJson);
+            const compressed = "LZ:" + LZString.compressToUTF16(stateJson);
             try { localStorage.setItem('portal-state', compressed); } catch (e) { console.warn('localStorage save failed:', e); }
             try {
                 const appsCount = state.userApps ? state.userApps.length : 0;
@@ -6846,7 +6935,19 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (!file) return;
             const r = new FileReader();
             r.onload = ev => {
-                document.getElementById('import-code-area').value = ev.target.result;
+                let code = ev.target.result.trim();
+                let jsonStr = "";
+                if (code.startsWith('LZ:')) {
+                    jsonStr = LZString.decompressFromUTF16(code.substring(3));
+                } else if (code.startsWith('LZB:')) {
+                    let b64 = code.substring(4).replace(/ /g, '+');
+                    while (b64.length % 4 > 0) b64 += '=';
+                    jsonStr = LZString.decompressFromBase64(b64);
+                    if (!jsonStr) jsonStr = LZString.decompressFromUTF16(code.substring(4));
+                } else {
+                    jsonStr = decodeURIComponent(escape(atob(code)));
+                }
+                document.getElementById('import-code-area').value = jsonStr;
                 importSyncCode();
             };
             r.readAsText(file);
@@ -6857,7 +6958,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             const file = e.target.files[0];
             if (!file) return;
             // Generate fresh export data
-            const freshCode = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+            const freshCode = "LZB:" + LZString.compressToBase64(JSON.stringify(state));
             const blob = new Blob([freshCode], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -6881,14 +6982,35 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             });
         }
 
-        function importSyncCode() {
+        async function importSyncCode() {
             try {
                 let code = document.getElementById('import-code-area').value.trim();
+                
+                // Auto-Paste from Clipboard
+                if (!code && navigator.clipboard && navigator.clipboard.readText) {
+                    try {
+                        const clipText = await navigator.clipboard.readText();
+                        const text = clipText ? clipText.trim() : "";
+                        // Basic validation to see if clipboard has a likely Portal code
+                        if (text && (text.startsWith('LZ:') || text.startsWith('LZB:') || text.startsWith('%7B') || text.startsWith('ey'))) {
+                            code = text;
+                            document.getElementById('import-code-area').value = code;
+                            notify("Auto-pasted code from clipboard!", "success", "ph-clipboard");
+                        }
+                    } catch (err) {
+                        console.warn("Clipboard auto-read failed", err);
+                    }
+                }
+
                 if (!code) return notify("Please paste a code first or upload a file", "error");
                 
                 let importedState;
                 if (code.startsWith('LZB:')) {
-                    importedState = JSON.parse(LZString.decompressFromBase64(code.substring(4)));
+                    let b64 = code.substring(4).replace(/ /g, '+');
+                    while (b64.length % 4 > 0) b64 += '=';
+                    let decomp = LZString.decompressFromBase64(b64);
+                    if (!decomp) decomp = LZString.decompressFromUTF16(code.substring(4));
+                    importedState = JSON.parse(decomp);
                 } else if (code.startsWith('LZ:')) {
                     importedState = JSON.parse(LZString.decompressFromUTF16(code.substring(3)));
                 } else {
