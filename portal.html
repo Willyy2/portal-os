@@ -228,9 +228,15 @@
             width: 90%;
             margin: 0 auto;
             white-space: nowrap;
-            overflow: hidden;
+            overflow: visible;  /* was hidden — was clipping all neon/filter glow */
             text-overflow: ellipsis;
             text-align: center;
+        }
+        /* Allow neon glow to bleed outside the h3 and card boundary */
+        .app-card h3:has(.portal-fx),
+        .app-card h3:has(.fx-neon) {
+            overflow: visible;
+            white-space: normal;
         }
 
         .app-card p {
@@ -278,6 +284,10 @@
             z-index: 50 !important;
             opacity: 1 !important;
             visibility: visible !important;
+        }
+        /* Don't double-brighten when neon FX is present — the neon has its own filter */
+        .app-card:hover:has(.fx-neon) {
+            filter: saturate(1.05) !important;
         }
 
         .app-card.selected-card {
@@ -388,6 +398,99 @@
         #app-context-menu::-webkit-scrollbar-thumb,
         #rte-context-menu::-webkit-scrollbar-thumb,
         #settings-ctx-menu::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 10px; }
+
+        /* ---- Context menu grouped dropdown styles ---- */
+        .ctx-item {
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .ctx-item:hover { background: rgba(255,255,255,0.09); }
+        .ctx-item i { font-size: 16px; flex-shrink: 0; }
+
+        .ctx-group { border: none; }
+        .ctx-group summary { list-style: none; }
+        .ctx-group summary::-webkit-details-marker { display: none; }
+        .ctx-group-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
+        .ctx-group-header:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
+        .ctx-group-header i:first-child { font-size: 14px; }
+        .ctx-group-caret {
+            margin-left: auto;
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+        .ctx-group[open] .ctx-group-caret { transform: rotate(90deg); }
+        .ctx-group-body { padding: 2px 0 2px 4px; }
+
+        /* ---- Misc Features modal grid card ---- */
+        .misc-card {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 8px; padding: 14px 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            cursor: pointer; text-align: center;
+            transition: border-color 0.15s, background 0.15s, transform 0.12s;
+        }
+        .misc-card:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.07); transform: translateY(-2px); }
+        .misc-card:active { transform: scale(0.96); }
+        .misc-card-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .misc-card-name { font-weight: 800; font-size: 12px; color: #fff; line-height: 1.2; }
+        .misc-card-desc { font-size: 10px; color: #94a3b8; font-family: sans-serif; line-height: 1.35; }
+
+        /* ---- Misc Help modal card ---- */
+        .misc-help-card {
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 14px 16px; border-radius: 16px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            text-align: left;
+        }
+        .misc-help-card > i { flex-shrink: 0; }
+
+
+        .misc-row {
+            width: 100%; display: flex; align-items: center; gap: 12px;
+            padding: 14px; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            text-align: left; cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            background: transparent;
+        }
+        .misc-row:hover { border-color: rgba(255,255,255,0.15); }
+        .misc-row-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
 
         /* ---- Cloaked Tab Overlay (original tab) ---- */
         #cloaked-overlay {
@@ -587,23 +690,38 @@
             position: relative;
         }
 
-        /* ── Glow / Shadow FX — uses currentColor so they inherit RTE color ── */
+        /* ── Glow / Shadow FX — uses currentColor so they inherit the RTE-set color ── */
+        /* ── Neon FX ── single canonical definition used everywhere ── */
         .fx-neon {
             font-weight: 900;
-            color: inherit;
+            color: currentColor;
+            /* Layer 1: 1px crisp halo keeps letter shapes readable */
+            /* Layer 2: mid-range bloom for the glow look */
+            /* Layer 3: outer flare adds neon atmosphere */
             text-shadow:
-                0 0 5px currentColor,
-                0 0 15px currentColor,
-                0 0 30px currentColor;
-            animation: fxNeon 2s ease-in-out infinite alternate;
+                0 0 1px currentColor,
+                0 0 6px currentColor,
+                0 0 18px currentColor;
+            animation: fxNeon 3s ease-in-out infinite;
+            will-change: text-shadow;
             text-rendering: optimizeLegibility;
         }
         @keyframes fxNeon {
-            0%   { text-shadow: 0 0 5px currentColor, 0 0 15px currentColor, 0 0 30px currentColor; opacity: 1; }
-            45%  { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor; opacity: 0.7; }
-            55%  { text-shadow: 0 0 2px currentColor, 0 0 6px currentColor; opacity: 0.7; }
-            100% { text-shadow: 0 0 8px currentColor, 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor; opacity: 1; }
+            0%, 100% {
+                text-shadow:
+                    0 0 1px currentColor,
+                    0 0 6px currentColor,
+                    0 0 18px currentColor;
+            }
+            50% {
+                text-shadow:
+                    0 0 2px currentColor,
+                    0 0 10px currentColor,
+                    0 0 28px currentColor,
+                    0 0 40px currentColor;
+            }
         }
+
 
         .fx-fire {
             font-weight: 900;
@@ -718,6 +836,14 @@
         .rte-fx-card:active { transform:scale(.93); }
         .rte-fx-card.fx-active { border-color:var(--primary-color); background:color-mix(in srgb,var(--primary-color) 20%,var(--button-bg)); color:var(--text-main); }
         .rte-fx-card .fx-demo { font-size:15px; font-weight:900; pointer-events:none; display: inline-block; position: relative; }
+        /* Preview cards: same neon layers, no animation (small size, static is fine) */
+        .rte-fx-card .fx-demo.fx-neon {
+            text-shadow:
+                0 0 1px currentColor,
+                0 0 5px currentColor,
+                0 0 14px currentColor !important;
+            animation: none !important;
+        }
 
         /* Fullscreen Iframe Container (Instant Snap) */
         #app-container {
@@ -1156,6 +1282,12 @@
             right: 176px;
         }
 
+        /* Misc Features button — right of help-btn, identical floating-btn style */
+        .misc-btn {
+            bottom: 32px;
+            left: 176px;
+        }
+
         /* Dev button red accent when enabled */
         .dev-btn {
             display: none;
@@ -1350,9 +1482,10 @@
         }
 
         .notification.info {
-            background: rgba(30, 41, 59, 0.95);
-            border-color: #334155;
+            background: color-mix(in srgb, var(--primary-color) 25%, rgba(30, 41, 59, 0.95));
+            border-color: color-mix(in srgb, var(--primary-color) 45%, #334155);
             color: white;
+            box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--primary-color) 30%, rgba(0,0,0,0.5));
         }
 
         @keyframes spin {
@@ -1476,6 +1609,11 @@
                 bottom: 16px;
             }
 
+            .misc-btn {
+                left: 122px;
+                bottom: 16px;
+            }
+
             .portal-nav-container {
                 left: 16px;
                 bottom: 16px;
@@ -1550,7 +1688,7 @@
     </div>
 
     <!-- Portal Info & QR Dialog -->
-    <div id="portal-info-modal" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-4">
+    <div id="portal-info-modal" class="fixed inset-0 z-[2360] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('portal-info-modal')"></div>
         <div class="relative custom-dialog p-8 rounded-3xl w-full max-w-sm text-center text-white shadow-2xl border border-white/10" style="background: var(--dialog-bg); font-family: 'Fredoka One', cursive;">
             <button onclick="closeModal('portal-info-modal')" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors z-[10]"><i class="ph ph-x text-2xl"></i></button>
@@ -1795,15 +1933,19 @@
 
     <div id="choice-modal" class="fixed inset-0 z-[1500] hidden flex items-center justify-center p-4"
         style="display: none;">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300"
-            onclick="closeModal('choice-modal')"></div>
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('choice-modal')"></div>
         <div
             class="relative custom-dialog p-8 rounded-[2rem] w-full max-w-sm shadow-2xl text-white text-center transform transition-all duration-300">
+            <!-- Close X button -->
+            <button onclick="closeModal('choice-modal')" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors" style="color:var(--text-dim);" title="Close">
+                <i class="ph ph-x text-lg"></i>
+            </button>
             <!-- App Icon -->
             <div id="choice-app-icon" class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"></div>
             <h2 class="text-2xl font-black mb-1 tracking-tight">Launch <span id="choice-app-name" style="color: var(--primary-color);"></span></h2>
-            <p class="text-xs text-slate-500 mb-6 px-4 font-medium uppercase tracking-widest font-sans">How do you want to open it?</p>
-            <div class="space-y-3">
+            <p id="choice-app-desc" class="text-[11px] text-slate-400 mb-4 px-4 font-sans italic" style="display: none; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;"></p>
+            <p class="text-[10px] text-slate-500 mb-3 px-4 font-medium uppercase tracking-widest font-sans">How do you want to open it?</p>
+            <div class="space-y-2.5">
                 <button id="launch-iframe"
                     class="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg transition-all active:scale-95" style="background: var(--primary-color); color: #fff; box-shadow: 0 8px 24px color-mix(in srgb, var(--primary-color) 35%, transparent);">
                     <i class="ph ph-browser text-xl"></i> Open Inside Portal
@@ -1923,6 +2065,14 @@
                     </summary>
                     <div class="p-4 border-t border-white/5 space-y-4">
                         <div id="bulk-restrict-icon" class="space-y-3">
+                            <!-- Bulk safety toggle: shown when multi-select active, off by default -->
+                            <div id="bulk-icon-safety-row" class="hidden items-center justify-between p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                                <div>
+                                    <label class="text-[12px] font-bold text-amber-400 uppercase tracking-widest" style="font-family:'Fredoka One',cursive;">Allow Bulk Icon &amp; Color Edit</label>
+                                    <p class="text-[11px] text-slate-500 font-sans mt-0.5">Off by default — prevents accidental mass style changes</p>
+                                </div>
+                                <input type="checkbox" id="bulk-icon-color-allow" class="w-5 h-5 cursor-pointer accent-amber-500" onchange="toggleBulkIconAllow(this.checked)">
+                            </div>
                             <label class="block text-[14px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
                                 style="font-family: 'Fredoka One', cursive;">Emoji/Number
                                 & Icon</label>
@@ -2445,7 +2595,7 @@
     <!-- App Card Context Menu -->
     <div id="app-context-menu"
         class="fixed z-[9999] hidden border border-white/10 backdrop-blur-md rounded-xl p-1 shadow-2xl origin-top-left transition-all duration-150 scale-95 opacity-0"
-        style="background: var(--dialog-bg); min-width: 210px; max-height: 85vh; overflow-y: auto;">
+        style="background: var(--dialog-bg); min-width: 220px; max-height: 85vh; overflow-y: auto;">
         <div class="flex items-center justify-between px-3 pt-2 pb-1">
             <div id="app-ctx-title"
                 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 font-sans truncate pr-2">
@@ -2453,27 +2603,56 @@
             <button onclick="_dismissAppCtx()" class="text-red-500 hover:text-red-400 transition-colors shrink-0"><i class="ph ph-x font-bold"></i></button>
         </div>
         <div class="h-px bg-white/5 mb-1"></div>
-        <button onclick="appCtxAction('options')"
-            class="w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
-            <i class="ph ph-dots-three-circle-vertical text-blue-400"></i> App Options
-        </button>
-        <button onclick="appCtxAction('move')"
-            class="w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
-            <i class="ph ph-arrows-out-cardinal text-emerald-400"></i> Move App
-        </button>
-        <button onclick="appCtxAction('move-into-category')"
-            class="w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
-            <i class="ph ph-folder-simple-plus text-amber-400"></i> Move Into Category
-        </button>
-        <div class="h-px bg-white/5 my-1"></div>
+
+        <!-- ▸ Manage group -->
+        <details class="ctx-group" open>
+            <summary class="ctx-group-header">
+                <i class="ph ph-wrench text-blue-400"></i> Manage
+                <i class="ph ph-caret-right ctx-group-caret"></i>
+            </summary>
+            <div class="ctx-group-body">
+                <button onclick="appCtxAction('options')" class="ctx-item">
+                    <i class="ph ph-dots-three-circle-vertical text-blue-400"></i> App Options / Edit
+                </button>
+                <button onclick="appCtxAction('duplicate')" class="ctx-item">
+                    <i class="ph ph-copy text-indigo-400"></i> Duplicate
+                </button>
+                <button onclick="appCtxAction('duplicate-visual')" class="ctx-item">
+                    <i class="ph ph-paint-bucket" style="background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;"></i> Duplicate as Card (No URL)
+                </button>
+                <button onclick="appCtxAction('delete')" class="ctx-item text-red-400 hover:bg-red-500/10">
+                    <i class="ph ph-trash text-red-400"></i> Delete
+                </button>
+            </div>
+        </details>
+
+        <div class="h-px bg-white/5 my-0.5"></div>
+
+        <!-- ▸ Organize group -->
+        <details class="ctx-group">
+            <summary class="ctx-group-header">
+                <i class="ph ph-arrows-out-cardinal text-emerald-400"></i> Organize
+                <i class="ph ph-caret-right ctx-group-caret"></i>
+            </summary>
+            <div class="ctx-group-body">
+                <button onclick="appCtxAction('move')" class="ctx-item">
+                    <i class="ph ph-arrows-out-cardinal text-emerald-400"></i> Move App
+                </button>
+                <button onclick="appCtxAction('move-into-category')" class="ctx-item">
+                    <i class="ph ph-folder-simple-plus text-amber-400"></i> Move Into Category
+                </button>
+            </div>
+        </details>
+
+        <div class="h-px bg-white/5 my-0.5"></div>
+
+        <!-- Top-level actions -->
         <button onclick="appCtxAction('select')"
-            class="w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
-            <i class="ph ph-cursor-click text-purple-400"></i> <span id="app-ctx-select-label">Enter Selection
-                Mode</span>
+            class="ctx-item">
+            <i class="ph ph-cursor-click text-purple-400"></i> <span id="app-ctx-select-label">Enter Selection Mode</span>
         </button>
-        <div class="h-px bg-white/5 my-1"></div>
         <button onclick="appCtxAction('search')"
-            class="w-full text-left px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-3">
+            class="ctx-item">
             <i class="ph ph-magnifying-glass text-sky-400"></i> Global Search
         </button>
     </div>
@@ -2489,7 +2668,7 @@
     </div>
 
     <!-- Rich Text Editor Modal -->
-    <div id="rich-text-modal" class="fixed inset-0 z-[1800] hidden flex items-center justify-center p-4">
+    <div id="rich-text-modal" class="fixed inset-0 z-[2310] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('rich-text-modal')"></div>
         <div class="relative custom-dialog rounded-[1.75rem] w-full max-w-2xl text-white shadow-2xl border border-white/10 flex flex-col p-6 animate-pop-in"
             style="background: var(--dialog-bg);">
@@ -2588,7 +2767,8 @@
             </div>
 
             <div id="rte-editor" contenteditable="true"
-                class="w-full h-48 bg-black/20 border border-white/10 border-t-0 rounded-b-xl p-4 overflow-y-auto outline-none transition-all focus:border-[var(--primary-color)] focus:shadow-[0_0_10px_color-mix(in_srgb,var(--primary-color)_20%,transparent)] text-sm font-sans"
+                class="w-full h-48 bg-black/20 border border-white/10 border-t-0 rounded-b-xl p-4 overflow-y-auto outline-none transition-all focus:border-[var(--primary-color)] focus:shadow-[0_0_10px_color-mix(in_srgb,var(--primary-color)_20%,transparent)] text-sm"
+                style="font-family:'Fredoka One',cursive;"
                 onkeyup="handleRTEKeyup(event)" onmouseup="updateRTEActiveStates()"></div>
             <p class="text-[10px] text-slate-400 mt-2 font-sans font-bold uppercase tracking-widest flex items-center gap-2 opacity-80">
                 <i class="ph ph-info text-sm"></i> Type :keyword: for emojis.
@@ -2597,11 +2777,15 @@
                 </span>
             </p>
 
-            <div class="flex justify-end gap-3 mt-5">
+            <div class="flex justify-end gap-3 mt-5 flex-wrap">
                 <button onclick="closeModal('rich-text-modal')"
                     class="px-5 py-2.5 rounded-xl text-slate-300 bg-slate-800 hover:bg-slate-700 font-bold transition-all text-sm uppercase tracking-widest"
                     style="font-family: 'Fredoka One', cursive;">Cancel</button>
-                <button onclick="applyRTEContent()"
+                <button onclick="exportRTEasHTML()"
+                    class="px-5 py-2.5 rounded-xl text-white font-bold transition-all text-sm uppercase tracking-widest flex items-center gap-2"
+                    style="background: color-mix(in srgb, var(--primary-color) 15%, transparent); border: 2px solid color-mix(in srgb, var(--primary-color) 35%, transparent); font-family: 'Fredoka One', cursive;">
+                    <i class="ph ph-code"></i> Export HTML</button>
+                <button id="rte-apply-btn" onclick="applyRTEContent()"
                     class="px-5 py-2.5 rounded-xl text-white font-bold transition-all text-sm uppercase tracking-widest"
                     style="background: var(--button-bg); border: 2px solid color-mix(in srgb, var(--primary-color) 40%, transparent); font-family: 'Fredoka One', cursive;">Apply
                     Magic <i class="ph ph-magic-wand uppercase"></i></button>
@@ -2610,7 +2794,7 @@
     </div>
 
     <!-- Emoji Hub Modal -->
-    <div id="emoji-hub-modal" class="fixed inset-0 z-[1850] hidden flex items-center justify-center p-4"
+    <div id="emoji-hub-modal" class="fixed inset-0 z-[2330] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('emoji-hub-modal')"></div>
         <div
@@ -2654,7 +2838,7 @@
     </div>
 
     <!-- Emoji Creation Modal (Standalone Dialog) -->
-    <div id="emoji-creation-modal" class="fixed inset-0 z-[1860] hidden flex items-center justify-center p-4"
+    <div id="emoji-creation-modal" class="fixed inset-0 z-[2370] hidden flex items-center justify-center p-4"
         style="display: none;">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('emoji-creation-modal')"></div>
         <div class="relative custom-dialog rounded-[2.5rem] max-w-md w-full text-white p-10 shadow-2xl border border-white/10"
@@ -2682,18 +2866,22 @@
 
                 <div>
                     <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1"
-                        style="font-family:sans-serif;">Image URL / Data</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="emoji-url-input" placeholder="https://..." tabindex="2"
-                            class="flex-1 bg-black/60 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 transition-all text-sm font-mono placeholder:text-slate-600"
-                            onkeydown="if(event.key==='Enter'){addCustomEmoji();}">
-                        <button onclick="document.getElementById('emoji-creation-file').click()" tabindex="3"
-                            class="aspect-square w-14 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center border border-white/10 transition-colors"
-                            title="Upload Image">
-                            <i class="ph ph-upload-simple text-xl"></i>
-                        </button>
-                        <input type="file" id="emoji-creation-file" accept="image/*" class="hidden"
-                            onchange="handleEmojiFileUpload(event)">
+                        style="font-family:sans-serif;">Image</label>
+                    <!-- Unified image picker row -->
+                    <div class="flex gap-2 items-center">
+                        <div id="emoji-img-preview" class="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <i class="ph ph-image text-2xl text-slate-600" id="emoji-img-placeholder"></i>
+                        </div>
+                        <div class="flex-1 flex flex-col gap-2">
+                            <input type="hidden" id="emoji-url-input" placeholder="Paste URL or pick below..." tabindex="2"
+                                class="w-full bg-black/60 border border-white/10 rounded-2xl px-4 py-3 outline-none focus:border-blue-500 transition-all text-sm font-mono placeholder:text-slate-600"
+                                oninput="_emojiPreviewUrl(this.value)"
+                                onkeydown="if(event.key==='Enter'){addCustomEmoji();}">
+                            <button type="button" tabindex="3" onclick="openImagePicker(document.getElementById('emoji-url-input').value, function(val){ document.getElementById('emoji-url-input').value=val; _emojiPreviewUrl(val); })"
+                                class="w-full h-14 rounded-2xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 text-xs font-bold border border-blue-500/30 transition-all flex items-center justify-center gap-2">
+                                <i class="ph ph-image-square text-base"></i> Choose Image / Upload
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -3066,7 +3254,7 @@
     </div>
 
     <!-- Code Studio (shared iframe editor for HTML, CSS, JS, JSON) -->
-    <div id="code-studio-modal" class="fixed inset-0 z-[2100] hidden flex items-center justify-center p-4">
+    <div id="code-studio-modal" class="fixed inset-0 z-[2340] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('code-studio-modal')"></div>
         <div
             class="relative custom-dialog rounded-[1.75rem] max-w-4xl w-full h-[80vh] overflow-hidden text-white flex flex-col">
@@ -3213,6 +3401,23 @@
                             style="color: var(--primary-color); opacity: 0.5;"></i>
                     </summary>
                     <div class="px-5 pb-5">
+                        <!-- v4.9 — May 9 2026 -->
+                        <div class="mb-4 p-3 rounded-xl border border-white/5" style="background: color-mix(in srgb, var(--primary-color) 5%, transparent);">
+                            <p class="text-xs font-bold uppercase tracking-widest font-sans mb-2 flex items-center gap-1"
+                                style="color: var(--primary-color);"><i class="ph ph-sparkle"></i> v4.9</p>
+                            <ul class="text-[11px] font-sans space-y-2 ml-3 list-disc text-slate-300">
+                                <li><b>Misc Features Hub:</b> New ✦ sparkle button opens a central hub with Global Search, Rich Text Editor, Multi-Link Tool, Portal URL &amp; QR Code, Move App, Format Painter, Emoji Hub, Cloaked Tab and Bulk Manager — all in one place.</li>
+                                <li><b>Rich Text Editor Export:</b> New &ldquo;Export HTML&rdquo; button in the RTE lets you copy your styled text as raw HTML and paste it anywhere.</li>
+                                <li><b>Smart Pickers:</b> Move App and Format Painter now use a live search-picker dialog instead of typing names manually — search apps or categories and select with one click.</li>
+                                <li><b>Version Update Toast:</b> A notification now appears the first time you open a new version of Portal, with a direct link to the changelog.</li>
+                                <li><b>Global Search:</b> System-wide search for apps, categories, settings and dialogs. Press Escape to close.</li>
+                                <li><b>Duplicate as Visual Card:</b> Right-click any app to clone its style/icon/color without its URL.</li>
+                                <li><b>Bulk Edit Safety Toggle:</b> Icon &amp; color changes during multi-select gated behind an opt-in toggle.</li>
+                                <li><b>Neon Pulse:</b> Single canonical neon text effect — cleaner, more readable, 4s breathing animation.</li>
+                                <li><b>Adaptive Description Scaling:</b> Long descriptions shrink and clamp automatically across 4 tiers.</li>
+                                <li><b>Connection Resilience:</b> Failed-connection timeout extended to 40s; Refresh button fully rebuilds the iframe.</li>
+                            </ul>
+                        </div>
                         <!-- v4.8 — May 6 2026 -->
                         <div class="mb-4">
                             <p class="text-xs font-bold uppercase tracking-widest font-sans mb-2 flex items-center gap-1"
@@ -3372,7 +3577,7 @@
                             style="background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2);">
                             <span style="font-size:22px;">👑</span>
                             <div>
-                                <p class="font-bold text-sm" style="color: #fde68a;">Owner — w...... (uh uh)</p>
+                                <p class="font-bold text-sm" style="color: #fde68a;">Owner - wi11y2</p>
                                 <p class="text-[11px] font-sans" style="color: rgba(253,230,138,0.6);">but yeah i made
                                     the portal soo like</p>
                             </div>
@@ -3775,6 +3980,7 @@
                         class="ph ph-sliders-horizontal"></i> App Visuals</button>
                 <button class="dropdown-item" onclick="promptReplaceUrl(event)"><i class="ph ph-link"></i> Replace App
                     URL</button>
+                <button class="dropdown-item" onclick="openGlobalSearch()"><i class="ph ph-magnifying-glass text-sky-400"></i> Global Search</button>
             </div>
             <div style="height:1px; background:rgba(255,255,255,0.1); margin:4px 8px;"></div>
             <button class="dropdown-item" style="color:#f87171" onclick="goBack()"><i class="ph ph-house-line"></i> Back
@@ -3825,6 +4031,144 @@
         <div class="portal-trigger" onclick="togglePortalMenu(event)"><i class="ph ph-squares-four"></i></div>
     </div>
 
+    <!-- Misc Features Modal -->
+    <div id="misc-modal" class="fixed inset-0 z-[2200] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-sm" onclick="closeModal('misc-modal')"></div>
+        <div class="relative w-full max-w-lg custom-dialog rounded-[1.75rem] text-white shadow-2xl border border-white/10 flex flex-col overflow-hidden"
+            style="background: var(--dialog-bg); max-height: 88vh;">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/5 shrink-0">
+                <h2 class="text-lg font-black flex items-center gap-2 tracking-tight">
+                    <i class="ph ph-sparkle" style="color: var(--primary-color);"></i> Misc Features
+                </h2>
+                <button onclick="closeModal('misc-modal')" class="p-1.5 hover:bg-white/10 rounded-full transition-all text-slate-400 hover:text-white"><i class="ph ph-x text-sm"></i></button>
+            </div>
+            <!-- Grid body -->
+            <div class="px-4 py-4 grid grid-cols-3 gap-2.5 overflow-y-auto scroll-section" style="min-height:0;">
+
+                <!-- Global Search -->
+                <button onclick="closeModal('misc-modal'); window._returnToMiscModal = true; openGlobalSearch();" class="misc-card" style="--mc:#ffffff;">
+                    <div class="misc-card-icon" style="background: color-mix(in srgb, var(--primary-color) 18%, transparent); color: var(--primary-color);">
+                        <i class="ph ph-magnifying-glass text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Global Search</span>
+                    <span class="misc-card-desc">Search apps, categories &amp; system actions</span>
+                </button>
+
+                <!-- Rich Text Editor -->
+                <button onclick="openRTEExportMode();" class="misc-card">
+                    <div class="misc-card-icon bg-violet-500/15 text-violet-400">
+                        <i class="ph ph-text-aa text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Rich Text Editor</span>
+                    <span class="misc-card-desc">Compose styled text and export as HTML</span>
+                </button>
+
+                <!-- Multi-Link -->
+                <button onclick="toggleModal('multi-link-modal');" class="misc-card">
+                    <div class="misc-card-icon bg-cyan-500/15 text-cyan-400">
+                        <i class="ph ph-link text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Multi-Link</span>
+                    <span class="misc-card-desc">Launch multiple URLs or a whole folder</span>
+                </button>
+
+                <!-- Portal URL -->
+                <button onclick="showPortalUrlDialog();" class="misc-card">
+                    <div class="misc-card-icon bg-amber-500/15 text-amber-400">
+                        <i class="ph ph-qr-code text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Portal URL</span>
+                    <span class="misc-card-desc">Copy or share your Portal's unique URL &amp; QR</span>
+                </button>
+
+                <!-- Move App -->
+                <button onclick="closeModal('misc-modal'); window._returnToMiscModal = true; openMiscPickerMoveApp();" class="misc-card">
+                    <div class="misc-card-icon bg-emerald-500/15 text-emerald-400">
+                        <i class="ph ph-folder-simple-plus text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Move App</span>
+                    <span class="misc-card-desc">Search an app and pick its destination folder</span>
+                </button>
+
+                <!-- Format Painter -->
+                <button onclick="closeModal('misc-modal'); window._returnToMiscModal = true; openMiscPickerFormatPaint();" class="misc-card">
+                    <div class="misc-card-icon bg-orange-500/15 text-orange-400">
+                        <i class="ph ph-paint-brush text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Format Painter</span>
+                    <span class="misc-card-desc">Copy one app's style and paste to others</span>
+                </button>
+
+                <!-- Emoji Hub -->
+                <button onclick="openEmojiHub();" class="misc-card">
+                    <div class="misc-card-icon bg-fuchsia-500/15 text-fuchsia-400">
+                        <i class="ph ph-smiley-wink text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Emoji Hub</span>
+                    <span class="misc-card-desc">Create and manage custom Portal emojis</span>
+                </button>
+
+                <!-- Cloaked Tab -->
+                <button onclick="closeModal('misc-modal'); launchPortalCloaked();" class="misc-card">
+                    <div class="misc-card-icon bg-purple-500/15 text-purple-400">
+                        <i class="ph ph-mask-happy text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Cloaked Tab</span>
+                    <span class="misc-card-desc">Open Portal disguised as another website</span>
+                </button>
+
+                <!-- Bulk Manager -->
+                <button onclick="closeModal('misc-modal'); openBulkMode();" class="misc-card">
+                    <div class="misc-card-icon bg-sky-500/15 text-sky-400">
+                        <i class="ph ph-stack text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name" id="misc-bulk-btn-name">Multi-Select</span>
+                    <span class="misc-card-desc">Select multiple apps to edit or delete at once</span>
+                </button>
+
+                <!-- Portal Loader Raw Code -->
+                <button onclick="fetchAndShowPortalLoader();" class="misc-card">
+                    <div class="misc-card-icon bg-indigo-500/15 text-indigo-400">
+                        <i class="ph ph-code-block text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">View Loader</span>
+                    <span class="misc-card-desc">Fetch and view raw loader source code</span>
+                </button>
+
+            </div>
+            <!-- Footer: Help button -->
+            <div class="px-4 pb-4 pt-2 border-t border-white/5 flex justify-end shrink-0">
+                <button onclick="toggleModal('misc-help-modal');" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                    <i class="ph ph-question"></i> How to use these features
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Misc Features Help Modal -->
+    <div id="misc-help-modal" class="fixed inset-0 z-[2300] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal('misc-help-modal')"></div>
+        <div class="relative w-full max-w-lg custom-dialog rounded-[1.75rem] text-white shadow-2xl border border-white/10 flex flex-col overflow-hidden" style="background: var(--dialog-bg); max-height: 85vh;">
+            <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/5 shrink-0">
+                <h2 class="text-base font-black flex items-center gap-2"><i class="ph ph-question text-sky-400"></i> Feature Guide</h2>
+                <button onclick="closeModal('misc-help-modal')" class="p-1.5 hover:bg-white/10 rounded-full text-slate-400 hover:text-white"><i class="ph ph-x text-sm"></i></button>
+            </div>
+            <div class="px-4 py-4 grid grid-cols-2 gap-3 overflow-y-auto scroll-section" style="min-height:0;">
+                <div class="misc-help-card"><i class="ph ph-magnifying-glass text-2xl" style="color:var(--primary-color)"></i><div><p class="font-bold text-sm">Global Search</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Type anything to find apps, categories, settings or dialogs. Press Escape to close.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-text-aa text-2xl text-violet-400"></i><div><p class="font-bold text-sm">Rich Text Editor</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Write styled text with bold, color, FX and emojis. Use &ldquo;Export HTML&rdquo; to copy it as raw HTML.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-link text-2xl text-cyan-400"></i><div><p class="font-bold text-sm">Multi-Link Tool</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Enter multiple URLs or pick a category folder &mdash; all links launch at once in new tabs.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-qr-code text-2xl text-amber-400"></i><div><p class="font-bold text-sm">Portal URL &amp; QR Code</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Shows your Portal's shareable URL and a scannable QR code. Copy it or open in a new tab.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-folder-simple-plus text-2xl text-emerald-400"></i><div><p class="font-bold text-sm">Move App to Category</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Step 1: search and pick the app. Step 2: search and pick the destination category. Done!</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-paint-brush text-2xl text-orange-400"></i><div><p class="font-bold text-sm">Format Painter</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Search and pick a source app, then click any other app card to copy its style onto it.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-smiley-wink text-2xl text-fuchsia-400"></i><div><p class="font-bold text-sm">Emoji Hub</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Create custom emojis from images. Use them in app names and descriptions with :keyword: syntax.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-mask-happy text-2xl text-purple-400"></i><div><p class="font-bold text-sm">Cloaked Tab</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Opens Portal in a new tab disguised as another website &mdash; great for privacy in shared environments.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-stack text-2xl text-sky-400"></i><div><p class="font-bold text-sm">Bulk Manager</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Enters selection mode. Click multiple app cards to select, then use the toolbar to edit or delete.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-code-block text-2xl text-indigo-400"></i><div><p class="font-bold text-sm">View Loader</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Fetches and displays the raw source code of the portal_loader.js script.</p></div></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Dashboard Buttons -->
     <button class="floating-btn dev-btn" onclick="openDevTools()" title="Dev Mode"><i
             class="ph ph-bug-beetle"></i></button>
@@ -3833,6 +4177,8 @@
             class="ph ph-newspaper"></i></button>
     <button class="floating-btn export-btn" onclick="showExport()" title="Sync Data"><i
             class="ph ph-share-network"></i></button>
+    <button class="floating-btn misc-btn" id="misc-features-btn" onclick="openMiscModal()" title="Misc Features"><i
+            class="ph ph-sparkle"></i></button>
     <button class="floating-btn settings-btn" id="settings-btn" onclick="showSettings()"
         oncontextmenu="showSettingsContextMenu(event)" title="Settings"></button>
     <!-- Settings button icon is set by JS to allow dynamic update -->
@@ -3868,8 +4214,7 @@
     </div>
 
     <!-- Multi-Link Opener Modal -->
-    <div id="multi-link-modal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4"
-        style="display: none;">
+    <div id="multi-link-modal" class="fixed inset-0 z-[2320] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('multi-link-modal')"></div>
         <div class="relative custom-dialog rounded-[2.5rem] max-w-md w-full text-white p-8 shadow-2xl border border-white/10"
             style="font-family: 'Fredoka One', cursive;">
@@ -4013,16 +4358,16 @@
             "fastBoot": false
           },
           "defaultApps": [
-            { "id": "d1", "name": "DuckMath", "color": "#fbbf24", "icon": "ph-bird", "desc": "Productivity", "content": "https://duckmath.org", "isDefault": true, "creator": "Automated" },
-            { "id": "d2", "name": "GN-Math", "color": "#f97316", "icon": "ph-game-controller", "desc": "Resources", "content": "https://gn-math.dev", "isDefault": true, "creator": "Automated" },
-            { "id": "d3", "name": "WebSim", "color": "#EF4444", "icon": "ph-globe", "desc": "Simulation", "content": "https://websim.ai", "isDefault": true, "creator": "Automated" }
+            { "id": "d1", "name": "DuckMath", "color": "#fbbf24", "icon": "ph-bird", "desc": "a ducklike fun math game where you can collect ducks but you have to do math equations (just kidding has alot of unblocked games)", "content": "https://duckmath.org", "isDefault": true, "creator": "Automated" },
+            { "id": "d2", "name": "GN-Math", "color": "#f97316", "icon": "ph-game-controller", "desc": "THE PLACE for games! unblocked ones though, can sometimes have issues but thats not my fault!", "content": "https://gn-math.dev", "isDefault": true, "creator": "Automated" },
+            { "id": "d3", "name": "WebSim", "color": "#EF4444", "icon": "ph-globe", "desc": "includes ALOT of user created stuff made by ai im pretty sure!", "content": "https://websim.ai", "isDefault": true, "creator": "Automated" }
           ]
         }
     </script>
 
     <script>
         /* ██████████████████████████████████████████████████████████████████████████
-           PORTAL OS — MASTER CODE MAP  (v4.8 · April 2026)
+           PORTAL OS — MASTER CODE MAP  (v4.9 · May 2026)
            ██████████████████████████████████████████████████████████████████████████
 
            HOW THIS FILE WORKS
@@ -4087,7 +4432,7 @@
            choice-modal       — "Open in tab or iframe" picker
            code-studio-modal  — Code Studio (CSS/JSON/HTML editor)
            move-into-cat-modal — Move Into Category (created dynamically)
-           ████████████████████████████████████████████████████████████████████████ */
+           ██████████████████████████████████████████████████████████████████████████ */
 
         /* ==========================================================================
            §1. CORE STATE & CONSTANTS
@@ -4128,6 +4473,30 @@
 
         let saveTimeout = null;
         let renderRequested = false;
+
+        // ── _hoistFxColors: fix neon color mismatch in portal card rendering ──
+        // The .portal-fx span uses currentColor for glow. If the actual text color
+        // lives on an INNER child span (from the RTE color picker), the outer span
+        // inherits the card's nameStyle (usually white) instead of the intended color.
+        // This function processes saved HTML before insertion and hoists the inner
+        // color up to the outer span — fixes ALL apps, old and new.
+        function _hoistFxColors(html) {
+            if (!html || !html.includes('portal-fx')) return html;
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            tmp.querySelectorAll('.portal-fx').forEach(span => {
+                if (span.style.color) return; // already has explicit color
+                const inner = span.querySelector('[style*="color"]');
+                if (inner && inner.style.color) {
+                    span.style.color = inner.style.color;
+                    return;
+                }
+                // Also check <font color="..."> tags (execCommand may produce these)
+                const fontEl = span.querySelector('font[color]');
+                if (fontEl) span.style.color = fontEl.getAttribute('color');
+            });
+            return tmp.innerHTML;
+        }
 
         // --- Dangling UI State Variables ---
         let dragState = null,
@@ -4278,6 +4647,9 @@
                     if (!state.theme.customEmojis) state.theme.customEmojis = [];
                 }
 
+                migrateTree();
+                commitChanges(true, true);
+
                 // Cleanup stale keys
                 if (state.theme && state.theme.globalFilters !== undefined) delete state.theme.globalFilters;
                 if (state.theme && state.theme.globalVisuals !== undefined) delete state.theme.globalVisuals;
@@ -4366,9 +4738,9 @@
                         globalFilters: { brightness: 100, contrast: 100, saturate: 100, blur: 0, opacity: 100, hue: 0, sepia: 0, grayscale: false, invert: false }
                     },
                     defaultApps: [
-                        { "id": "d1", "name": "DuckMath", "color": "#fbbf24", "icon": "ph-bird", "desc": "Productivity", "content": "https://duckmath.org", "isDefault": true, "creator": "Automated" },
-                        { "id": "d2", "name": "GN-Math", "color": "#f97316", "icon": "ph-game-controller", "desc": "Resources", "content": "https://gn-math.dev", "isDefault": true, "creator": "Automated" },
-                        { "id": "d3", "name": "WebSim", "color": "#EF4444", "icon": "ph-globe", "desc": "Simulation", "content": "https://websim.ai", "isDefault": true, "creator": "Automated" }
+                        { "id": "d1", "name": "DuckMath", "color": "#fbbf24", "icon": "ph-bird", "desc": "a ducklike fun math game where you can collect ducks but you have to do math equations (just kidding has alot of unblocked games)", "content": "https://duckmath.org", "isDefault": true, "creator": "Automated" },
+                        { "id": "d2", "name": "GN-Math", "color": "#f97316", "icon": "ph-game-controller", "desc": "THE PLACE for games! unblocked ones though, can sometimes have issues but thats not my fault!", "content": "https://gn-math.dev", "isDefault": true, "creator": "Automated" },
+                        { "id": "d3", "name": "WebSim", "color": "#EF4444", "icon": "ph-globe", "desc": "includes ALOT of user created stuff made by ai im pretty sure!", "content": "https://websim.ai", "isDefault": true, "creator": "Automated" }
                     ]
                 };
             }
@@ -4384,6 +4756,29 @@
 
         // Tree Migration
         function migrateTree() {
+            // Update default app descriptions
+            const descUpdates = {
+                "d1": "a ducklike fun math game where you can collect ducks but you have to do math equations (just kidding has alot of unblocked games)",
+                "d2": "THE PLACE for games! unblocked ones though, can sometimes have issues but thats not my fault!",
+                "d3": "includes ALOT of user created stuff made by ai im pretty sure!",
+                "DuckMath": "a ducklike fun math game where you can collect ducks but you have to do math equations (just kidding has alot of unblocked games)",
+                "Duck Math": "a ducklike fun math game where you can collect ducks but you have to do math equations (just kidding has alot of unblocked games)",
+                "GN-Math": "THE PLACE for games! unblocked ones though, can sometimes have issues but thats not my fault!",
+                "WebSim": "includes ALOT of user created stuff made by ai im pretty sure!"
+            };
+            function walkDescs(list) {
+                if (!list) return;
+                for (const node of list) {
+                    if (descUpdates[node.name]) {
+                        node.desc = descUpdates[node.name];
+                    } else if (descUpdates[node.id]) {
+                        node.desc = descUpdates[node.id];
+                    }
+                    if (node.children) walkDescs(node.children);
+                }
+            }
+            if (state.userApps) walkDescs(state.userApps);
+
             if (state.userApps && state.userApps.length > 0 && state.userApps.some(a => 'categoryId' in a)) {
                 const root = [];
                 const map = {};
@@ -4554,12 +4949,11 @@
             if (id === 'emoji-hub-modal') window.rteInsertMode = false;
         }
 
-        function notify(msg, type = 'info', icon = 'ph-info', customColor = null) {
+        function notify(msg, type = 'info', icon = 'ph-info', customColor = null, actionLabel = null, actionFn = null, customDuration = null) {
             const container = document.getElementById('notification-container');
             const n = document.createElement('div');
             n.className = `notification ${type}`;
             if (customColor) {
-                // e6 hex = 90% opacity
                 n.style.background = customColor + 'e6';
                 n.style.borderColor = customColor;
                 n.style.color = '#ffffff';
@@ -4569,13 +4963,18 @@
             const iconClass = icon.startsWith('ph-') ? `ph ${icon}` : icon;
             const iconHtml = isImg ? `<img src="${icon}" style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover;">` : `<i class="${iconClass}"></i>`;
 
-            n.innerHTML = `${iconHtml}<span>${msg}</span>`;
+            const actionHtml = actionLabel ? `<button class="notify-action-btn" style="margin-left:8px;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Fredoka One',cursive;">${actionLabel}</button>` : '';
+            n.innerHTML = `${iconHtml}<span>${msg}</span>${actionHtml}`;
+            if (actionLabel && actionFn) {
+                n.querySelector('.notify-action-btn').addEventListener('click', () => { actionFn(); n.remove(); });
+            }
             container.appendChild(n);
             setTimeout(() => { n.classList.add('show'); }, 50);
-            setTimeout(() => {
+            const duration = customDuration || (actionLabel ? 6000 : 3000);
+            const autoHide = setTimeout(() => {
                 n.classList.remove('show');
                 setTimeout(() => n.remove(), 600);
-            }, 3000);
+            }, duration);
         }
 
 
@@ -4982,7 +5381,16 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
                     // ── card.onclick handles click/select/launch (delegation handles context/long-press) ──
                     card.onclick = (e) => {
-                        if (isPaintMode) { applyStyleToApp(app.id); return; }
+                        if (isPaintMode) {
+                            if (isCat) {
+                                // In paint mode: allow navigating INTO a category to pick a source
+                                if (currentPath.includes(app.id)) return;
+                                currentPath.push(app.id); renderApps();
+                            } else {
+                                applyStyleToApp(app.id);
+                            }
+                            return;
+                        }
                         if (isSelectMode) { toggleSelectApp(app.id); return; }
                         if (isCat) {
                             // Guard: don't navigate into a category already in the path (prevents loops)
@@ -5012,7 +5420,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     const iconHtml = `
                     <div class="card-icon-wrap">
                     ${app.icon === 'custom' && app.customIcon ?
-                            `<div class="w-20 h-20 rounded-3xl mb-6 shadow-xl" style="background-image: url(${app.customIcon}); background-size: cover; background-position: center; border: 1px solid rgba(255,255,255,0.1)"></div>` :
+                            `<div class="w-20 h-20 rounded-3xl mb-6 shadow-xl" style="background: ${app.color ? app.color + '20' : 'color-mix(in srgb,var(--primary-color) 12%,transparent)'}; background-image: url(${app.customIcon}); background-size: cover; background-position: center; border: 1px solid ${app.color ? app.color + '40' : 'rgba(255,255,255,0.1)'}"></div>` :
                             app.icon === 'text' && app.customText ?
                                 `<div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 text-4xl font-bold shadow-lg" style="color: ${app.color || 'var(--primary-color)'}; background: ${app.color ? app.color + '20' : 'color-mix(in srgb,var(--primary-color) 12%,transparent)'}; border: 1px solid ${app.color ? app.color + '40' : 'color-mix(in srgb,var(--primary-color) 25%,transparent)'}">` + (typeof renderTextWithEmojis === 'function' ? renderTextWithEmojis(app.customText) : app.customText) + `</div>` :
                                 `<div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-lg" style="color: ${app.color || 'var(--primary-color)'}; background: ${app.color ? app.color + '20' : 'color-mix(in srgb,var(--primary-color) 12%,transparent)'}; border: 1px solid ${app.color ? app.color + '40' : 'color-mix(in srgb,var(--primary-color) 25%,transparent)'};"><i class="ph ${app.icon} text-4xl"></i></div>`
@@ -5070,8 +5478,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     <div style="opacity: ${iconOpacity}; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%;">
                         ${isSelected ? `<div class="absolute top-4 left-4 w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white scale-125 shadow-[0_0_20px_rgba(59,130,246,0.8)] z-50 border-2 border-white"><i class="ph ph-check text-2xl font-bold"></i></div>` : ''}
                         ${iconHtml}
-                        <h3 class="text-2xl font-bold transition-colors" style="${nameStyle}">${renderTextWithEmojis(app.name)}</h3>
-                        <p class="text-sm mt-2 font-sans tracking-wide transition-colors" style="${descStyle}">${renderTextWithEmojis(app.desc || '')}</p>
+                        <h3 class="text-2xl font-bold transition-colors" style="${nameStyle}">${renderTextWithEmojis(_hoistFxColors(app.name))}</h3>
+                        <p class="mt-2 font-sans tracking-wide transition-colors" style="${descStyle}; ${(()=>{const l=(app.desc||'').length; if(l>220) return 'font-size:0.65rem;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;'; if(l>120) return 'font-size:0.72rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;'; if(l>60) return 'font-size:0.8rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;'; return 'font-size:0.875rem;';})()}">${renderTextWithEmojis(app.desc || '')}</p>
                         ${app.creator ? `<span class="absolute bottom-3 left-4 text-[8px] font-sans uppercase tracking-[0.15em] transition-colors pointer-events-none group-hover:opacity-100" style="${creatorStyle}">by ${renderTextWithEmojis(app.creator)}</span>` : ''}
                     </div>
                 `;
@@ -5186,6 +5594,23 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             updateBulkUI();
             commitChanges(); renderApps();
             notify(`Duplicated ${count} item${count > 1 ? 's' : ''}`, "success", "ph-copy");
+        }
+
+        /* Duplicate as a visual-only card: keeps styles/icon/color but clears URL/HTML content */
+        function duplicateAsVisualCard(id) {
+            const app = findNodeInTree(state.userApps, id);
+            if (!app) return notify('App not found!', 'error');
+            const clone = JSON.parse(JSON.stringify(app));
+            clone.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+            clone.name += ' (Visual)';
+            clone.content = '';
+            clone.isHtml = false;
+            clone.redirectOnly = false;
+            clone.isCategory = false;
+            clone.children = undefined;
+            getCurrentList().push(clone);
+            commitChanges(); renderApps();
+            notify('Visual card created!', 'success', 'ph-paint-bucket');
         }
 
         /* ==========================================================================
@@ -5556,6 +5981,23 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             renderApps();
         }
 
+        /* Bulk icon/color safety toggle — dims icon/color UI when disabled */
+        function toggleBulkIconAllow(allowed) {
+            const iconSection = document.getElementById('bulk-restrict-icon');
+            const colorEl = document.getElementById('add-color');
+            const iconPickerEl = document.getElementById('icon-picker');
+            const emojiEl = document.getElementById('add-emoji');
+            const imgBtn = iconSection ? iconSection.querySelector('button') : null;
+
+            // Keep only the safety row itself fully visible
+            const targets = [iconPickerEl, emojiEl, colorEl, imgBtn];
+            targets.forEach(t => {
+                if (!t) return;
+                t.style.opacity = allowed ? '1' : '0.3';
+                t.style.pointerEvents = allowed ? '' : 'none';
+            });
+        }
+
         function updateBulkUI() {
             const addBtn = document.querySelector('.floating-btn.add-btn');
             const icon = addBtn ? addBtn.querySelector('i') : null;
@@ -5575,6 +6017,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     addBtn.style.boxShadow = '0 0 30px rgba(59, 130, 246, 0.8)';
                     addBtn.style.borderColor = '#3b82f6';
                 }
+                const miscBtn = document.getElementById('misc-bulk-btn-name');
+                if (miscBtn) miscBtn.textContent = 'Turn Off Multi-Select';
             } else if (hasSelection) {
                 icon.classList.add('ph-cursor-click');
                 icon.style.color = '#3b82f6';
@@ -5582,6 +6026,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     addBtn.style.boxShadow = '0 0 30px rgba(59, 130, 246, 0.6)';
                     addBtn.style.borderColor = '#3b82f6';
                 }
+                const miscBtn = document.getElementById('misc-bulk-btn-name');
+                if (miscBtn) miscBtn.textContent = 'Turn On Multi-Select';
             } else {
                 icon.classList.add('ph-plus');
                 icon.style.color = '';
@@ -5589,6 +6035,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     addBtn.style.boxShadow = '';
                     addBtn.style.borderColor = '';
                 }
+                const miscBtn = document.getElementById('misc-bulk-btn-name');
+                if (miscBtn) miscBtn.textContent = 'Turn On Multi-Select';
             }
 
             // Show/hide bulk action buttons based on selection
@@ -5760,7 +6208,9 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             }
 
             if (selectedAppIds.length > 0) {
-                // Bulk Save
+                // Bulk Save — icon/color gated by safety toggle
+                const bulkIconColorAllowed = !!(document.getElementById('bulk-icon-color-allow') && document.getElementById('bulk-icon-color-allow').checked);
+
                 const sNameCol = document.getElementById('add-text-name');
                 const sDescCol = document.getElementById('add-text-desc');
                 const sCardBg = document.getElementById('add-card-bg');
@@ -5785,36 +6235,43 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
                 const bulkDesc = document.getElementById('add-desc').value;
                 const bulkEmoji = document.getElementById('add-emoji').value;
+                const bulkCreator = document.getElementById('add-creator') ? document.getElementById('add-creator').value.trim() : '';
 
                 selectedAppIds.forEach(id => {
                     const app = findNodeInTree(state.userApps, id);
                     if (app) {
-                        const appCol = document.getElementById('add-color');
-                        if (appCol && appCol.value !== '#000000') app.color = appCol.value; // basic bulk sanity check
+                        // Only apply color + icon if safety toggle is ON
+                        if (bulkIconColorAllowed) {
+                            const appCol = document.getElementById('add-color');
+                            if (appCol && appCol.value !== '#000000') app.color = appCol.value;
+
+                            if (bulkEmoji) {
+                                app.icon = 'text';
+                                app.customText = bulkEmoji;
+                                app.customIcon = null;
+                            } else if (customIconData) {
+                                app.icon = 'custom';
+                                app.customIcon = customIconData;
+                                app.customText = null;
+                            } else if (selectedIcon && selectedIcon !== 'text' && selectedIcon !== 'custom') {
+                                app.icon = selectedIcon;
+                                app.customIcon = null;
+                                app.customText = null;
+                            }
+                        }
 
                         app.styles = JSON.parse(JSON.stringify(styles));
                         if (bulkDesc) app.desc = bulkDesc;
-                        if (bulkEmoji) {
-                            app.icon = 'text';
-                            app.customText = bulkEmoji;
-                            app.customIcon = null;
-                        } else if (customIconData) {
-                            app.icon = 'custom';
-                            app.customIcon = customIconData;
-                            app.customText = null;
-                        } else if (selectedIcon && selectedIcon !== 'text' && selectedIcon !== 'custom') {
-                            app.icon = selectedIcon;
-                            app.customIcon = null;
-                            app.customText = null;
-                        }
+                        if (bulkCreator) app.creator = bulkCreator;
                     }
                 });
 
                 const count = selectedAppIds.length;
                 selectedAppIds = [];
+                isSelectMode = false;
                 updateBulkUI();
                 commitChanges(); applyTheme(); renderApps(); closeModal('add-modal');
-                notify(`Changes applied to ${count} items!`, "success", "ph-check-circle");
+                notify(`Changes applied to ${count} item${count > 1 ? 's' : ''}!${!bulkIconColorAllowed ? ' (Icon & Color skipped — toggle required)' : ''}`, "success", "ph-check-circle");
                 return;
             }
 
@@ -7408,6 +7865,12 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (delGrp) delGrp.classList.toggle('hidden', !isBulk);
             if (saveBtn) saveBtn.textContent = "Save";
 
+            // Safety toggle: show only in bulk mode, always reset to OFF
+            const safetyRow = document.getElementById('bulk-icon-safety-row');
+            const safetyChk = document.getElementById('bulk-icon-color-allow');
+            if (safetyRow) safetyRow.classList.toggle('hidden', !isBulk);
+            if (safetyChk) { safetyChk.checked = false; toggleBulkIconAllow(false); }
+
             document.getElementById('add-name').value = '';
             document.getElementById('add-desc').value = '';
             // Clear Emoji Previews explicitly
@@ -7605,27 +8068,29 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 // 5s timeout for premium loading feel
                 setTimeout(() => {
                     if (loaded) return;
-                    // Assume fail after 5s if no paint/load
+                    // Slot may still have the iframe; rebuild with fresh state
                     slot.innerHTML = `
                     <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#020617;z-index:9005;color:white;font-family:'Fredoka One',sans-serif;padding:24px;text-align:center;">
                         <h2 style="font-size:32px;margin-bottom:10px;">Portal Connection Failed</h2>
-                        <p style="color:#94a3b8;margin-bottom:30px;font-size:14px;max-width:400px;">This site likely blocks portal embedding (X-Frame-Options) or is taking too long to respond.</p>
-                        <div style="display:flex; gap:12px;">
+                        <p style="color:#94a3b8;margin-bottom:30px;font-size:14px;max-width:400px;">This site likely blocks embedding (X-Frame-Options) or took too long to respond. Try opening in a new tab instead.</p>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
                             <button onclick="window.open('${currentApp.content}', '_blank')" style="background:#2563eb;color:white;padding:16px 32px;border-radius:16px;font-size:16px;font-weight:bold;cursor:pointer;border:none;transition:0.3s;box-shadow:0 10px 20px rgba(37,99,235,0.3);">Open in New Tab</button>
-                            <button onclick="smartRefresh()" style="background:#334155;color:white;padding:16px 32px;border-radius:16px;font-size:16px;font-weight:bold;cursor:pointer;border:none;transition:0.3s;">Refresh App</button>
+                            <button onclick="(function(){ var slot=document.getElementById('active-frame-slot'); if(slot){slot.innerHTML=''; var newF=document.createElement('iframe'); newF.id='active-frame'; newF.className='w-full h-full border-none'; newF.allow='fullscreen; clipboard-write; autoplay'; if(currentApp&&currentApp.isHtml){newF.srcdoc=currentApp.content;}else if(currentApp&&currentApp.content){newF.src=currentApp.content;} slot.appendChild(newF);} notify('Retrying...','info','ph-arrows-clockwise'); })()" style="background:#334155;color:white;padding:16px 32px;border-radius:16px;font-size:16px;font-weight:bold;cursor:pointer;border:none;transition:0.3s;">Refresh App</button>
                         </div>
                     </div>`;
-                }, 25000); // Increased timeout to 25s for better reliability per user request
+                }, 40000); // 40s timeout — some sites just take a while
             }
 
             if (currentApp.isHtml) f.srcdoc = currentApp.content; else f.src = currentApp.content;
 
             slot.appendChild(f);
             
-            // Dynamic Title for Iframe
+            // Dynamic Title for Iframe — strip HTML tags so complex names don't break tab title
             const portalNm = state.theme.name || 'Portal';
-            const cleanAppName = currentApp.name;
-            document.title = `${cleanAppName} - ${portalNm}${state.theme.devMode ? " [DEV]" : ""}`;
+            const _tmpDiv = document.createElement('div');
+            _tmpDiv.innerHTML = currentApp.name || 'App';
+            const cleanAppName = _tmpDiv.textContent || _tmpDiv.innerText || (state.theme.name || 'Portal');
+            document.title = `${cleanAppName} - ${portalNm}${state.theme.devMode ? " [DEV]" : ""}`;            
             
             container.style.display = 'flex';
             container.classList.add('animate-open');
@@ -7702,22 +8167,29 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
            §10.5. NAVIGATION & LAUNCHERS — Iframe, Cloaked Tab, Portal Menu
            ========================================================================== */
         function smartRefresh() {
-            const f = document.getElementById('active-frame');
-            if (!f) { notify('No app is currently open.', 'info', 'ph-info'); return; }
+            // Try direct id first, then search slot
+            let f = document.getElementById('active-frame');
+            if (!f) {
+                const slot = document.getElementById('active-frame-slot');
+                if (slot) f = slot.querySelector('iframe');
+            }
+            if (!f) {
+                // No iframe found — re-launch if currentApp is set
+                if (currentApp) { launchInIframe(); notify('Re-launching app...', 'info', 'ph-arrows-clockwise'); }
+                else { notify('No app is currently open.', 'info', 'ph-info'); }
+                return;
+            }
             const icon = document.querySelector('.portal-trigger i');
             if (icon) { icon.classList.add('spin-once'); setTimeout(() => icon.classList.remove('spin-once'), 600); }
 
             if (f.srcdoc) {
-                // For HTML apps: blank then reassign to force reload
                 const old = f.srcdoc;
                 f.srcdoc = '';
                 setTimeout(() => { f.srcdoc = old; }, 50);
             } else if (f.src && f.src !== 'about:blank') {
-                // For URL apps: use contentWindow.location.reload for a true reload
                 try {
                     f.contentWindow.location.reload();
                 } catch (e) {
-                    // Cross-origin: reassign src
                     const s = f.src;
                     f.src = 'about:blank';
                     setTimeout(() => { f.src = s; }, 50);
@@ -7793,21 +8265,25 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (!url) return notify('Please enter a URL', 'error');
             if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
-            // Update the live iframe — force a real reload by blanking then reassigning
-            const f = document.getElementById('active-frame');
-            if (f) {
-                f.srcdoc = '';
-                f.src = 'about:blank';
-                setTimeout(() => { f.src = url; }, 80);
-            }
-
-            // Update the state/currentApp
+            // Update state first so currentApp is consistent
             if (currentApp) {
                 currentApp.content = url;
                 currentApp.isHtml = false;
                 const app = findNodeInTree(state.userApps, currentApp.id);
                 if (app) { app.content = url; app.isHtml = false; }
                 commitChanges();
+            }
+
+            // Force a hard reload: null src, wait a tick, then set new URL
+            const f = document.getElementById('active-frame');
+            if (f) {
+                f.removeAttribute('srcdoc');
+                f.src = 'about:blank';
+                // Use onload to set the real URL only after blank is fully loaded
+                f.onload = function() {
+                    f.onload = null;
+                    f.src = url;
+                };
             }
 
             notify('App URL updated — reloading!', 'success', 'ph-check-circle');
@@ -7822,6 +8298,40 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                 if (app) { app.content = url; app.isHtml = false; }
                 commitChanges();
             }
+        }
+
+
+        /* ── Misc Features Modal ── */
+        function openMiscModal() {
+            // Reset move-app fields
+            const an = document.getElementById('misc-move-app-name');
+            const cn = document.getElementById('misc-move-cat-name');
+            if (an) an.value = '';
+            if (cn) cn.value = '';
+            toggleModal('misc-modal');
+        }
+
+        function openBulkMode() {
+            if (typeof toggleSelectModeFromSettings === 'function') toggleSelectModeFromSettings();
+            else notify('Bulk mode not available right now.', 'info', 'ph-info');
+        }
+
+        function miscMoveAppToCategory() {
+            const rawApp = (document.getElementById('misc-move-app-name')?.value || '').trim().toLowerCase();
+            const rawCat = (document.getElementById('misc-move-cat-name')?.value || '').trim().toLowerCase();
+            if (!rawApp || !rawCat) { notify('Please fill in both fields.', 'warning', 'ph-warning'); return; }
+
+            const app = apps.find(a => a.name.toLowerCase().includes(rawApp));
+            if (!app) { notify(`No app found matching "${rawApp}"`, 'error', 'ph-x-circle'); return; }
+
+            const cat = categories.find(c => c.name.toLowerCase().includes(rawCat));
+            if (!cat) { notify(`No category found matching "${rawCat}"`, 'error', 'ph-x-circle'); return; }
+
+            app.categoryId = cat.id;
+            saveApps();
+            renderApps();
+            notify(`"${app.name}" moved to "${cat.name}"`, 'success', 'ph-check-circle');
+            closeModal('misc-modal');
         }
 
         function addMultiLinkRow() {
@@ -8028,10 +8538,19 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             nameEl.innerHTML = typeof renderTextWithEmojis === 'function'
                 ? renderTextWithEmojis(rawName)
                 : rawName;
-            // Color: use the app's icon color for plain names, theme color for HTML-rich names
-            nameEl.style.color = (!isHtmlName && currentApp.color)
-                ? currentApp.color
-                : 'var(--primary-color)';
+            // Color: always apply accent color as base. For HTML names, set it on the wrapper
+            // so plain text nodes inherit it while inner HTML spans can override.
+            nameEl.style.color = currentApp.color || 'var(--primary-color)';
+
+            const descEl = document.getElementById('choice-app-desc');
+            if (descEl) {
+                if (currentApp.desc && currentApp.desc.trim() !== '') {
+                    descEl.innerHTML = typeof renderTextWithEmojis === 'function' ? renderTextWithEmojis(currentApp.desc) : currentApp.desc;
+                    descEl.style.display = '-webkit-box';
+                } else {
+                    descEl.style.display = 'none';
+                }
+            }
 
             // Icon background — use the app's own color (with alpha) or fall back to primary
             const appColor = currentApp.color || null;
@@ -8484,13 +9003,14 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         async function fetchAndShowPortalLoader() {
             try {
                 notify("Fetching loader code...", "info", "ph-spinner ph-spin");
-                const response = await fetch("https://raw.githubusercontent.com/Willyy2/portal-os/refs/heads/main/portal_loader.html");
-                if (!response.ok) throw new Error("Network response was not ok");
+                // Use jsDelivr CDN for better reliability than raw GitHub URLs
+                const response = await fetch("https://cdn.jsdelivr.net/gh/Willyy2/portal-os@main/portal_loader.html");
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const code = await response.text();
                 openCodeStudio('loader_readonly', code, 'loader');
             } catch (error) {
                 console.error("Fetch Error:", error);
-                notify("Failed to fetch loader code.", "error");
+                notify("Failed to fetch loader code. Check your connection.", "error");
             }
         }
 
@@ -8511,10 +9031,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             const brdCol = (state.theme && state.theme.colors && state.theme.colors.border) || 'rgba(255,255,255,0.08)';
             const txtCol = (state.theme && state.theme.colors && state.theme.colors.textMain) || '#ffffff';
 
-            // Build srcdoc using doc.write so we have full control over the content
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            doc.open();
-            doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+            // Build srcdoc so we have full control over the content and it reloads reliably
+            iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@phosphor-icons/web"><\/script>
 <style>
@@ -8585,8 +9103,9 @@ document.getElementById('fexport').onclick=()=>{
 document.getElementById('save').onclick=()=>parent.postMessage({source:'portal-dev',type:'code-studio-save',content:ed.value},'*');
 document.getElementById('cancel').onclick=()=>parent.postMessage({source:'portal-dev',type:'code-studio-close'},'*');
 ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selectionStart;this.value=this.value.substring(0,s)+'    '+this.value.substring(this.selectionEnd);this.selectionEnd=s+4;updateLn();}}
-<\/script></body></html>`);
-            doc.close();
+<\/script></body></html>`;
+            
+            // Show modal
             toggleModal('code-studio-modal');
         }
 
@@ -8660,9 +9179,19 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             const emojis = state.theme.customEmojis || [];
 
             if (emojis.length === 0) {
-                list.innerHTML = '<p class="text-slate-500 font-bold text-center col-span-2 sm:col-span-3 py-6 uppercase tracking-widest text-xs">No emojis added yet</p>';
+                list.className = 'flex flex-col items-center justify-center py-10 col-span-3';
+                list.innerHTML = `
+                    <div class="w-16 h-16 rounded-3xl bg-fuchsia-600/15 border border-fuchsia-500/20 flex items-center justify-center mb-4">
+                        <i class="ph ph-smiley-wink text-4xl text-fuchsia-400"></i>
+                    </div>
+                    <p class="text-white font-bold text-base mb-1">No Custom Emojis Yet</p>
+                    <p class="text-slate-500 text-xs font-sans text-center max-w-[200px] mb-5">Add your first emoji to use it anywhere with :keyword: syntax</p>
+                    <button onclick="openEmojiCreationDialog()" class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-sm font-bold transition-all active:scale-95">
+                        <i class="ph ph-plus"></i> Add First Emoji
+                    </button>`;
                 return;
             }
+            list.className = 'grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[50vh] overflow-y-auto scroll-section pb-2';
 
             emojis.forEach((em, idx) => {
                 const card = document.createElement('div');
@@ -8798,7 +9327,21 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             }
 
             toggleModal('emoji-creation-modal');
-            setTimeout(() => { if (kwEl) kwEl.focus(); }, 80);
+            setTimeout(() => {
+                if (kwEl) kwEl.focus();
+                _emojiPreviewUrl(em ? (em.url || '') : '');
+            }, 80);
+        }
+
+        // Helper: update image preview thumbnail in emoji creation dialog
+        function _emojiPreviewUrl(url) {
+            const previewBox = document.getElementById('emoji-img-preview');
+            if (!previewBox) return;
+            if (url && url.trim()) {
+                previewBox.innerHTML = `<img src="${url.trim()}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentNode.innerHTML='<i class=\'ph ph-warning text-xl text-red-400\'></i>'">`;
+            } else {
+                previewBox.innerHTML = '<i class="ph ph-image text-2xl text-slate-600"></i>';
+            }
         }
 
         function togglePerformanceMode() {
@@ -9006,6 +9549,11 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             window.handlePortalIconUpload = handlePortalIconUpload; window.clearPortalIcon = clearPortalIcon;
             window.duplicateApp = duplicateApp; window.startStylePaint = startStylePaint;
             window.cancelStylePaint = cancelStylePaint; window.applyStyleToApp = applyStyleToApp;
+            window.duplicateAsVisualCard = duplicateAsVisualCard;
+            window.openMiscModal = openMiscModal;
+            window.miscMoveAppToCategory = miscMoveAppToCategory;
+            window.openBulkMode = openBulkMode;
+            window.toggleBulkIconAllow = toggleBulkIconAllow;
             window.openFunctionPlayground = openFunctionPlayground; window.runDevJS = runDevJS;
             window.resetFilters = resetFilters; window.toggleFxCustom = toggleFxCustom;
             window.updateFilters = updateFilters; window.toggleAppControls = toggleAppControls;
@@ -9260,6 +9808,16 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
 
         window.openRichTextEditor = function () {
             if (!targetRTEInput) return;
+            // Restore Apply Magic button display if we're not in export mode
+            const applyBtn = document.getElementById('rte-apply-btn');
+            if (applyBtn) {
+                if (targetRTEInput.id === 'rte-scratch-input') {
+                    applyBtn.style.display = 'none';
+                } else {
+                    applyBtn.style.display = 'inline-block';
+                }
+            }
+
             const oldEditor = document.getElementById('rte-editor');
             // Clone and replace the editor DOM node to completely destroy Chrome's hidden formatting memory!
             const editor = oldEditor.cloneNode(false);
@@ -9477,6 +10035,16 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                         while (span.firstChild) parent.insertBefore(span.firstChild, span);
                         parent.removeChild(span);
                     });
+                    // Refocus editor and restore cursor so user can type normally right away
+                    editor.focus();
+                    const sel2 = window.getSelection();
+                    if (!sel2.rangeCount || !editor.contains(sel2.anchorNode)) {
+                        const r = document.createRange();
+                        r.selectNodeContents(editor);
+                        r.collapse(false);
+                        sel2.removeAllRanges();
+                        sel2.addRange(r);
+                    }
                 }
                 // Also clear any lingering selection formatting
                 if (hasSelection) {
@@ -9507,6 +10075,25 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 try {
                     span.appendChild(range.extractContents());
                     range.insertNode(span);
+
+                    // ── Color inheritance fix ──
+                    // If the wrapped content has an inner color span, hoist its color up to
+                    // the fx span so currentColor (used by neon glow) matches the text color.
+                    const innerColored = span.querySelector('[style*="color"]');
+                    if (innerColored && innerColored.style.color) {
+                        span.style.color = innerColored.style.color;
+                    } else {
+                        // Also check if selection was inside a parent with explicit color
+                        let colorParent = span.parentElement;
+                        while (colorParent && colorParent !== editor) {
+                            if (colorParent.style && colorParent.style.color) {
+                                span.style.color = colorParent.style.color;
+                                break;
+                            }
+                            colorParent = colorParent.parentElement;
+                        }
+                    }
+
                     const nr = document.createRange();
                     nr.selectNode(span);
                     sel.removeAllRanges();
@@ -9675,17 +10262,16 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             } else if (action === 'move') {
                 startDragItem(id, null);
             } else if (action === 'select') {
-                // Unify through single toggle so state is always consistent
                 toggleSelectModeFromSettings();
-                // If we just entered select mode, also select this card
                 if (isSelectMode) toggleSelectApp(id);
             } else if (action === 'move-into-category') {
-                // Support multi-select: if in select mode and items are selected, move all of them
                 if (isSelectMode && selectedAppIds.length > 1) {
                     openMoveIntoCategoryDialog(null, [...selectedAppIds]);
                 } else {
                     openMoveIntoCategoryDialog(id, null);
                 }
+            } else if (action === 'duplicate-visual') {
+                duplicateAsVisualCard(id);
             } else if (action === 'search') {
                 window.openGlobalSearch();
             }
@@ -9699,20 +10285,21 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                 dlg.className = 'fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] p-4';
                 dlg.innerHTML = `
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-md" onclick="closeGlobalSearch()"></div>
-                <div class="relative w-full max-w-2xl bg-black/80 border border-white/20 rounded-[2rem] shadow-2xl p-6" style="animation: dialogPop .3s var(--spring-easing); background: var(--dialog-bg);">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="relative w-full max-w-2xl border border-white/20 rounded-[2rem] shadow-2xl p-6" style="animation: dialogPop .3s var(--spring-easing); background: var(--dialog-bg);">
+                    <div class="flex justify-between items-center mb-1">
                         <h2 class="text-xl font-black text-white flex items-center gap-2" style="font-family:'Fredoka One',cursive;"><i class="ph ph-magnifying-glass text-sky-400"></i> Global Search</h2>
                         <button onclick="closeGlobalSearch()" class="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all"><i class="ph ph-x"></i></button>
                     </div>
+                    <p class="text-[11px] text-slate-500 font-sans mb-4">For any of your apps, category's, or some of the dialogs and such!</p>
                     <div class="relative">
                         <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-xl text-slate-400"></i>
-                        <input type="text" id="global-search-input" placeholder="Search apps, categories, or links..." 
+                        <input type="text" id="global-search-input" placeholder="Search apps, categories, settings, dialogs..." 
                             class="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-3 outline-none text-white font-bold font-sans focus:border-sky-500 transition-colors" 
-                            oninput="updateGlobalSearch(this.value)">
+                            oninput="updateGlobalSearch(this.value)"
+                            onkeydown="if(event.key==='Escape')closeGlobalSearch();">
                     </div>
                     <div id="global-search-results" class="mt-4 max-h-[50vh] overflow-y-auto hidden flex-col gap-2 pr-2 scroll-section"></div>
-                </div>`;
-                document.body.appendChild(dlg);
+                </div>`;                document.body.appendChild(dlg);
             }
             dlg.style.display = 'flex';
             const inp = document.getElementById('global-search-input');
@@ -9724,11 +10311,26 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
 
         window.closeGlobalSearch = function() {
             const dlg = document.getElementById('global-search-modal');
-            if (dlg) dlg.style.display = 'none';
+            if (dlg) {
+                dlg.style.animation = 'dialogPopOut 0.25s var(--spring-easing) forwards';
+                setTimeout(() => {
+                    dlg.style.display = 'none';
+                    dlg.style.animation = '';
+                    if (window._returnToMiscModal) {
+                        window._returnToMiscModal = false;
+                        const miscModal = document.getElementById('misc-modal');
+                        if (miscModal) {
+                            miscModal.classList.remove('hidden');
+                            miscModal.style.display = 'flex';
+                        }
+                    }
+                }, 250);
+            }
         };
 
         // ── Global Search Bridge: navigate to a category by reconstructing the full path ──
         window.openCategory = function(categoryId) {
+            window._returnToMiscModal = false;
             closeGlobalSearch();
             // Walk the full tree to find the path to this category
             function findPath(list, targetId, pathSoFar) {
@@ -9755,6 +10357,7 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
 
         // ── Global Search Bridge: launch an app by its ID ──
         window.launchApp = function(appId) {
+            window._returnToMiscModal = false;
             closeGlobalSearch();
             const app = findNodeInTree(state.userApps, appId);
             if (!app) return notify('App not found.', 'error', 'ph-warning');
@@ -10139,6 +10742,227 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             };
             reader.readAsDataURL(file);
         }
+
+        /* ─────────────────────────────────────────────────────────────────────
+           PORTAL VERSION — bump this string each release
+           ───────────────────────────────────────────────────────────────────── */
+        const PORTAL_VERSION = '4.9.2';
+
+        /* First-time-per-version update toast ─────────────────────────────── */
+        (function checkNewVersionToast() {
+            const key = 'portal_last_seen_ver';
+            const seen = localStorage.getItem(key);
+            if (seen !== PORTAL_VERSION) {
+                setTimeout(() => {
+                    notify(
+                        `New version: ${PORTAL_VERSION} is out now! Check the changelog for info.`,
+                        'info',
+                        'ph-rocket-launch',
+                        '#10b981', // Custom green
+                        'Open Changelog',
+                        () => toggleModal('misc-help-modal'),
+                        15000 // Lasts 15 seconds!
+                    );
+                }, 1800);
+                localStorage.setItem(key, PORTAL_VERSION);
+            }
+        })();
+
+        /* ── RTE Export HTML ─────────────────────────────────────────────── */
+        function exportRTEasHTML() {
+            const editor = document.getElementById('rte-editor');
+            if (!editor) return;
+            const html = editor.innerHTML;
+
+            // Create a styled copy-sheet modal
+            const existing = document.getElementById('rte-export-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'rte-export-modal';
+            modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="document.getElementById('rte-export-modal').remove()"></div>
+                <div class="relative custom-dialog rounded-[1.75rem] w-full max-w-lg text-white p-6 z-10 flex flex-col gap-4" style="background:var(--dialog-bg);">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-black flex items-center gap-2"><i class="ph ph-code text-sky-400"></i> Exported HTML</h2>
+                        <button onclick="document.getElementById('rte-export-modal').remove()" class="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all"><i class="ph ph-x"></i></button>
+                    </div>
+                    <p class="text-[11px] text-slate-500 font-sans -mt-2">Copy this HTML and paste it anywhere — a notes app, webpage, or another Portal description.</p>
+                    <textarea id="rte-export-output" readonly
+                        class="w-full h-48 bg-black/50 border border-white/10 rounded-xl p-3 text-xs font-mono text-sky-300 outline-none resize-none scroll-section"
+                        onclick="this.select()">${html.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                    <div class="flex gap-2">
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('rte-editor').innerHTML).then(()=>notify('HTML copied!','success','ph-copy'))"
+                            class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all active:scale-95"
+                            style="background:var(--primary-color);"><i class="ph ph-copy"></i> Copy HTML</button>
+                        <button onclick="document.getElementById('rte-export-modal').remove()"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">Close</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+        window.exportRTEasHTML = exportRTEasHTML;
+
+        /* Opens the RTE in standalone "export mode" — sets a scratch textarea as the target */
+        function openRTEExportMode() {
+            let scratch = document.getElementById('rte-scratch-input');
+            if (!scratch) {
+                scratch = document.createElement('textarea');
+                scratch.id = 'rte-scratch-input';
+                scratch.style.display = 'none';
+                scratch.value = '';
+                document.body.appendChild(scratch);
+            } else {
+                scratch.value = '';
+            }
+            // targetRTEInput is a true global variable — assign directly
+            targetRTEInput = scratch;
+            
+            // Apply Magic button gets hidden inside window.openRichTextEditor() automatically
+            // because targetRTEInput is 'rte-scratch-input'
+            
+            if (typeof window.openRichTextEditor === 'function') window.openRichTextEditor();
+            else notify('Rich Text Editor not available.', 'error');
+        }
+        window.openRTEExportMode = openRTEExportMode;
+
+        /* ── Shared Picker Search ─────────────────────────────────────────────
+           mode: 'apps-and-cats' | 'cats-only' | 'apps-only'
+           onSelect(item) — called with the chosen node
+           ─────────────────────────────────────────────────────────────────── */
+        window.closePickerSearch = function() {
+            document.getElementById('picker-search-modal')?.remove();
+            if (window._returnToMiscModal) {
+                window._returnToMiscModal = false;
+                const miscModal = document.getElementById('misc-modal');
+                if (miscModal) {
+                    miscModal.classList.remove('hidden');
+                    miscModal.style.display = 'flex';
+                }
+            }
+        };
+
+        function openPickerSearch({ title, subtitle, icon, mode, accentClass, onSelect }) {
+            const existing = document.getElementById('picker-search-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'picker-search-modal';
+            modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="window.closePickerSearch()"></div>
+                <div class="relative custom-dialog rounded-[1.75rem] w-full max-w-md text-white p-6 z-10 flex flex-col gap-4" style="background:var(--dialog-bg);">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-black flex items-center gap-2">${icon} ${title}</h2>
+                        <button onclick="window.closePickerSearch()" class="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all"><i class="ph ph-x"></i></button>
+                    </div>
+                    ${subtitle ? `<p class="text-[11px] text-slate-500 font-sans -mt-2">${subtitle}</p>` : ''}
+                    <div class="relative">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input id="picker-search-input" type="text" placeholder="Type to search..."
+                            class="w-full bg-black/50 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none text-white font-bold font-sans focus:border-sky-500 transition-colors"
+                            oninput="window._updatePickerResults(this.value)"
+                            onkeydown="if(event.key==='Escape') window.closePickerSearch()">
+                    </div>
+                    <div id="picker-search-results" class="flex flex-col gap-1 max-h-60 overflow-y-auto scroll-section pr-1">
+                        <p class="text-slate-600 text-center text-sm font-sans py-4">Start typing to search…</p>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            setTimeout(() => document.getElementById('picker-search-input')?.focus(), 80);
+
+            window._updatePickerResults = function(query) {
+                const q = query.toLowerCase().trim();
+                const container = document.getElementById('picker-search-results');
+                if (!container) return;
+                if (!q) { container.innerHTML = '<p class="text-slate-600 text-center text-sm font-sans py-4">Start typing to search\u2026</p>'; return; }
+
+                const matches = [];
+                function walk(list) {
+                    for (const node of list) {
+                        const nameMatch = node.name.toLowerCase().includes(q);
+                        if (mode === 'cats-only' && node.isCategory && nameMatch) matches.push(node);
+                        else if (mode === 'apps-only' && !node.isCategory && nameMatch) matches.push(node);
+                        else if (mode === 'apps-and-cats' && nameMatch) matches.push(node);
+                        if (node.children) walk(node.children);
+                    }
+                }
+                walk(state.userApps);
+
+                if (matches.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500 text-center text-sm font-sans py-4">No results.</p>';
+                    return;
+                }
+                // Store items in a global array so onclick can safely reference by index
+                window._pickerItems = matches.slice(0, 12);
+                container.innerHTML = window._pickerItems.map((item, i) => {
+                    const iscat = item.isCategory;
+                    const iconEl = iscat
+                        ? '<i class="ph ph-folder text-amber-400 text-lg"></i>'
+                        : '<i class="ph ph-app-window text-sky-400 text-lg"></i>';
+                    return `<button class="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-white/10 transition-colors text-left group" style="background:var(--card-bg);" onclick="window._pickerOnSelect(${i})">
+                        <div class="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg shrink-0">${iconEl}</div>
+                        <div><p class="text-white text-sm font-bold">${item.name}</p><p class="text-[10px] text-slate-500 font-sans">${iscat ? 'Category' : 'App'}</p></div>
+                        <i class="ph ph-check-circle ml-auto text-slate-600 group-hover:text-white transition-colors"></i>
+                    </button>`;
+                }).join('');
+            };
+
+            window._pickerOnSelect = function(index) {
+                window._returnToMiscModal = false;
+                const item = window._pickerItems[index];
+                document.getElementById('picker-search-modal')?.remove();
+                if (item && typeof onSelect === 'function') onSelect(item);
+            };
+        }
+        window.openPickerSearch = openPickerSearch;
+
+        /* ── Misc: Move App to Category ─ 2-step picker flow ─────────────── */
+        function openMiscPickerMoveApp() {
+            openPickerSearch({
+                title: 'Pick an App',
+                subtitle: 'Search for the app you want to move.',
+                icon: '<i class="ph ph-magnifying-glass text-emerald-400"></i>',
+                mode: 'apps-only',
+                onSelect(appNode) {
+                    // Step 2: pick destination category
+                    openPickerSearch({
+                        title: 'Pick Destination',
+                        subtitle: `Moving: <b>${appNode.name}</b>. Choose a target category.`,
+                        icon: '<i class="ph ph-folder-simple-plus text-emerald-400"></i>',
+                        mode: 'cats-only',
+                        onSelect(catNode) {
+                            // Directly execute the move
+                            const app = findNodeInTree(state.userApps, appNode.id);
+                            const cat = findNodeInTree(state.userApps, catNode.id);
+                            if (!app || !cat) { notify('Could not find app or category.', 'error'); return; }
+                            deleteNodeInTree(state.userApps, app.id);
+                            cat.children = cat.children || [];
+                            cat.children.push(app);
+                            commitChanges();
+                            renderApps();
+                            notify(`"${app.name}" moved to "${cat.name}"`, 'success', 'ph-check-circle');
+                        }
+                    });
+                }
+            });
+        }
+        window.openMiscPickerMoveApp = openMiscPickerMoveApp;
+
+        /* ── Misc: Format Painter — pick source app via search ───────────── */
+        function openMiscPickerFormatPaint() {
+            openPickerSearch({
+                title: 'Pick Source App',
+                subtitle: 'Search for the app whose style you want to copy.',
+                icon: '<i class="ph ph-paint-brush text-orange-400"></i>',
+                mode: 'apps-only',
+                onSelect(appNode) {
+                    startStylePaint(appNode.id);
+                }
+            });
+        }
+        window.openMiscPickerFormatPaint = openMiscPickerFormatPaint;
 
 </script>
 </body>
