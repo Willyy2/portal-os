@@ -4158,6 +4158,24 @@
                     <span class="misc-card-desc">Fetch and view raw loader source code</span>
                 </button>
 
+                <!-- Notification Log -->
+                <button onclick="showNotificationLog();" class="misc-card">
+                    <div class="misc-card-icon bg-rose-500/15 text-rose-400">
+                        <i class="ph ph-bell-ringing text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Notification Log</span>
+                    <span class="misc-card-desc">View all notifications from this session</span>
+                </button>
+
+                <!-- Ways to Get Portal -->
+                <button onclick="toggleModal('get-portal-choice-modal');" class="misc-card">
+                    <div class="misc-card-icon bg-teal-500/15 text-teal-400">
+                        <i class="ph ph-planet text-2xl"></i>
+                    </div>
+                    <span class="misc-card-name">Get Portal</span>
+                    <span class="misc-card-desc">Active links and HTML deployment methods</span>
+                </button>
+
             </div>
             <!-- Footer: Help button -->
             <div class="px-4 pb-4 pt-2 border-t border-white/5 flex justify-end shrink-0">
@@ -4187,7 +4205,122 @@
                 <div class="misc-help-card"><i class="ph ph-mask-happy text-2xl text-purple-400"></i><div><p class="font-bold text-sm">Cloaked Tab</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Opens Portal in a new tab disguised as another website &mdash; great for privacy in shared environments.</p></div></div>
                 <div class="misc-help-card"><i class="ph ph-stack text-2xl text-sky-400"></i><div><p class="font-bold text-sm">Bulk Manager</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Enters selection mode. Click multiple app cards to select, then use the toolbar to edit or delete.</p></div></div>
                 <div class="misc-help-card"><i class="ph ph-code-block text-2xl text-indigo-400"></i><div><p class="font-bold text-sm">View Loader</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Fetches and displays the raw source code of the portal_loader.js script.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-bell-ringing text-2xl text-rose-400"></i><div><p class="font-bold text-sm">Notification Log</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">View every alert and notification sent during this session. Clears when the page is refreshed.</p></div></div>
+                <div class="misc-help-card"><i class="ph ph-planet text-2xl text-teal-400"></i><div><p class="font-bold text-sm">Get Portal</p><p class="text-[10px] text-slate-400 font-sans mt-0.5">Quick access to official mirror links and a guide on how to host Portal yourself using the HTML method.</p></div></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Notification Log Modal -->
+    <div id="notification-log-modal" class="fixed inset-0 z-[2400] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('notification-log-modal')"></div>
+        <div class="relative w-full max-w-md custom-dialog rounded-3xl text-white shadow-2xl border border-white/10 flex flex-col overflow-hidden"
+            style="background: var(--dialog-bg); max-height: 80vh;">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                <h2 class="text-xl font-black flex items-center gap-3 tracking-tight">
+                    <i class="ph ph-clock-counter-clockwise text-rose-400"></i> Session Log
+                </h2>
+                <button onclick="closeModal('notification-log-modal')" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div id="notification-log-body" class="p-4 overflow-y-auto scroll-section flex-1 space-y-2">
+                <!-- Log entries appear here -->
+            </div>
+            <div class="p-4 bg-black/20 border-t border-white/5 flex justify-between items-center">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Session Only</span>
+                <button onclick="window.sessionNotifications = []; showNotificationLog();" class="text-[10px] text-rose-400 hover:text-rose-300 font-black uppercase tracking-widest transition-colors">Clear Log</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Get Portal Choice Modal -->
+    <div id="get-portal-choice-modal" class="fixed inset-0 z-[2500] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/85 backdrop-blur-md" onclick="closeModal('get-portal-choice-modal')"></div>
+        <div class="relative w-full max-w-sm custom-dialog rounded-[2.5rem] text-white shadow-2xl border border-white/10 p-8 flex flex-col gap-6" style="background: var(--dialog-bg);">
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-3xl bg-teal-500/20 text-teal-400 flex items-center justify-center mx-auto mb-4 border border-teal-500/30">
+                    <i class="ph ph-planet text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black tracking-tight">Ways to get Portal</h2>
+                <p class="text-[11px] text-slate-500 font-sans mt-1 uppercase tracking-widest font-bold">Pick your preferred method</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="closeModal('get-portal-choice-modal'); toggleModal('portal-urls-modal')" class="w-full py-4 bg-teal-600 hover:bg-teal-500 rounded-2xl font-black text-sm transition-all shadow-lg shadow-teal-900/20 flex items-center justify-center gap-3">
+                    <i class="ph ph-link"></i> See active portal urls
+                </button>
+                <button onclick="closeModal('get-portal-choice-modal'); toggleModal('html-method-modal')" class="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-sm transition-all border border-white/10 flex items-center justify-center gap-3 text-slate-300">
+                    <i class="ph ph-file-html"></i> HTML method
+                </button>
+            </div>
+            <button onclick="closeModal('get-portal-choice-modal')" class="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors">Maybe later</button>
+        </div>
+    </div>
+
+    <!-- Active Portal URLs Modal -->
+    <div id="portal-urls-modal" class="fixed inset-0 z-[2510] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('portal-urls-modal')"></div>
+        <div class="relative w-full max-w-md custom-dialog rounded-[2.5rem] text-white shadow-2xl border border-white/10 p-8 flex flex-col gap-6" style="background: var(--dialog-bg);">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-black flex items-center gap-2">Official Mirrors</h2>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Copy and paste these links</p>
+                </div>
+                <button onclick="closeModal('portal-urls-modal'); toggleModal('get-portal-choice-modal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                    <i class="ph ph-arrow-left"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div class="p-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-teal-400 font-bold uppercase tracking-widest">Mirror 1</span>
+                        <button onclick="copyToClipboard('https://burst-trade-526.techsmart.cc/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                    </div>
+                    <code class="text-xs text-slate-300 break-all font-mono">https://burst-trade-526.techsmart.cc/</code>
+                </div>
+                <div class="p-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Mirror 2</span>
+                        <button onclick="copyToClipboard('https://portal-w2.vercel.app/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                    </div>
+                    <code class="text-xs text-slate-300 break-all font-mono">https://portal-w2.vercel.app/</code>
+                </div>
+                <div class="p-4 bg-white/5 border border-teal-500/20 rounded-2xl flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest">Mirror 3 (OG)</span>
+                        <button onclick="copyToClipboard('https://simple-weather-592.techsmart.cc/'); notify('Link copied!', 'success', 'ph-copy')" class="text-[10px] text-slate-500 hover:text-white font-bold flex items-center gap-1 transition-colors"><i class="ph ph-copy"></i> Copy</button>
+                    </div>
+                    <code class="text-xs text-slate-300 break-all font-mono">https://simple-weather-592.techsmart.cc/</code>
+                </div>
+            </div>
+            <button onclick="closeModal('portal-urls-modal')" class="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest">Back to Hub</button>
+        </div>
+    </div>
+
+    <!-- HTML Method Modal -->
+    <div id="html-method-modal" class="fixed inset-0 z-[2510] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('html-method-modal')"></div>
+        <div class="relative w-full max-w-sm custom-dialog rounded-[2.5rem] text-white shadow-2xl border border-white/10 p-8 flex flex-col gap-6" style="background: var(--dialog-bg);">
+             <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-violet-600/20 text-violet-400 flex items-center justify-center border border-violet-500/30">
+                    <i class="ph ph-file-html text-2xl"></i>
+                </div>
+                <button onclick="closeModal('html-method-modal'); toggleModal('get-portal-choice-modal')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+                    <i class="ph ph-arrow-left"></i>
+                </button>
+            </div>
+            <div>
+                <h2 class="text-xl font-black">so. you wanna know the html method huh?</h2>
+                <p class="text-sm text-slate-400 mt-3 leading-relaxed font-medium">
+                    first get the portal loader code from the button below this than go to a unblocked code editor and paste in that html and bam!
+                </p>
+            </div>
+            <div class="p-2 bg-white/5 rounded-3xl border border-white/10">
+                <button onclick="closeModal('html-method-modal'); fetchAndShowPortalLoader();" class="w-full py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-black text-sm transition-all shadow-lg shadow-violet-900/30 flex items-center justify-center gap-3">
+                    <i class="ph ph-code-block"></i> Get Portal Loader
+                </button>
+            </div>
+            <button onclick="closeModal('html-method-modal')" class="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors">Close Guide</button>
         </div>
     </div>
 
@@ -4958,7 +5091,16 @@
             if (id === 'emoji-hub-modal') window.rteInsertMode = false;
         }
 
+        window.sessionNotifications = [];
         function notify(msg, type = 'info', icon = 'ph-info', customColor = null, actionLabel = null, actionFn = null, customDuration = null) {
+            // Push to session log
+            window.sessionNotifications.push({ 
+                msg, 
+                type, 
+                icon, 
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) 
+            });
+
             const container = document.getElementById('notification-container');
             const n = document.createElement('div');
             n.className = `notification ${type}`;
@@ -4982,8 +5124,35 @@
             const duration = customDuration || (actionLabel ? 6000 : 3000);
             const autoHide = setTimeout(() => {
                 n.classList.remove('show');
+                setTimeout(() => n.remove(), 60000); // Keep in DOM for 1 minute for history access if needed, but visually hidden
                 setTimeout(() => n.remove(), 600);
             }, duration);
+        }
+
+        function showNotificationLog() {
+            const body = document.getElementById('notification-log-body');
+            if (!body) return;
+            body.innerHTML = '';
+            if (window.sessionNotifications.length === 0) {
+                body.innerHTML = `<div class="py-12 text-center opacity-30"><i class="ph ph-bell-slash text-4xl mb-2"></i><p class="text-xs font-bold uppercase tracking-widest">No notifications yet</p></div>`;
+            } else {
+                [...window.sessionNotifications].reverse().forEach(n => {
+                    const iconClass = n.icon.startsWith('ph-') ? `ph ${n.icon}` : n.icon;
+                    const entry = document.createElement('div');
+                    entry.className = `p-3 rounded-2xl bg-white/5 border border-white/5 flex gap-3 items-center`;
+                    entry.innerHTML = `
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${n.type === 'error' ? 'bg-red-500/20 text-red-400' : (n.type === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400')}">
+                            <i class="${iconClass} text-lg"></i>
+                        </div>
+                        <div class="flex-1 min-width-0">
+                            <p class="text-[11px] font-medium leading-snug break-words">${n.msg}</p>
+                            <p class="text-[9px] text-slate-500 font-bold mt-1 uppercase">${n.time}</p>
+                        </div>
+                    `;
+                    body.appendChild(entry);
+                });
+            }
+            toggleModal('notification-log-modal');
         }
 
 
@@ -9040,7 +9209,7 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
         async function fetchAndShowPortalLoader() {
             try {
-                notify("Fetching loader code...", "info", "ph-spinner ph-spin");
+                notify("got code i think", "info", "ph-spinner ph-spin");
                 // Use jsDelivr CDN for better reliability than raw GitHub URLs
                 const response = await fetch("https://cdn.jsdelivr.net/gh/Willyy2/portal-os@main/portal_loader.html");
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
