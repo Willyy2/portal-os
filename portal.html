@@ -120,6 +120,7 @@
             background-attachment: fixed;
             background-size: cover;
             background-position: center;
+            background-blend-mode: var(--bg-blend, normal);
             color: var(--text-main);
             font-family: 'Fredoka One', cursive, sans-serif;
             letter-spacing: 0.5px;
@@ -3153,14 +3154,49 @@
                         class="w-full h-10 rounded-lg cursor-pointer bg-transparent border border-white/10">
                 </div>
             </div>
+
+            <!-- Background Image Settings -->
+            <div class="mt-8 pt-6 border-t border-white/5 space-y-5">
+                <div>
+                    <label class="text-[10px] uppercase text-slate-500 font-black mb-3 block tracking-widest">Custom Background Wallpaper</label>
+                    <div class="flex gap-3">
+                        <div class="relative flex-1">
+                            <i class="ph ph-image absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" id="theme-bg-image-url" placeholder="Paste image URL here..." 
+                                class="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-primary-color transition-all font-sans">
+                        </div>
+                        <button onclick="document.getElementById('theme-bg-image-url').value=''; saveThemeColors();" 
+                            class="px-4 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all border border-white/5 group">
+                            <i class="ph ph-trash transition-transform group-hover:scale-110"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2 italic">Use a transparent pattern for a "textured" look that stays recolorable!</p>
+                </div>
+
+                <div class="grid grid-cols-1">
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-black mb-2 block tracking-widest">Blend Mode</label>
+                        <select id="theme-bg-blend-mode" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary-color transition-all appearance-none cursor-pointer font-sans">
+                            <option value="normal">None (Standard)</option>
+                            <option value="overlay">Overlay (Vivid Tint)</option>
+                            <option value="multiply">Multiply (Darker)</option>
+                            <option value="luminosity">Luminosity (Tint Texture)</option>
+                            <option value="screen">Screen (Light Tint)</option>
+                            <option value="soft-light">Soft Light (Subtle)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex gap-4 mt-8">
                 <button onclick="resetThemeOnly()"
-                    class="flex-1 py-3 bg-slate-900 text-yellow-500 border border-yellow-500/20 rounded-2xl font-bold text-xs hover:bg-yellow-500/10">Reset
+                    class="flex-1 py-3 bg-slate-900 text-yellow-500 border border-yellow-500/20 rounded-2xl font-bold text-xs hover:bg-yellow-500/10 transition-all">Reset
                     Theme</button>
                 <button onclick="saveThemeColors()"
-                    class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl font-bold text-sm shadow-lg shadow-blue-900/30">Save
+                    class="flex-1 py-3 bg-primary-color text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary-color/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save
                     Theme</button>
             </div>
+            <button onclick="closeModal('theme-modal')" class="w-full mt-4 text-slate-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">Close Editor</button>
         </div>
     </div>
 
@@ -5553,6 +5589,8 @@
     --text-dim: ${txD};
     --header-color: ${hdr};
     --action-btn: ${actBtn};
+    --bg-image: ${state.theme.backgroundImage ? `url('${state.theme.backgroundImage}')` : 'none'};
+    --bg-blend: ${state.theme.backgroundBlend || 'normal'};
 }
 
 input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: var(--primary-color) !important; }
@@ -7252,6 +7290,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             document.getElementById('theme-col-text-main').value = colors.textMain || "#ffffff";
             document.getElementById('theme-col-text-dim').value = colors.textDim || "#94a3b8";
             document.getElementById('theme-col-header').value = colors.header || colors.textMain || "#ffffff";
+            document.getElementById('theme-bg-image-url').value = state.theme.backgroundImage || "";
+            document.getElementById('theme-bg-blend-mode').value = state.theme.backgroundBlend || "normal";
             toggleModal('theme-modal');
         }
 
@@ -7269,6 +7309,8 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             colors.textDim = document.getElementById('theme-col-text-dim').value || colors.textDim;
             colors.header = document.getElementById('theme-col-header').value || colors.header;
             state.theme.colors = colors;
+            state.theme.backgroundImage = document.getElementById('theme-bg-image-url').value;
+            state.theme.backgroundBlend = document.getElementById('theme-bg-blend-mode').value;
             commitChanges(); applyTheme(); closeModal('theme-modal'); notify("Theme updated!", "success");
         }
 
@@ -9033,8 +9075,39 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             const descEl = document.getElementById('choice-app-desc');
             if (descEl) {
                 if (currentApp.desc && currentApp.desc.trim() !== '') {
-                    descEl.innerHTML = typeof renderTextWithEmojis === 'function' ? renderTextWithEmojis(currentApp.desc) : currentApp.desc;
+                    const desc = currentApp.desc.trim();
+                    descEl.innerHTML = typeof renderTextWithEmojis === 'function' 
+                        ? `"${renderTextWithEmojis(desc)}"` 
+                        : `"${desc}"`;
                     descEl.style.display = '-webkit-box';
+                    
+                    // Dynamic font sizing based on length
+                    const len = desc.length;
+                    let fontSize = '11px';
+                    let lineClamp = '2';
+                    
+                    if (len < 35) {
+                        fontSize = '16px';
+                        lineClamp = '3';
+                        descEl.style.padding = '0 10px';
+                    } else if (len < 75) {
+                        fontSize = '13px';
+                        lineClamp = '3';
+                        descEl.style.padding = '0';
+                    } else {
+                        fontSize = '11px';
+                        lineClamp = '2';
+                        descEl.style.padding = '0';
+                    }
+                    
+                    if (len > 160) {
+                        fontSize = '10px';
+                        lineClamp = '4';
+                    }
+                    
+                    descEl.style.fontSize = fontSize;
+                    descEl.style.webkitLineClamp = lineClamp;
+                    descEl.style.lineClamp = lineClamp;
                 } else {
                     descEl.style.display = 'none';
                 }
