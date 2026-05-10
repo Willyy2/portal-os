@@ -3404,13 +3404,13 @@
     </div>
 
     <!-- Help Modal (Changelogs, Help & Honorable Mentions) -->
-    <div id="help-modal" class="fixed inset-0 z-[1900] hidden flex items-center justify-center p-4"
+    <div id="news-modal" class="fixed inset-0 z-[1900] hidden flex items-center justify-center p-4"
         style="display: none;">
-        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('help-modal')"></div>
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal('news-modal')"></div>
         <div class="relative custom-dialog rounded-[2rem] max-w-xl w-full text-white p-8"
             style="background: var(--dialog-bg);">
             <!-- X Close Button -->
-            <button onclick="closeModal('help-modal')"
+            <button onclick="closeModal('news-modal')"
                 class="absolute top-5 right-5 text-slate-500 hover:text-white transition-colors z-10">
                 <i class="ph ph-x text-2xl"></i>
             </button>
@@ -3679,7 +3679,7 @@
 
             </div>
 
-            <button onclick="closeModal('help-modal')"
+            <button onclick="closeModal('news-modal')"
                 class="w-full mt-5 py-3 rounded-2xl font-bold bg-slate-800 hover:bg-slate-700 transition-colors border border-white/5 text-sm">Got
                 it!</button>
         </div>
@@ -4429,7 +4429,7 @@
     <!-- Dashboard Buttons -->
     <button class="floating-btn dev-btn" onclick="openDevTools()" title="Dev Mode"><i class="ph ph-bug-beetle"></i></button>
     <button class="floating-btn add-btn" onclick="showAdd()" title="App Manager"><i class="ph ph-plus"></i></button>
-    <button class="floating-btn help-btn" onclick="toggleModal('help-modal')" title="News & Help"><i class="ph ph-newspaper"></i></button>
+    <button class="floating-btn help-btn" onclick="toggleModal('news-modal')" title="News & Help"><i class="ph ph-newspaper"></i></button>
     <button class="floating-btn export-btn" onclick="showExport()" title="Sync Hub"><i class="ph ph-share-network"></i></button>
     <button class="floating-btn misc-btn" id="misc-features-btn" onclick="openMiscModal()" title="Misc Features/Stuff"><i class="ph ph-sparkle"></i></button>
     <button class="floating-btn settings-btn" id="settings-btn" onclick="showSettings()"
@@ -10894,14 +10894,14 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             // System Keywords
             const systemKeywords = [
                 { keyword: 'settings', title: 'Portal Settings', icon: '<i class="ph ph-gear text-emerald-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
-                { keyword: 'help', title: 'Portal Help', icon: '<i class="ph ph-question text-sky-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
-                { keyword: 'changelog', title: 'Update Changelog', icon: '<i class="ph ph-list-numbers text-purple-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
+                { keyword: 'help', title: 'Portal Help', icon: '<i class="ph ph-question text-sky-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('news-modal')" },
+                { keyword: 'changelog', title: 'Update Changelog', icon: '<i class="ph ph-list-numbers text-purple-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('news-modal')" },
                 { keyword: 'dev mode', title: 'Developer Tools', icon: '<i class="ph ph-code text-rose-400 text-xl"></i>', action: "closeGlobalSearch(); openDevTools()" },
                 { keyword: 'developer', title: 'Developer Tools', icon: '<i class="ph ph-code text-rose-400 text-xl"></i>', action: "closeGlobalSearch(); openDevTools()" },
                 { keyword: 'theme', title: 'Theme Customization', icon: '<i class="ph ph-palette text-fuchsia-400 text-xl"></i>', action: "closeGlobalSearch(); openThemeEditor()" },
                 { keyword: 'experimental', title: 'Experimental Settings', icon: '<i class="ph ph-flask text-amber-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
-                { keyword: 'right click', title: 'Right Click Help', icon: '<i class="ph ph-mouse-right-click text-indigo-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
-                { keyword: 'context menu', title: 'Context Menu Help', icon: '<i class="ph ph-mouse-right-click text-indigo-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('help-modal')" },
+                { keyword: 'right click', title: 'Right Click Help', icon: '<i class="ph ph-mouse-right-click text-indigo-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('news-modal')" },
+                { keyword: 'context menu', title: 'Context Menu Help', icon: '<i class="ph ph-mouse-right-click text-indigo-400 text-xl"></i>', action: "closeGlobalSearch(); toggleModal('news-modal')" },
                 { keyword: 'fast boot', title: 'Fast Boot Setting', icon: '<i class="ph ph-rocket-launch text-emerald-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
                 { keyword: 'performance', title: 'Performance Mode', icon: '<i class="ph ph-lightning text-yellow-400 text-xl"></i>', action: "closeGlobalSearch(); showSettings()" },
                 { keyword: 'emoji', title: 'Emoji Hub', icon: '<i class="ph ph-smiley-wink text-fuchsia-400 text-xl"></i>', action: "closeGlobalSearch(); openEmojiHub()" },
@@ -11238,10 +11238,10 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
         /* ─────────────────────────────────────────────────────────────────────
            PORTAL VERSION — bump this string each release
            ───────────────────────────────────────────────────────────────────── */
-        const PORTAL_VERSION = '4.9.2';
+        const PORTAL_VERSION = '4.9';
 
         /* First-time-per-version update toast ─────────────────────────────── */
-        (function checkNewVersionToast() {
+        window.checkNewVersionToast = function() {
             const key = 'portal_last_seen_ver';
             const seen = localStorage.getItem(key);
             if (seen !== PORTAL_VERSION) {
@@ -11252,13 +11252,14 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
                         'ph-rocket-launch',
                         '#10b981', // Custom green
                         'Open Changelog',
-                        () => toggleModal('misc-help-modal'),
+                        () => toggleModal('news-modal'),
                         15000 // Lasts 15 seconds!
                     );
                 }, 1800);
                 localStorage.setItem(key, PORTAL_VERSION);
             }
-        })();
+        };
+        checkNewVersionToast();
 
         /* ── RTE Export HTML ─────────────────────────────────────────────── */
         function exportRTEasHTML() {
