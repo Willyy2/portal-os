@@ -5790,9 +5790,11 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     return state.userApps;
                 }
                 seen.add(id);
-                let cat = list.find(a => a.id === id);
-                if (cat && cat.children) list = cat.children;
-                else break;
+                const cat = list.find(a => a.id === id);
+                if (!cat) break; // category was deleted — stop navigating
+                // Always return the children array (even if empty) so sub-categories don't inherit parent data
+                if (!cat.children) cat.children = [];
+                list = cat.children;
             }
             return list;
         }
@@ -6973,20 +6975,11 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             if (!file) return;
             const r = new FileReader();
             r.onload = ev => {
-                let code = ev.target.result.trim();
-                let jsonStr = "";
-                if (code.startsWith('LZ:')) {
-                    jsonStr = LZString.decompressFromUTF16(code.substring(3));
-                } else if (code.startsWith('LZB:')) {
-                    let b64 = code.substring(4).replace(/ /g, '+');
-                    while (b64.length % 4 > 0) b64 += '=';
-                    jsonStr = LZString.decompressFromBase64(b64);
-                    if (!jsonStr) jsonStr = LZString.decompressFromUTF16(code.substring(4));
-                } else {
-                    jsonStr = decodeURIComponent(escape(atob(code)));
-                }
-                document.getElementById('import-code-area').value = jsonStr;
-                importSyncCode();
+                // Pass the raw file content directly to import — importSyncCode handles all formats
+                const raw = (ev.target.result || '').trim();
+                const area = document.getElementById('import-code-area');
+                if (area) area.value = raw;
+                importSyncCode(raw);
             };
             r.readAsText(file);
             e.target.value = null;
@@ -7020,17 +7013,16 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
             });
         }
 
-        async function importSyncCode() {
+        async function importSyncCode(directCode) {
             try {
-                let code = document.getElementById('import-code-area').value.trim();
-                
-                // Auto-Paste from Clipboard
+                let code = directCode || document.getElementById('import-code-area').value.trim();
+
+                // Auto-Paste from Clipboard if nothing provided
                 if (!code && navigator.clipboard && navigator.clipboard.readText) {
                     try {
                         const clipText = await navigator.clipboard.readText();
                         const text = clipText ? clipText.trim() : "";
-                        // Basic validation to see if clipboard has a likely Portal code
-                        if (text && (text.startsWith('LZ:') || text.startsWith('LZB:') || text.startsWith('%7B') || text.startsWith('ey'))) {
+                        if (text && (text.startsWith('LZ:') || text.startsWith('LZB:') || text.startsWith('%7B') || text.startsWith('ey') || text.startsWith('{'))) {
                             code = text;
                             document.getElementById('import-code-area').value = code;
                             notify("Auto-pasted code from clipboard!", "success", "ph-clipboard");
@@ -7040,32 +7032,92 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
                     }
                 }
 
-                if (!code) return notify("Please paste a code first or upload a file", "error");
-                
-                let importedState;
+                if (!code) return notify("Paste a code or upload a file first!", "error", "ph-warning");
+
+                let importedState = null;
+                let lastError = null;
+
+                // --- Strategy 1: LZB (current format) ---
                 if (code.startsWith('LZB:')) {
-                    let b64 = code.substring(4).replace(/ /g, '+');
-                    while (b64.length % 4 > 0) b64 += '=';
-                    let decomp = LZString.decompressFromBase64(b64);
-                    if (!decomp) decomp = LZString.decompressFromUTF16(code.substring(4));
-                    importedState = JSON.parse(decomp);
-                } else if (code.startsWith('LZ:')) {
-                    importedState = JSON.parse(LZString.decompressFromUTF16(code.substring(3)));
-                } else {
-                    // Legacy Base64 Support
-                    importedState = JSON.parse(decodeURIComponent(escape(atob(code))));
+                    try {
+                        let b64 = code.substring(4).replace(/ /g, '+');
+                        while (b64.length % 4 > 0) b64 += '=';
+                        let decomp = LZString.decompressFromBase64(b64);
+                        if (!decomp) decomp = LZString.decompressFromUTF16(code.substring(4));
+                        if (decomp) importedState = JSON.parse(decomp);
+                    } catch(e) { lastError = e; }
+                }
+
+                // --- Strategy 2: LZ (UTF16 format) ---
+                if (!importedState && code.startsWith('LZ:')) {
+                    try {
+                        const decomp = LZString.decompressFromUTF16(code.substring(3));
+                        if (decomp) importedState = JSON.parse(decomp);
+                    } catch(e) { lastError = e; }
+                }
+
+                // --- Strategy 3: Raw JSON (already decoded) ---
+                if (!importedState && (code.startsWith('{') || code.startsWith('['))) {
+                    try {
+                        importedState = JSON.parse(code);
+                    } catch(e) { lastError = e; }
+                }
+
+                // --- Strategy 4: Legacy Base64 ---
+                if (!importedState) {
+                    try {
+                        // Handle URL-safe base64 (replace - and _ with + and /)
+                        let b64 = code.replace(/-/g, '+').replace(/_/g, '/').replace(/ /g, '+');
+                        while (b64.length % 4 > 0) b64 += '=';
+                        const decoded = decodeURIComponent(escape(atob(b64)));
+                        if (decoded && decoded.startsWith('{')) {
+                            importedState = JSON.parse(decoded);
+                        }
+                    } catch(e) { lastError = e; }
+                }
+
+                // --- Strategy 5: LZB/LZ without prefix (try both) ---
+                if (!importedState) {
+                    try {
+                        let decomp = LZString.decompressFromBase64(code.replace(/ /g, '+'));
+                        if (decomp && decomp.startsWith('{')) importedState = JSON.parse(decomp);
+                    } catch(e) {}
+                    if (!importedState) {
+                        try {
+                            let decomp = LZString.decompressFromUTF16(code);
+                            if (decomp && decomp.startsWith('{')) importedState = JSON.parse(decomp);
+                        } catch(e) {}
+                    }
+                }
+
+                if (!importedState || typeof importedState !== 'object') {
+                    console.error('Import failed, last error:', lastError);
+                    notify("❌ Couldn't read that code — make sure it's the full text from a Portal backup file!", "error", "ph-warning-circle");
+                    return;
+                }
+
+                // Validate it looks like portal state
+                if (!importedState.userApps && !importedState.theme) {
+                    notify("⚠️ That doesn't look like a Portal backup — missing apps or theme data.", "error", "ph-warning");
+                    return;
                 }
 
                 state = importedState;
                 if (!state.theme) state.theme = {};
-                
+                if (!Array.isArray(state.userApps)) state.userApps = [];
+
                 const defaultConf = getDefaultConfig().theme;
                 if (state.theme.portalPassword === undefined) state.theme.portalPassword = defaultConf.portalPassword;
-                if (state.theme.devMode === undefined) state.theme.devMode = defaultConf.devMode;
-                if (state.theme.fastBoot === undefined) state.theme.fastBoot = defaultConf.fastBoot;
+                if (state.theme.devMode === undefined) state.theme.devMode = false;
+                if (state.theme.fastBoot === undefined) state.theme.fastBoot = true;
 
-                commitChanges(); applyTheme(); renderApps(); syncSettingsUI(); notify("Imported!", "success"); closeModal('export-modal');
-            } catch (e) { notify("Invalid code", "error"); }
+                commitChanges(); applyTheme(); renderApps(); syncSettingsUI();
+                notify("✅ Imported successfully!", "success", "ph-check-circle");
+                closeModal('export-modal');
+            } catch (e) {
+                console.error('Import exception:', e);
+                notify("❌ Import failed: " + e.message, "error", "ph-warning-circle");
+            }
         }
 
         function updateDevToggleFromState() {
@@ -8366,9 +8418,15 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
         }
 
         function showAdd() {
-            // Do NOT reset isSelectMode here — user may have selected items intentionally before opening bulk manager
-            // Only sync the UI to reflect current state
-            updateBulkUI();
+            // If there are NO selected apps, this is a fresh "create" action — exit select mode cleanly.
+            // If there ARE selected apps, keep the bulk state so the user can bulk-edit.
+            if (selectedAppIds.length === 0 && isSelectMode) {
+                isSelectMode = false;
+                updateBulkUI();
+                renderApps();
+            } else {
+                updateBulkUI();
+            }
 
             editingAppId = null;
             const isBulk = selectedAppIds.length > 0;
@@ -8498,6 +8556,13 @@ input[type="checkbox"]:checked, input[type="radio"]:checked { background-color: 
 
         function editApp(id, e) {
             if (e) e.stopPropagation();
+            // Editing a single app: always exit multi-select mode so the UI shows as normal editor
+            if (isSelectMode || selectedAppIds.length > 0) {
+                isSelectMode = false;
+                selectedAppIds = [];
+                updateBulkUI();
+                renderApps();
+            }
             const app = findNodeInTree(state.userApps, id);
             editingAppId = id;
             if (!app) return;
@@ -11272,8 +11337,12 @@ ed.onkeydown=function(e){if(e.key==='Tab'){e.preventDefault();const s=this.selec
             if(!modal) return;
             const input = document.getElementById('image-choice-url');
             input.value = currentUrl || '';
+            // Always reset pointer-events in case a previous interaction left it blocked
+            modal.style.pointerEvents = 'all';
             modal.style.display = 'flex';
             modal.classList.remove('hidden');
+            // Focus the input so the user can type immediately
+            setTimeout(() => { if(input) input.focus(); }, 80);
         }
 
         function closeImagePicker() {
